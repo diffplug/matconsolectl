@@ -23,7 +23,7 @@ This approach is to use MATLAB for computation. It does not allow for user inter
 
   * <a href="http://jmatlink.sourceforge.net/">JMatLink</a> is a library that allows for controlling the MATLAB engine from Java.
 
-  * A now defunct commercial approach is called MatlabServerAgent. There website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
+  * A now defunct commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
 
   * Another commercial approach is to use JIntegra. They have a <a href="http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm">web page</a> on how to use their product with MATLAB.
 
