@@ -31,4 +31,4 @@ This approach is to use MATLAB for computation. It does not allow for user inter
 
 This approach is very different from the above two. It uses Java to link together multiple sessions of MATLAB using Java.
 
-Gabor Cselle from the Swiss Federal Institute of Technology has <a href="http://www.gaborcselle.com/mdct/">a tutorial and source code</a> on his approach to distributed computing on MATLAB using Java.
+  * Gabor Cselle from the Swiss Federal Institute of Technology has <a href="http://www.gaborcselle.com/mdct/">a tutorial and source code</a> on his approach to distributed computing on MATLAB using Java.
