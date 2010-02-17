@@ -2,7 +2,7 @@
 
 = Introduction =
 
-There are a variety of approaches to MATLAB control from Java. At a high level they fall into several categories:
+There are a variety of approaches to MATLAB control with Java. At a high level they fall into several categories:
   # Controlling the MATLAB GUI from Java
   # Controlling the MATLAB engine from Java
   # Controlling multiple sessions of MATLAB from MATLAB using Java
