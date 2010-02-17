@@ -9,7 +9,7 @@ There are a variety of approaches to MATLAB control from Java. At a high level t
 
 = Approach 1: Controlling the MATLAB GUI =
 
-This approach is for those that want to control MATLAB that will also be used by a user, if you are just interested in using MATLAB for computation then Approach 2 is likely more appropriate.
+This approach is for those that want to control a MATLAB session (or multiple sessions) that will also be used by a user, if you are just interested in using MATLAB for computation then Approach 2 is likely more appropriate.
 
 The code available on this website was created to control one or more sessions of the MATLAB GUI from a Java program not launched from within MATLAB. This is done without any need for user interaction: the user does not need to change MATLAB configurations, launch MATLAB, or type any special commands into MATLAB once it has been connected.
 
