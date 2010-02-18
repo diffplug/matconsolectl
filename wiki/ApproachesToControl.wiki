@@ -35,4 +35,4 @@ This approach is very different from the above two. It uses Java to link togethe
 
   * Gabor Cselle from the Swiss Federal Institute of Technology has <a href="http://www.gaborcselle.com/mdct/">a tutorial and source code</a> on his approach to distributed computing on MATLAB using Java.
 
-  * Scott Gorlin from the Massachusetts of Technology has <a href="http://www.scottgorlin.com/2007/07/matlabdispatch/">another approach</a> to control multiple sessions of MATLAB using Java. The code can be found <a href="http://git.scottgorlin.com/?p=MatlabDispatch.git">here</a>.
+  * Scott Gorlin from the Massachusetts Insitute of Technology has <a href="http://www.scottgorlin.com/2007/07/matlabdispatch/">another approach</a> to control multiple sessions of MATLAB using Java. His code also makes use of Kamin Whitehouse's code. The code can be found <a href="http://git.scottgorlin.com/?p=MatlabDispatch.git">here</a>.
