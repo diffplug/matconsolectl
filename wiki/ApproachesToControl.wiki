@@ -23,11 +23,14 @@ This approach is to use MATLAB for computation. It does not allow for user inter
 
   * <a href="http://jmatlink.sourceforge.net/">JMatLink</a> is a library that allows for controlling the MATLAB engine from Java. If you are using it with the latest version of MATLAB you may run into issues, see this <a href="http://www.mathworks.com/matlabcentral/newsreader/view_thread/263275">discussion thread</a> for more information and a solution.
 
-  * A now defunct commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
-
-  * Another commercial approach is to use JIntegra. They have a <a href="http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm">web page</a> on how to use their product with MATLAB.
-
   * Andreas Klimke from the University of Stuttgart has two different approaches to controlling the MATLAB engine. There is a <a href="http://preprints.ians.uni-stuttgart.de/downloads/2003/2003-005.pdf">paper</a> detailing the approaches. The source code for these approaches can be downloaded <a href="http://matlabdb.mathematik.uni-stuttgart.de/download.jsp?Search=Java&SearchCategory=All&MP_ID=163">here</a>.
+
+  * A commercial approach is to use JIntegra. They have a <a href="http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm">web page</a> on how to use their product with MATLAB.
+
+  * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
+
+
+
 
 = Approach 3: Controlling multiple sessions of MATLAB from MATLAB =
 
