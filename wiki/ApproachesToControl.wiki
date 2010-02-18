@@ -21,7 +21,7 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
 This approach is to use MATLAB for computation. It does not allow for user interaction.
 
-  * <a href="http://jmatlink.sourceforge.net/">JMatLink</a> is a library that allows for controlling the MATLAB engine from Java.
+  * <a href="http://jmatlink.sourceforge.net/">JMatLink</a> is a library that allows for controlling the MATLAB engine from Java. If you are using it with the latest version of MATLAB you may run into issues, see this <a href="http://www.mathworks.com/matlabcentral/newsreader/view_thread/263275">discussion thread</a> for more information and a solution.
 
   * A now defunct commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
 
