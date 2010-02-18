@@ -19,7 +19,7 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
   * David Allen from the Virginia Polytechnic Institute addresses controlling MATLAB from Java in his <a href="http://institutes.lanl.gov/ei/pdf_files/dallenThesis1.pdf">thesis</a>. His description on the process is on page 32, which is actually page 38 of the PDF.
 
-  * Erlangung der Würde from the Technischen Universität Carolo‐Wilhelmina zu Braunschweig describes another <a href="http://rzbl04.biblio.etc.tu-bs.de:8080/docportal/servlets/MCRFileNodeServlet/DocPortal_derivate_00005520/MeMo.pdf;jsessionid=68EFECE2491240789B79447B2803F3DE">solution</a> that seems to use socket binding and Java Native Interface (JNI) calls. The relevant pages appear to be 91 and 92, but the entire document is in German, so I'm less than certain.
+  * Erlangung der Würde from the Technischen Universität Carolo‐Wilhelmina zu Braunschweig describes another <a href="http://rzbl04.biblio.etc.tu-bs.de:8080/docportal/servlets/MCRFileNodeServlet/DocPortal_derivate_00005520/MeMo.pdf;jsessionid=68EFECE2491240789B79447B2803F3DE">solution</a>. The relevant pages appear to be 91 and 92, but the entire document is in German, so I'm less than certain.
 
 = Approach 2: Controlling the MATLAB engine =
 
