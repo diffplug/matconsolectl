@@ -41,8 +41,8 @@ import java.util.UUID;
 import java.util.Vector;
 
 /**
- * Use this class to create instances of MatlabProxy. Each proxy will control
- * a different instance of MATLAB.
+ * Use this class to create instances of {@link MatlabProxy}. Each proxy will
+ * control a different instance of MATLAB.
  * 
  * Confirmed to work on OS X, Windows, & Linux. If your operating system is
  * not reported as OS X, it will launch it as if it were on Windows or Linux
