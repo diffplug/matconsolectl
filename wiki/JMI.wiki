@@ -21,5 +21,4 @@ This interface comes in the form of a jar file called jmi.jar with MATLAB. It is
   * `com.mathworks.jmi.types.resources`
   * `com.mathworks.jmi.util`
 
-
-
+The only class matlabcontrol uses is `com.mathworks.jmi.Matlab`, as well as the interface `com.mathworks.jmi.CompletionObserver`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
