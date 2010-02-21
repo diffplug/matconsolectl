@@ -27,9 +27,12 @@ The methods and fields of the `Matlab` class can easily be viewed by using MATLA
 
 There are a great number of methods and fields. matlabcontrol only uses a small number of those methods and none of the fields. `matlab.MatlabController` which is part of matlabcontrol is the only class that calls `com.mathworks.jmi.Matlab`'s methods. The methods it calls are:
   * `public static void whenMatlabReady(Runnable toRun)`
+
   * `public void evalConsoleOutput(String command)`
   * `public void evalConsoleOutput(String command, com.mathworks.jmi.CompletionObserver observer)`
-  * `public static Object mtEval(String command, int returnCount)`
   * `public Object fevalConsoleOutput(String functionName, Object[] args, int returnCount,  com.mathworks.jmi.CompletionObserver observer)`
-  * `public static void mtFeval(String functionName, Object[] args, int returnCount)`
+
+  * `public static Object mtEval(String command, int returnCount)`
+  * `public static Object mtFeval(String functionName, Object[] args, int returnCount)`
+
   * `public static void setEchoEval(boolean echo)`
