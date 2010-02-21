@@ -6,6 +6,7 @@ There are a variety of approaches to MATLAB control with Java. At a high level t
   # Controlling the MATLAB GUI from Java
   # Controlling the MATLAB engine from Java
   # Controlling multiple sessions of MATLAB from MATLAB using Java
+  # Running or modifying MATLAB code without MATLAB
 
 = Approach 1: Controlling the MATLAB GUI =
 
@@ -35,9 +36,6 @@ This approach is to use MATLAB purely for computation. It does not allow for use
 
   * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
 
-
-  * <a href="http://www.mathworks.com/products/javabuilder/">MATLAB Builder JA</a> is a product offered by The MathWorks which allows for compiling MATLAB code in such a way that a Java wrapper is created allowing for easy code interaction. It does not technically fit into this category; instead of interacting with the MATLAB engine it instead makes use of the MATLAB Compiler (MCR).
-
 = Approach 3: Controlling multiple sessions of MATLAB from MATLAB =
 
 This approach is very different from the above two. It uses Java to link together multiple sessions of MATLAB using Java.
@@ -47,3 +45,11 @@ This approach is very different from the above two. It uses Java to link togethe
   * Scott Gorlin from the Massachusetts Insitute of Technology has <a href="http://www.scottgorlin.com/2007/07/matlabdispatch/">another approach</a> to control multiple sessions of MATLAB using Java. A partial <a href="http://www.scottgorlin.com/wp-content/uploads/2008/01/day6.pdf">walk through</a> of his code and how to use it is also available. His code also makes use of Kamin Whitehouse's code. The code can be found <a href="http://git.scottgorlin.com/?p=MatlabDispatch.git">here</a>.
 
   * Brad Phelan created a solution called "Matlab 2 Matlab : Distributed Computing Toolbox". His website is currently not functional, but at least for the moment Google has a <a href="http://google.com/search?q=cache:WzmuqKbc9R8J:xtargets.com/cms/Tutorials/Matlab-Programming/Matlab-2-Matlab-Distributed-Computing-Toolbox.html">cache of the relevant web page</a>.
+
+= Running or modifying MATLAB code without MATLAB =
+
+This approach does not actually involve MATLAB and so is not really MATLAB control at all. Nonetheless it involves MATLAB and Java so its worth mentioning here.
+
+  * <a href="http://www.mathworks.com/products/javabuilder/">MATLAB Builder JA</a> is a product offered by The MathWorks which allows for compiling MATLAB code in such a way that a Java wrapper is created allowing for easy code interaction. Instead of interacting with the MATLAB engine it instead makes use of the MATLAB Compiler (MCR).
+
+  * Wojciech Gradkowski created <a href="http://www.mathworks.com/matlabcentral/fileexchange/10759">JMatIO</a> which is a pure Java library for reading and writing ot hte Matlab 5 MAT-file format.
