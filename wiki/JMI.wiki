@@ -11,7 +11,7 @@ The article has since been removed for the website, the <a href="http://www.math
 
 = The Interface =
 
-This interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at /java/jar/jmi.jar in the MATLAB directory on your computer. For instance, on OS X with `MATLAB R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB you have. `MATLAB R2009b` for OS X's jmi.jar contains a number of packages:
+The interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at /java/jar/jmi.jar in the MATLAB directory on your computer. For instance, on OS X with `MATLAB R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB you have. `MATLAB R2009b` for OS X's jmi.jar contains a number of packages:
   * `com.mathworks.jmi`
   * `com.mathworks.jmi.bean`
   * `com.mathworks.jmi.bean.resources`
