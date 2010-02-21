@@ -84,8 +84,8 @@ public class MatlabProxy
     /**
      * Evaluates a command in MATLAB. The result of this command will not be
      * returned.
-     * 
-     * This is equivalent to MATLAB's <code>eval(['command here'])</code>.
+     * <br><br>
+     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
      * 
      * @param command the command to be evaluated in MATLAB
      * 
@@ -117,24 +117,26 @@ public class MatlabProxy
     /**
      * Evaluates a command in MATLAB. The result of this command can be
      * returned.
-     * 
-     * This is equivalent to MATLAB's <code>eval(['command here'])</code>.
-     * 
+     * <br><br>
+     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
+     * <br><br>
      * In order for the result of this command to be returned the
-     * number of items to be returned must be specified by
+     * number of arguments to be returned must be specified by
      * <code>returnCount</code>. If the command you are evaluating is a MATLAB
-     * function you can determine the amount of items it returns by using the
-     * <code>nargout</code> function in the MATLAB Command Window. If it
+     * function you can determine the amount of arguments it returns by using
+     * the <code>nargout</code> function in the MATLAB Command Window. If it
      * returns -1 that means the function returns a variable number of
      * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of items returned. If the number of items
-     * returned differs from <code>returnCount</code> then an empty String will
-     * be returned.
+     * manually determine the number of arguments returned. If the number of
+     * arguments returned differs from <code>returnCount</code> then either
+     * <code>null</code> or an empty <code>String</code> will be returned.
      * 
      * @param command the command to be evaluated in MATLAB
      * @param returnCount the number of arguments that will be returned from evaluating the command
      * 
      * @see #eval(String)
+     * 
+     * @return result of MATLAB eval
      */
 	public Object returningEval(String command, int returnCount)
 	{
@@ -164,10 +166,11 @@ public class MatlabProxy
      * Arguments to the function may be provided as <code>args</code>, if you
      * wish to call the function with no arguments pass in <code>null</code>.
      * The result of this command will not be returned.
-     * 
+     * <br><br>
      * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any String will
-     * be converted to a MATLAB char array, not a variable name.
+     * equivalents as appropriate. Importantly, this means that any
+     * <code>String</code> will be converted to a MATLAB char array, not a
+     * variable name.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, <code>null</code> if none
@@ -175,11 +178,11 @@ public class MatlabProxy
      * @see #returningFeval(String, Object[], int)
      * @see #returningFeval(String, Object[])
      */
-	public void feval(String command, Object[] args)
+	public void feval(String functionName, Object[] args)
 	{
 		try
 		{
-			_internalProxy.feval(command, args);
+			_internalProxy.feval(functionName, args);
 		}
 		catch (RemoteException e)
 		{
@@ -202,26 +205,33 @@ public class MatlabProxy
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
      * wish to call the function with no arguments pass in <code>null</code>.
-     * 
+     * <br><br>
+     * The <code>Object</code>s in the array will be converted into MATLAB
+     * equivalents as appropriate. Importantly, this means that any
+     * <code>String</code> will be converted to a MATLAB char array, not a
+     * variable name.
+     * <br><br>
      * The result of this function can be returned. In order for a function's
      * return data to be returned to MATLAB it is necessary to know how many
-     * items will be returned. This function will attempt to determine that
+     * arguments will be returned. This method will attempt to determine that
      * automatically, but in the case where a function has a variable number of
-     * items returned it will only return one of them. To have all of them
+     * arguments returned it will only return one of them. To have all of them
      * returned use {@link #returningFeval(String, Object[], int)} and specify
-     * the number of items that will be returned.
+     * the number of arguments that will be returned.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, <code>null</code> if none
      * 
      * @see #feval(String, Object[])
      * @see #returningFeval(String, Object[])
+     * 
+     * @return result of MATLAB function
      */
-	public Object returningFeval(String command, Object[] args)
+	public Object returningFeval(String functionName, Object[] args)
 	{
 		try
 		{
-			return _internalProxy.returningFeval(command, args);
+			return _internalProxy.returningFeval(functionName, args);
 		}
 		catch (RemoteException e)
 		{
@@ -244,17 +254,23 @@ public class MatlabProxy
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
      * wish to call the function with no arguments pass in <code>null</code>.
-     * 
+     * <br><br>
+     * The <code>Object</code>s in the array will be converted into MATLAB
+     * equivalents as appropriate. Importantly, this means that any
+     * <code>String</code> will be converted to a MATLAB char array, not a
+     * variable name.
+     * <br><br>
      * The result of this function can be returned. In order for the result of
-     * this function to be returned the number of items to be returned must be
-     * specified by <code>returnCount</code>. You can use the 
+     * this function to be returned the number of arguments to be returned must
+     * be specified by <code>returnCount</code>. You can use the 
      * <code>nargout</code> function in the MATLAB Command Window to determine
-     * the number of items that will be returned. If <code>nargout</code>
+     * the number of arguments that will be returned. If <code>nargout</code>
      * returns -1 that means the function returns a variable number of
      * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of items returned. If the number of items
-     * returned differs from <code>returnCount</code> then <code>null</code>
-     * will be returned.
+     * manually determine the number of arguments returned. If the number of
+     * arguments returned differs from <code>returnCount</code> then either
+     * only some of the items will be returned or <code>null</code> will be
+     * returned.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, <code>null</code> if none
@@ -262,12 +278,14 @@ public class MatlabProxy
      * 
      * @see #feval(String, Object[])
      * @see #returningFeval(String, Object[])
+     * 
+     * @return result of MATLAB function
      */
-	public Object returningFeval(String command, Object[] args, int returnCount)
+	public Object returningFeval(String functionName, Object[] args, int returnCount)
 	{
 		try
 		{
-			return _internalProxy.returningFeval(command, args, returnCount);
+			return _internalProxy.returningFeval(functionName, args, returnCount);
 		}
 		catch (RemoteException e)
 		{
