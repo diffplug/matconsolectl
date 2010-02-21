@@ -9,7 +9,7 @@ JMI has been distributed with each version of MATLAB since at least MATLAB 6.1 (
 
 The article has since been removed for the website, the <a href="http://www.mathworks.com/company/newsletters/news_notes/win02/patterns.html">page</a> is now a dead end. However, a copy of the article is <a href="http://bbs.matwav.com/viewthread.php?tid=71482">available on zfhit's blog</a>. The <a href="http://www.mathworks.com/nnimagebrowser">page with the code</a> states that "The file you are trying to view is not in a published state." I am unaware of any existing mirrors of this example code. However, a <a href="http://webscripts.softpedia.com/scriptScreenshots/Matlab-ImageBrowser-Screenshots-37200.html">screen shot</a> can be seen. The Mathworks has never since posted any information regarding JMI, although a <a href="http://www.mathworks.com/matlabcentral/newsreader/search_results?dur=all&page=1&search_string=tag%3Ajmi">few posts</a> relating to JMI are available on MATLAB Central which is part of The Mathworks website.
 
-= What is the interface? =
+= The Interface =
 
 This interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at /java/jar/jmi.jar in the MATLAB directory on your computer. For instance, on OS X with `MATLAB R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB you have. `MATLAB R2009b` for OS X's jmi.jar contains a number of packages:
   * `com.mathworks.jmi`
