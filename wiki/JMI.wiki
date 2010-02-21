@@ -1,4 +1,4 @@
-#summary Java MATLAB Interface (JMI) allows Java to interact with MATLAB
+#summary The Java MATLAB Interface (JMI) allows Java to interact with MATLAB
 
 = Introduction =
 
