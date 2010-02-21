@@ -46,7 +46,7 @@ This approach is very different from the above two. It uses Java to link togethe
 
   * Brad Phelan created a solution called "Matlab 2 Matlab : Distributed Computing Toolbox". His website is currently not functional, but at least for the moment Google has a <a href="http://google.com/search?q=cache:WzmuqKbc9R8J:xtargets.com/cms/Tutorials/Matlab-Programming/Matlab-2-Matlab-Distributed-Computing-Toolbox.html">cache of the relevant web page</a>.
 
-= Running or modifying MATLAB code without MATLAB =
+= Approach 4: Running or modifying MATLAB code without MATLAB =
 
 This approach does not actually involve MATLAB and so is not really MATLAB control at all. Nonetheless it involves MATLAB and Java so its worth mentioning here.
 
