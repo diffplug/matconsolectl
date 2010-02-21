@@ -17,7 +17,7 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
   * Bowen Hui from the University of Toronto <a href="http://www.cs.utoronto.ca/~bowen/code/code.html#matjav">wrote code</a> that uses Kamin Whitehouse's code to allow for controlling MATLAB from Java. Like the code on this website, his code can control MATLAB from a Java program that is not launched from within MATLAB. However, his code requires configuration on the part of the user, and it writes the results to a text file as opposed to returning those results as Java objects.
 
-  * Simon Caton from Cardiff University has a <a href="http://beryl.cs.cf.ac.uk/Web/Guides/Java%20Control%20of%20Matlab/1.php"walk through</a> on controlling MATLAB and the results it returns.
+  * Simon Caton from Cardiff University has a <a href="http://beryl.cs.cf.ac.uk/Web/Guides/Java%20Control%20of%20Matlab/1.php">walk through</a> on controlling MATLAB and the results it returns.
 
   * David Allen from the Virginia Polytechnic Institute addresses controlling MATLAB from Java in his <a href="http://institutes.lanl.gov/ei/pdf_files/dallenThesis1.pdf">thesis</a>. His description on the process is on page 32, which is actually page 38 of the PDF.
 
