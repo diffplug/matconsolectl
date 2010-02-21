@@ -9,13 +9,13 @@ There are a variety of approaches to MATLAB control with Java. At a high level t
 
 = Approach 1: Controlling the MATLAB GUI =
 
-This approach is for those that want to control a MATLAB session (or multiple sessions) that will also be used by a user, if you are just interested in using MATLAB for computation then Approach 2 is likely more appropriate.
+This approach is for those that want to control a MATLAB session (or multiple sessions) that will also be used by a user, if you are interested in using MATLAB purely for computation then Approach 2 may be more appropriate.
 
-  * The code available here was created to control one or more sessions of the MATLAB GUI from a Java program not launched from within MATLAB. This is done without any need for user interaction: the user does not need to change MATLAB configurations, launch MATLAB, or type any special commands into MATLAB so that it can be controlled.
+  * The code available here was created to control one or more sessions of the MATLAB GUI from a Java program not launched from within MATLAB. This is done without any need for user interaction: the user does not need to change MATLAB configurations, launch MATLAB, or type any special commands into MATLAB so that it can be controlled. The results of commands to sent to MATLAB will be returned as Java objects when possible.
 
-  * The code here is based off of code from Kamin Whitehouse from the University of Virginia. His code allows for controlling MATLAB from Java, but the Java program must be launched from MATLAB. For more details see his <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">webpage</a> explaining his solution.
+  * The code here is loosely based off of code from Kamin Whitehouse from the University of Virginia. His code allows for controlling MATLAB from Java, but the Java program must be launched from MATLAB. For more details see his <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">webpage</a> explaining his solution.
 
-  * Bowen Hui from the University of Toronto <a href="http://www.cs.utoronto.ca/~bowen/code/code.html#matjav">also wrote code</a> based off Kamin Whitehouse's code to allow for controlling MATLAB from Java. Like the code on this website, his code can control MATLAB from a Java program that is not launched from within MATLAB. However, his code requires configuration on the part of the user, and it writes the results to a text file. This has the disadvantage of requiring parsing a text file, but the advantage that MATLAB output which may not be returned in a usable format to Java will be printed to the text file. However, if what you are really interested in is output from MATLAB, you are probably better off with the solutions that fall into Approach 2.
+  * Bowen Hui from the University of Toronto <a href="http://www.cs.utoronto.ca/~bowen/code/code.html#matjav">wrote code</a> that uses Kamin Whitehouse's code to allow for controlling MATLAB from Java. Like the code on this website, his code can control MATLAB from a Java program that is not launched from within MATLAB. However, his code requires configuration on the part of the user, and it writes the results to a text file as opposed to returning those results as Java objects.
 
   * David Allen from the Virginia Polytechnic Institute addresses controlling MATLAB from Java in his <a href="http://institutes.lanl.gov/ei/pdf_files/dallenThesis1.pdf">thesis</a>. His description on the process is on page 32, which is actually page 38 of the PDF.
 
@@ -23,7 +23,7 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
 = Approach 2: Controlling the MATLAB engine =
 
-This approach is to use MATLAB for computation. It does not allow for user interaction.
+This approach is to use MATLAB purely for computation. It does not allow for user interaction.
 
   * <a href="http://jmatlink.sourceforge.net/">JMatLink</a> is a library that allows for controlling the MATLAB engine from Java. If you are using it with the latest version of MATLAB you may run into issues, see this <a href="http://www.mathworks.com/matlabcentral/newsreader/view_thread/263275">discussion thread</a> for more information and a solution.
 
