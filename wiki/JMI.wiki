@@ -32,10 +32,10 @@ There are a great number of methods and fields. matlabcontrol only uses a small 
   * `public void evalConsoleOutput(String command)`
   * `public void evalConsoleOutput(String command, com.mathworks.jmi.CompletionObserver observer)`
   * `public void fevalConsoleOutput(String functionName, Object[] args, int returnCount,  com.mathworks.jmi.CompletionObserver observer)`
+  These methods send either a statement (eval methods) or a function call (feval) to MATLAB. They can visibly effect the running instance. The `com.mathworks.jmi.CompletionObserver` passed into the latter two methods allow for knowing when MATLAB is done executing the command. This is often *after* MATLAB is ready for the next command. (That is, when `whenMatlabReady(Runnable toRun)` would invoke the `run()` method of the `Runnable`.) If another method were to be called on MATLAB before the `CompletionObserver` indicates the command is complete problems could arise where the next command is referring to a variable created in the previous command, but that command has yet to finish.
+
 
   * `public static Object mtEval(String command, int returnCount)`
   * `public static Object mtFeval(String functionName, Object[] args, int returnCount)`
 
   * `public static void setEchoEval(boolean echo)`
-
-Method 1 Methods 2, 3, and 4 are invoked
