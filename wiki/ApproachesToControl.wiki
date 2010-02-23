@@ -54,7 +54,7 @@ This approach is very different from the above two. It uses Java to link togethe
 
 = Approach 4: Running or modifying MATLAB code without MATLAB =
 
-This approach does not actually involve MATLAB and so is not really MATLAB control at all. Nonetheless it involves MATLAB and Java so its worth mentioning here.
+This approach does not actually involve MATLAB and so is not really MATLAB control at all. Nonetheless it involves MATLAB code and Java so its worth mentioning here.
 
   * [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] is a product offered by The MathWorks which allows for compiling MATLAB code in such a way that a Java wrapper is created allowing for easy code interaction. Instead of interacting with the MATLAB engine it instead makes use of the MATLAB Compiler (MCR).
 
