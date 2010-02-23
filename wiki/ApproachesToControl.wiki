@@ -34,28 +34,28 @@ This approach is to use MATLAB purely for computation. It does not allow for use
 
   * Markus Krätzig created [http://www.jstatcom.com/jmatlab.html JMatlab/Link] which works as part of [http://www.jstatcom.com/ JStatCom]. His tutorial notes that it only works on Windows.
 
-  * Ma Li, Jiang Zhihong, Li Hao, & Wu Dan from Nanjing University wrote a <a href="http://doi.ieeecomputersociety.org/10.1109/IFITA.2009.494">paper</a> entitled "The Combination of JAVA with MATLAB Apply to Meteorology" where they discuss an approach using Java Native Interface calls to MATLAB's C++ API. The paper is written in rather broken English. (Access to the paper is restricted by IEEE Xplore membership or the article can be purchased.)
+  * Ma Li, Jiang Zhihong, Li Hao, & Wu Dan from Nanjing University wrote a [http://doi.ieeecomputersociety.org/10.1109/IFITA.2009.494 paper] entitled "The Combination of JAVA with MATLAB Apply to Meteorology" where they discuss an approach using Java Native Interface calls to MATLAB's C++ API. The paper is written in rather broken English. (Access to the paper is restricted by IEEE Xplore membership or the article can be purchased.)
 
-  * A commercial approach is to use JIntegra. They have a <a href="http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm">web page</a> on how to use their product with MATLAB.
+  * A commercial approach is to use JIntegra. They have a [http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm web page] on how to use their product with MATLAB.
 
-  * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found <a href="http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com">here</a> on the Internet Archive.
+  * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found [http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com here] on the Internet Archive.
 
 = Approach 3: Controlling multiple sessions of MATLAB from MATLAB =
 
 This approach is very different from the above two. It uses Java to link together multiple sessions of MATLAB using Java.
 
-  * Gabor Cselle from the Swiss Federal Institute of Technology has <a href="http://www.gaborcselle.com/mdct/">a tutorial and source code</a> on his approach to distributed computing on MATLAB using Java.
+  * Gabor Cselle from the Swiss Federal Institute of Technology has [http://www.gaborcselle.com/mdct/ a tutorial and source code] on his approach to distributed computing on MATLAB using Java.
 
-  * Scott Gorlin from the Massachusetts Insitute of Technology has <a href="http://www.scottgorlin.com/2007/07/matlabdispatch/">another approach</a> to control multiple sessions of MATLAB using Java. A partial <a href="http://www.scottgorlin.com/wp-content/uploads/2008/01/day6.pdf">walk through</a> of his code and how to use it is also available. His code also makes use of Kamin Whitehouse's code. The code can be found <a href="http://git.scottgorlin.com/?p=MatlabDispatch.git">here</a>.
+  * Scott Gorlin from the Massachusetts Insitute of Technology has [http://www.scottgorlin.com/2007/07/matlabdispatch/ another approach] to control multiple sessions of MATLAB using Java. A partial [http://www.scottgorlin.com/wp-content/uploads/2008/01/day6.pdf walk through] of his code and how to use it is also available. His code also makes use of Kamin Whitehouse's code. The code can be found [http://git.scottgorlin.com/?p=MatlabDispatch.git here].
 
-  * Max Goldman and Da Guo from the Massachusetts Institute of Technology created <a href="http://beowulf.csail.mit.edu/18.337-2003/projects/web.mit.edu/maxg/www/18.337/">Java MPI in MATLAB*P</a> which allows for parallel computing using MATLAB.
+  * Max Goldman and Da Guo from the Massachusetts Institute of Technology created [http://beowulf.csail.mit.edu/18.337-2003/projects/web.mit.edu/maxg/www/18.337/ Java MPI in MATLAB*P] which allows for parallel computing using MATLAB.
 
-  * Brad Phelan created a solution called "Matlab 2 Matlab : Distributed Computing Toolbox". His website is currently not functional, but at least for the moment Google has a <a href="http://google.com/search?q=cache:WzmuqKbc9R8J:xtargets.com/cms/Tutorials/Matlab-Programming/Matlab-2-Matlab-Distributed-Computing-Toolbox.html">cache of the relevant web page</a>.
+  * Brad Phelan created a solution called "Matlab 2 Matlab : Distributed Computing Toolbox". His website is currently not functional, but at least for the moment Google has a [http://google.com/search?q=cache:WzmuqKbc9R8J:xtargets.com/cms/Tutorials/Matlab-Programming/Matlab-2-Matlab-Distributed-Computing-Toolbox.html cache of the relevant web page].
 
 = Approach 4: Running or modifying MATLAB code without MATLAB =
 
 This approach does not actually involve MATLAB and so is not really MATLAB control at all. Nonetheless it involves MATLAB and Java so its worth mentioning here.
 
-  * <a href="http://www.mathworks.com/products/javabuilder/">MATLAB Builder JA</a> is a product offered by The MathWorks which allows for compiling MATLAB code in such a way that a Java wrapper is created allowing for easy code interaction. Instead of interacting with the MATLAB engine it instead makes use of the MATLAB Compiler (MCR).
+  * [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] is a product offered by The MathWorks which allows for compiling MATLAB code in such a way that a Java wrapper is created allowing for easy code interaction. Instead of interacting with the MATLAB engine it instead makes use of the MATLAB Compiler (MCR).
 
-  * Wojciech Gradkowski created <a href="http://www.mathworks.com/matlabcentral/fileexchange/10759">JMatIO</a> which is a pure Java library for reading and writing ot hte Matlab 5 MAT-file format.
+  * Wojciech Gradkowski created [http://www.mathworks.com/matlabcentral/fileexchange/10759 JMatIO] which is a pure Java library for reading and writing to the Matlab 5 MAT-file format.
