@@ -1,0 +1,14 @@
+#summary Known compatibility for operating systems and versions of MATLAB
+
+= Known Compatability =
+
+Below is a chart of known compatibility:
+
+|| Operating System || MATLAB Version || Compatible ||
+|| OS X 10.5 || 2009b || Yes ||
+|| Windows XP || 2008b || Yes ||
+|| Windows Vista || 2008b || Yes ||
+|| Windows 7 || 2008b || Yes ||
+|| Debian Linux 2.6.26-2-686 || 2008b || Yes ||
+
+If your configuration is not listed above, please leave a comment with the relevant data and it will be added to the above table.
