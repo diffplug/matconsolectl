@@ -2,7 +2,7 @@
 
 = Introduction =
 
-The code available on this website relies upon the Java MATLAB Interface. This interface is entirely undocumented and not publicly acknowledged by The Mathworks.
+The code available on this website relies upon the Java MATLAB Interface (JMI). This interface is entirely undocumented and not publicly acknowledged by The Mathworks.
 
 = History =
 JMI has been included with each version of MATLAB since MATLAB 5.3 `(R11)` when Java was first integrated into MATLAB. In February of 2002 Peter Webb published an article entitled "Integrating Java Components into MATLAB" in the News and Notes section of the Newsletters published by The Mathworks. Additionally, he posted the ImageBrowser code discussed in his article on the website.
