@@ -45,7 +45,7 @@ This approach is to use MATLAB purely for computation. It does not allow for use
 
   * Erlangung der Würde from the Technischen Universität Carolo‐Wilhelmina zu Braunschweig describes another [http://rzbl04.biblio.etc.tu-bs.de:8080/docportal/servlets/MCRFileNodeServlet/DocPortal_derivate_00005520/MeMo.pdf;jsessionid=68EFECE2491240789B79447B2803F3DE solution]. The relevant pages appear to be 91 and 92, but the entire document is in German, so I'm less than certain.
 
-  * A commercial approach is to use JIntegra. They have a [http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm web page] on how to use their product with MATLAB.
+  * A commercial approach is to use [http://j-integra.intrinsyc.com/ JIntegra]. They have a [http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm web page] on how to use their product with MATLAB.
 
   * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found [http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com here] on the Internet Archive.
 
