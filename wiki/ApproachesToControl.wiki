@@ -36,6 +36,8 @@ This approach is to use MATLAB purely for computation. It does not allow for use
 
   * Markus Krätzig created [http://www.jstatcom.com/jmatlab.html JMatlab/Link] which works as part of [http://www.jstatcom.com/ JStatCom]. His tutorial notes that it only works on Windows.
 
+  * Pete Cappello & Andy Pippin from University of California, Santa Barbara created a [http://www.cs.ucsb.edu/projects/jicos/javadoc/edu/ucsb/cs/jicos/services/external/services/matlab/package-summary.html package] that allows for MATLAB control from their framework called [http://www.cs.ucsb.edu/projects/jicos/ JICOS], a Java-centric network computing service.
+
   * Ma Li, Jiang Zhihong, Li Hao, & Wu Dan from Nanjing University wrote a [http://doi.ieeecomputersociety.org/10.1109/IFITA.2009.494 paper] entitled "The Combination of JAVA with MATLAB Apply to Meteorology" where they discuss an approach using Java Native Interface calls to MATLAB's C++ API. The paper is written in rather broken English. (Access to the paper is restricted by IEEE Xplore membership or the article can be purchased.)
 
   * A commercial approach is to use JIntegra. They have a [http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm web page] on how to use their product with MATLAB.
