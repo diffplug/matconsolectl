@@ -22,6 +22,11 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
   * Simon Caton from Cardiff University has a [http://beryl.cs.cf.ac.uk/Web/Guides/Java%20Control%20of%20Matlab/1.php walk through] on controlling MATLAB and the results it returns.
 
+  * Debprakash Patnaik from Virginia Tech wrote a [http://debprakash.blogspot.com/2007/01/java-matlab-connection-11-jan-2007-see.html blog post] and some [http://debprakash.googlepages.com/MatlabInterface.zip simple example code] on how to call MATLAB from Java from inside of MATLAB. The code is much less sophisticated than the above solutions.
+
+  * Aguido Horatio Davis from Griffith University wrote a [http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.133.1715&rep=rep1&type=pdf paper] where he describes a framework for controlling MATLAB from Java. Extensive code is provided in the paper beginning on page 117, although many previous pages describe the approach.
+
+
   * David Allen from the Virginia Polytechnic Institute addresses controlling MATLAB from Java in his [http://institutes.lanl.gov/ei/pdf_files/dallenThesis1.pdf thesis]. His description on the process is on page 32, which is actually page 38 of the PDF.
 
   * Erlangung der Würde from the Technischen Universität Carolo‐Wilhelmina zu Braunschweig describes another [http://rzbl04.biblio.etc.tu-bs.de:8080/docportal/servlets/MCRFileNodeServlet/DocPortal_derivate_00005520/MeMo.pdf;jsessionid=68EFECE2491240789B79447B2803F3DE solution]. The relevant pages appear to be 91 and 92, but the entire document is in German, so I'm less than certain.
