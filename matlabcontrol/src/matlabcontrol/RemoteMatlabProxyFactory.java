@@ -279,7 +279,9 @@ public class RemoteMatlabProxyFactory
 		
 		if(!_proxies.containsKey(bindValue))
 		{
-			throw new MatlabConnectionException("MATLAB proxy could not be created");
+			throw new MatlabConnectionException("MATLAB proxy could not be created." + 
+												"\nOS: " + System.getProperty("os.name") +
+												"\nJava: " + System.getProperty("java.version") + " from " + System.getProperty("java.vendor"));
 		}
 		
 		return _proxies.get(bindValue);
@@ -298,6 +300,26 @@ public class RemoteMatlabProxyFactory
 	}
 	
 	/**
+	 * If this operating system is reported as Windows.
+	 * 
+	 * @return if Windows
+	 */
+	private static boolean isWindows()
+	{
+		return System.getProperty("os.name").toLowerCase().contains("windows");
+	}
+	
+	/**
+	 * If this operating system is reported as OS X.
+	 * 
+	 * @return if OS X
+	 */
+	private static boolean isOSX()
+	{
+		return System.getProperty("os.name").equalsIgnoreCase("Mac OS X");
+	}
+	
+	/**
 	 * Launches Matlab. This is OS specific.
 	 * Confirmed to work on OS X, Windows, & Linux.
 	 * 
@@ -305,18 +327,65 @@ public class RemoteMatlabProxyFactory
 	 */
 	private void runMatlab(String bindValue) throws MatlabConnectionException
 	{
+		//Determine the location of MATLAB
+		String matlabLoc = getMatlabLocation();
+		
 		//Get the location of the directory or jar this class is in
+		String path = getSupportCodeLocation();
+		
+		//Argument that MATLAB will run on start.
+		//Tells MATLAB to add this code to it's classpath, then to call a method which
+		//will create a controller and send it over RMI back to this JVM.
+		String runArg = "javaaddpath '" + path + "'; " +
+						MatlabConnector.class.getName() + ".connectFromMatlab('" + bindValue + "');";
+		
+		//Attempt to run MATLAB
+		try
+		{
+			Runtime.getRuntime().exec(new String[]{matlabLoc, "-desktop", "-r", runArg});
+		}
+		catch (IOException e)
+		{
+			throw new MatlabConnectionException("Could not launch MATLAB. Tried to launch MATLAB at: " + matlabLoc, e);
+		}
+	}
+	
+	/**
+	 * Determines the location of this source code. Either it will be the directory
+	 * or jar this .class file is in. (That is, the .class file built from compiling
+	 * this .java file.)
+	 * 
+	 * @return directory or jar file this class is in
+	 */
+	private String getSupportCodeLocation()
+	{
 		String path = this.getClass().getProtectionDomain().getCodeSource().getLocation().getPath();
+		path = path.replace("%20", " ");
+		//If under Windows, convert to a Windows path
+		if(isWindows())
+		{
+			path = path.replaceFirst("/", "");
+			path = path.replace("/", "\\");
+		}
 		
-		//Operating system
-		String osName = System.getProperty("os.name");
-		
-		//Determine the location of MATLAB, 
-		String matlabLoc = "";
+		return path;
+	}
+	
+	/**
+	 * Determines the location (or alias) of MATLAB, respecting any location
+	 * specified by the user via {@link #setMatlabLocation(String)}.
+	 * 
+	 * @return location (or alias) of MATLAB
+	 * @throws MatlabConnectionException
+	 */
+	private String getMatlabLocation() throws MatlabConnectionException
+	{
+		//Determine the location of MATLAB
+		String matlabLoc = null;
 		if(_specifiedMatlabLoc == null)
 		{
 			//OS X
-			if(osName.equalsIgnoreCase("Mac OS X"))
+			if(isOSX())
 			{
 				matlabLoc = this.getOSXMatlabLocation();
 			}
@@ -331,23 +400,19 @@ public class RemoteMatlabProxyFactory
 			matlabLoc = _specifiedMatlabLoc;
 		}
 		
-		//Argument that MATLAB will run on start. It tells it to add this code to it's classpath, then to
-		//call a method which will create a controller and send it over RMI back to this JVM
-		String runArg = "javaaddpath '" + path.replace("%20", " ") + "'; " + MatlabConnector.class.getName() + ".connectFromMatlab('" + bindValue + "');";
-		
-		//Attempt to run MATLAB
-		try
-		{
-			Runtime.getRuntime().exec(new String[]{matlabLoc, "-desktop", "-r", runArg});
-		}
-		catch (IOException e)
-		{
-			throw new MatlabConnectionException("Could not launch MATLAB. OS is believed to be: " + osName, e);
-		}
+		return matlabLoc;
 	}
 	
+	/**
+	 * Determines the location of the MATLAB executable on OS X.
+	 * If multiple versions are found, the last one encountered will be used.
+	 * 
+	 * @return
+	 * @throws MatlabConnectionException
+	 */
 	private String getOSXMatlabLocation() throws MatlabConnectionException
 	{
+		//Search for MATLAB in the Applications directory
 		String matlabName = null;
 		for(String fileName : new File("/Applications/").list())
 		{
@@ -357,12 +422,16 @@ public class RemoteMatlabProxyFactory
 			}
 		}
 		
+		//If not found
 		if(matlabName == null)
 		{
 			throw new MatlabConnectionException("Could not find MATLAB location, please specify one using setMatlabLocation(...)");
 		}
 		
-		return  "/Applications/"+matlabName+"/bin/matlab";
+		//Build path to the executable location
+		String matlabLocation = "/Applications/" + matlabName + "/bin/matlab";
+		
+		return  matlabLocation;
 	}
 	
 	/**
