@@ -8,8 +8,8 @@ Below is a chart of known compatibility:
 || OS X 10.5 || `R2009b` || Yes ||
 || Windows XP || `R2008b` || Yes ||
 || Windows XP || `R2009b` || Yes ||
-|| Windows Vista || `R2008b` || Yes ||
 || Windows Vista || `R2007a` || Yes ||
+|| Windows Vista || `R2008b` || Yes ||
 || Windows 7 || `R2008b` || Yes ||
 || Debian Linux 2.6.26-2-686 || `R2008b` || Yes ||
 
