@@ -13,6 +13,7 @@ Below is a chart of known compatibility:
 || Windows Vista || `R2007a` || Yes ||
 || Windows Vista || `R2008b` || Yes ||
 || Windows 7 || `R2008b` || Yes ||
+|| Windows 7 || `R2010a` || Yes ||
 || Debian Linux 2.6.26-2-686 || `R2008b` || Yes ||
 
 If your configuration is not listed above, please leave a comment with the relevant data and it will be added to the above table.
