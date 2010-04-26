@@ -6,6 +6,7 @@ Below is a chart of known compatibility:
 
 || Operating System || MATLAB Version || Compatible ||
 || OS X 10.5 || `R2009b` || Yes ||
+|| Windows XP || `R2007b` || Yes ||
 || Windows XP || `R2008b` || Yes ||
 || Windows XP || `R2009b` || Yes ||
 || Windows Vista || `R2007a` || Yes ||
