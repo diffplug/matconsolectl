@@ -17,4 +17,14 @@ Below is a chart of known compatibility:
 || Windows 7 || `R2010a` || Yes ||
 || Debian Linux 2.6.26-2-686 || `R2008b` || Yes ||
 
+
+||     || `R2010a || `R2009b` || `R2009a` || `R2008b` ||
+|| OS X 10.5 ||
+|| OS X 10.6 ||
+|| Windows XP ||
+|| Windows Vista ||
+|| Windows 7 ||
+|| Debian Linux 2.6.26-2-686 ||
+
+
 If your configuration is not listed above, please leave a comment with the relevant data and it will be added to the above table.
