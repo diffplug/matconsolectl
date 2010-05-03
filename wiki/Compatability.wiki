@@ -4,27 +4,13 @@
 
 Below is a chart of known compatibility:
 
-|| Operating System || MATLAB Version || Compatible ||
-|| OS X 10.5 || `R2008b` || Yes ||
-|| OS X 10.5 || `R2009b` || Yes ||
-|| OS X 10.6 || `R2010a` || Yes ||
-|| Windows XP || `R2007b` || Yes ||
-|| Windows XP || `R2008b` || Yes ||
-|| Windows XP || `R2009b` || Yes ||
-|| Windows Vista || `R2007a` || Yes ||
-|| Windows Vista || `R2008b` || Yes ||
-|| Windows 7 || `R2008b` || Yes ||
-|| Windows 7 || `R2010a` || Yes ||
-|| Debian Linux 2.6.26-2-686 || `R2008b` || Yes ||
-
-
-||                  || `R2010a` || `R2009b` || `R2009a` || `R2008b` ||
-|| OS X 10.5        ||
-|| OS X 10.6        ||
-|| Windows XP       ||
-|| Windows Vista    ||
-|| Windows 7        ||
-|| Debian Linux 2.6 ||
+||              ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||`R2007a`||
+|| OS X 10.5    ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
+|| OS X 10.6    ||   Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
+|| Windows XP   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||
+|| Windows Vista||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
+|| Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
+|| Debian 2.6   ||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 
 
 If your configuration is not listed above, please leave a comment with the relevant data and it will be added to the above table.
