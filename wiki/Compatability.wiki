@@ -13,4 +13,4 @@ Below is a chart of known compatibility:
 || Debian 2.6   ||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 
 
-If your configuration is not listed above, please leave a comment with the relevant data and it will be added to the above table.
+If your configuration has a question mark (?) in its cell, please leave a comment with the relevant data and the table will be updated.
