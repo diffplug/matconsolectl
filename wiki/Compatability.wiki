@@ -7,7 +7,7 @@ Below is a chart of known compatibility:
 ||              ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||`R2007a`||
 || OS X 10.5    ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 || OS X 10.6    ||   Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
-|| Windows XP   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||
+|| Windows XP   ||   Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||
 || Windows Vista||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
 || Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 || Debian 2.6   ||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
