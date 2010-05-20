@@ -27,4 +27,4 @@ No, and there are no plans to add this functionality as it would dramatically in
 
 * Can the Java program and MATLAB be on separate computers on the same network? *
 
-No, and there are no plans to add this functionality as it would dramatically increase the complexity of successfully connecting to a remote session. However, the code is open source so feel free to modify it to do so.
+No, and there are no plans to add this functionality. However, the code is open source so feel free to modify it to do so.
