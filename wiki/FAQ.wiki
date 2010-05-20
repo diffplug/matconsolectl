@@ -2,7 +2,7 @@
 
 = Introduction =
 
-Below are questions that I have frequently been asked via email or the [https://spreadsheets.google.com/viewform?formkey=dENLNHB0YUotVUpHQUxqNHVremZveWc6MA survey]. If you have a question not answered here, please take the survey and ask it there.
+Below are questions that I have frequently been asked via email or the [https://spreadsheets.google.com/viewform?formkey=dENLNHB0YUotVUpHQUxqNHVremZveWc6MA survey]. If you have a question not answered here, please [https://spreadsheets.google.com/viewform?formkey=dENLNHB0YUotVUpHQUxqNHVremZveWc6MA take the survey] and ask it there.
 
 
 * Is there a tutorial / walkthrough of how to use matlabcontrol? *
