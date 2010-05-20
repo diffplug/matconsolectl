@@ -1,0 +1,15 @@
+#summary Frequently Asked Questions
+
+= Introduction =
+
+Below are questions that I have frequently been asked via email or the questionnaire. If you have a question not answered here, leave it in the comments.
+
+
+* Is there a tutorial / walkthrough of how to use matlabcontrol? *
+No, currently there is not. One will be posted at the same time that the next version comes out (late May / early June).
+
+* Is the source code for the demo available? *
+No. When the next version comes out (late May / early June) a new demo will also be released. The source code for that demo will be available.
+
+* I'm trying to [your project here], is matlabcontrol what I am looking for? *
+Maybe. You should check out ApproachesToControl to see lots of related projects. matlabcontrol was created to allow for programmatic control of the MATLAB GUI, however it can also be used for doing computation in Matlab. If doing computation in Matlab is your primary goal then you should consider the official supported [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] created by The MathWorks.
