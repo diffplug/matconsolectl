@@ -23,7 +23,7 @@ The reason the return type is `Object` is because MATLAB can return anything. Fo
 
 * Why was matlabcontrol created? *
 
-It was created to allow for grading program written in Java used by Teaching Assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments.
+It was created to allow for a grading program written in Java used by Teaching Assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
 
 * When controlling a remote session can I have it control an already open instance of MATLAB? *
 
