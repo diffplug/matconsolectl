@@ -21,6 +21,10 @@ Maybe. You should check out ApproachesToControl to see lots of related projects.
 
 The reason the return type is `Object` is because MATLAB can return anything. For instance the expression "sqrt(5)" will return array of `double`s, "pwd" will return a `java.lang.String`, and "whos" will return a complicated array of arrays with a variety of base types and `Object`s in it. The above is what occurs in MATLAB `R2009b`, but not necessarily in past or future versions. You will have to experiment to find out what you is being returned. The demo can help as it lists everything returned, including what is inside of arrays.
 
+* Why was matlabcontrol created? *
+
+It was created to allow for grading program written in Java used by Teaching Assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments.
+
 * When controlling a remote session can I have it control an already open instance of MATLAB? *
 
 No, and there are no plans to add this functionality as it would dramatically increase the complexity of successfully connecting to a remote session. However, the code is open source so feel free to modify it to do so.
