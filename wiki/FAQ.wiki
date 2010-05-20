@@ -21,6 +21,10 @@ Maybe. You should check out ApproachesToControl to see lots of related projects.
 
 The reason the return type is `Object` is because MATLAB can return anything. For instance the expression "sqrt(5)" will return array of `double`s, "pwd" will return a `java.lang.String`, and "whos" will return a complicated array of arrays with a variety of base types and `Object`s in it. The above is what occurs in MATLAB `R2009b`, but not necessarily in past or future versions. You will have to experiment to find out what you is being returned. The demo can help as it lists everything returned, including what is inside of arrays.
 
+* When controlling a local session sometimes MATLAB hangs indefinitely, why? *
+
+This can occur if you are calling from the Event Dispatch Thread (EDT) used by AWT/Swing components. EDT is used extensively by MATLAB when accessing graphical components such as a figure window, uicontrols or plots. When you call into matlabcontrol it blocks (pauses) the thread you are calling from until MATLAB is done with your request. However, if MATLAB is trying to use the EDT and you called from the EDT it will be unable to complete the request as the EDT is paused. To avoid this you will have to call matlabcontrol from a separate thread. An easy way to this is to make use of a [http://java.sun.com/javase/6/docs/api/java/util/concurrent/Executors.html#newSingleThreadExecutor%28%29 single thread executor].
+
 * Why was matlabcontrol created? *
 
 It was created to allow for a grading program written in Java used by teaching assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
