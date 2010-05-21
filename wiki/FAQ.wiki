@@ -36,3 +36,7 @@ No, and there are no plans to add this functionality as it would dramatically in
 * Can the Java program and MATLAB be on separate computers on the same network? *
 
 No, and there are no plans to add this functionality. However, the code is open source so feel free to modify it to do so.
+
+* Is matlabcontrol thread-safe?* 
+
+No, and there are no immediate plans for it to be thread-safe. If enough interest is expressed in making this API thread-safe then it might happen.
