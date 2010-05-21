@@ -19,7 +19,7 @@ Maybe. You should check out ApproachesToControl to see lots of related projects.
 
 * The methods that call into MATLAB have a return type of `Object`, what are they actually returning? *
 
-The reason the return type is `Object` is because MATLAB can return anything. For instance the expression "sqrt(5)" will return array of `double`s, "pwd" will return a `java.lang.String`, and "whos" will return a complicated array of arrays with a variety of base types and `Object`s in it. The above is what occurs in MATLAB `R2009b`, but not necessarily in past or future versions. You will have to experiment to find out what you is being returned. The demo can help as it lists everything returned, including what is inside of arrays.
+The reason the return type is `Object` is because MATLAB can return anything. For instance the expression "sqrt(5)" will return array of `double`s, "pwd" will return a `java.lang.String`, and "whos" will return a complicated array of arrays with a variety of base types and `Object`s in it. The above is what occurs in MATLAB `R2009b`, but not necessarily in past or future versions. You will have to experiment to find out what is being returned. The demo can help as it lists everything returned, including what is inside of arrays.
 
 * When controlling a local session sometimes MATLAB hangs indefinitely, why? *
 
