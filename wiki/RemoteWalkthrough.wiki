@@ -1,0 +1,23 @@
+#summary Walkthrough for using matlabcontrol with a remote session
+
+= Introduction =
+
+This is a walkthrough for how to use matlabcontrol with a remote session. This guide refers to matlabcontrol v3.1.0. It is possible that at times this walkthrough will for a short while refer to a prior version after a new version has been released.
+
+= Hello World =
+
+Following in tradition, let's start with a Hello World example:
+
+{{{
+import matlabcontrol.*;
+
+public class HelloWorld
+{
+	public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+	{
+		RemoteMatlabProxyFactory factory = new RemoteMatlabProxyFactory();
+		RemoteMatlabProxy proxy = factory.getProxy();
+		proxy.eval("disp('hello world')");
+	}
+}
+}}}
