@@ -13,11 +13,34 @@ import matlabcontrol.*;
 
 public class HelloWorld
 {
-	public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
-	{
-		RemoteMatlabProxyFactory factory = new RemoteMatlabProxyFactory();
-		RemoteMatlabProxy proxy = factory.getProxy();
-		proxy.eval("disp('hello world')");
-	}
+  public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+  {
+    //Create a factory
+    RemoteMatlabProxyFactory factory = new RemoteMatlabProxyFactory();
+
+    //Get a proxy
+    RemoteMatlabProxy proxy = factory.getProxy();
+
+    //Use the proxy
+    proxy.eval("disp('hello world')");
+  }
 }
 }}}
+
+For any control of a remote session with matlabcontrol a `RemoteMatlabProxyFactory` must always be constructed. A `RemoteMatlabProxy` must then be retrieved from the proxy; instances of `RemoteMatlabProxy` cannot be directly constructed. There are three ways to retrieve a proxy:
+{{{
+public String requestProxy() throws MatlabConnectionException
+public RemoteMatlabProxy getProxy() throws MatlabConnectionException
+public RemoteMatlabProxy getProxy(long timeout) throws MatlabConnectionException
+}}}
+
+The first method, `requestProxy()`, returns a `String` which is the unique identifier of the proxy that will be created. When the proxy is created it will notify all of the `MatlabConnectionListener`s that have been added via the factory's `addConnectionListener(MatlabConnectionListener listener)` method. A connection listener has two methods:
+
+{{{
+public void connectionEstablished(RemoteMatlabProxy proxy);
+public void connectionLost(RemoteMatlabProxy proxy);
+}}}
+
+When the `connectionEstablished(RemoteMatlabProxy proxy)` method is called a proxy that is connected to MATLAB will be passed in. Proxies have a `String getIdentifier()` method which returns their identifier. The identifier returned when `String requestProxy()` is called will create a proxy with a corresponding identifier.
+
+The second and third methods 
