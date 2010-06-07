@@ -6,7 +6,7 @@ This is a walkthrough for how to use matlabcontrol with a remote session. This g
 
 = Creating a proxy =
 
-For any control of a remote session with matlabcontrol a `RemoteMatlabProxyFactory` must always be constructed. A `RemoteMatlabProxy` must then be retrieved from the proxy; instances of `RemoteMatlabProxy` cannot be directly constructed. There are three ways to retrieve a proxy:
+For any control of a remote session with matlabcontrol a `RemoteMatlabProxyFactory` must always be constructed. A `RemoteMatlabProxy` must then be retrieved from the factory; instances of `RemoteMatlabProxy` cannot be directly constructed. There are three ways to retrieve a proxy:
 {{{
 public String requestProxy() throws MatlabConnectionException
 public RemoteMatlabProxy getProxy() throws MatlabConnectionException
