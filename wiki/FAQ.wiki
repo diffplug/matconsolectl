@@ -7,11 +7,11 @@ Below are questions that I have frequently been asked via email or the [https://
 
 * Is there a tutorial / walkthrough of how to use matlabcontrol? *
 
-No. A tutorial will be posted at the same time that the next version comes out (late May / early June).
+No. A tutorial will be posted at the same time that the next version comes out (mid June).
 
 * Is the source code for the demo available? *
 
-No. When the next version comes out (late May / early June) a new demo will also be released. The source code for that demo will be available.
+No. When the next version comes out (mid June) a new demo will also be released. The source code for that demo will be available.
 
 * I'm trying to do {your project here}, is matlabcontrol what I am looking for? *
 
