@@ -36,13 +36,13 @@ For detailed information on each of the proxy's methods consult the javadocs for
 
 ||`boolean isConnected() `||Whether the proxy is connected to MATLAB. The most likely reason it would become disconnected is if MATLAB closed.||
 ||`void exit()`||Exits MATLAB. MATLAB should always be programmatically closed in this manner, any other way has a high likelihood of failure.||
-||``void setVariable(java.lang.String variableName, java.lang.Object value)`||Sets the MATLAB variable with name `variableName` to `value`.||
+||`void setVariable(java.lang.String variableName, java.lang.Object value)`||Sets the MATLAB variable with name `variableName` to `value`.||
 ||`Object getVariable(java.lang.String variableName)`||Gets the MATLAB variable with name `variableName`. ||
-||`void eval(java.lang.String command)`||Equivalent to MATLAB's eval(['command']).||
+||`void eval(java.lang.String command)`||Equivalent to MATLAB's `eval(['command'])`.||
 ||`Object returningEval(java.lang.String command, int returnCount) `||Same as above except that the result is returned. In order for this to work the number of arguments returned must be passed into `returnCount`.||
-||feval(java.lang.String functionName, java.lang.Object[] args) ||Equivalent to MATLAB's feval('functionName',args).||
-returningFeval(java.lang.String functionName, java.lang.Object[] args) 
-returningFeval(java.lang.String functionName, java.lang.Object[] args, int returnCount)
+||`void feval(java.lang.String functionName, java.lang.Object[] args)` ||Equivalent to MATLAB's `feval('functionName',args).`||
+||`Object returningFeval(java.lang.String functionName, java.lang.Object[] args)`||Same as above except that the result is returned.||
+||`Object returningFeval(java.lang.String functionName, java.lang.Object[] args, int returnCount)`||Same as above except that the number of arguments returned must be passed in. This method is meant to be used when the above method fails at correctly determining the number of return arguments.||
 
  To interact with these methods play around with the demo.
 
