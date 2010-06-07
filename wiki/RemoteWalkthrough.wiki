@@ -60,10 +60,10 @@ public class HelloWorld
     //Create a factory
     RemoteMatlabProxyFactory factory = new RemoteMatlabProxyFactory();
 
-    //Get a proxy
+    //Get a proxy, launching MATLAB in the process
     RemoteMatlabProxy proxy = factory.getProxy();
 
-    //Use the proxy
+    //Use the proxy to display hello world
     proxy.eval("disp('hello world')");
   }
 }
