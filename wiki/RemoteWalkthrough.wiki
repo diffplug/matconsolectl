@@ -13,7 +13,7 @@ public RemoteMatlabProxy getProxy() throws MatlabConnectionException
 public RemoteMatlabProxy getProxy(long timeout) throws MatlabConnectionException
 }}}
 
-== Requesting a proxy ==
+=== Requesting a proxy ===
 
 The first method, `requestProxy()`, returns a `String` which is the unique identifier of the proxy that will be created. When the proxy is created it will notify all of the `MatlabConnectionListener`s that have been added via the factory's `addConnectionListener(MatlabConnectionListener listener)` method. A connection listener has two methods:
 
@@ -24,7 +24,7 @@ public void connectionLost(RemoteMatlabProxy proxy);
 
 When the `connectionEstablished(RemoteMatlabProxy proxy)` method is called a proxy that is connected to MATLAB will be passed in. Proxies have a `String getIdentifier()` method which returns their identifier. The identifier returned when `String requestProxy()` is called will create a proxy with a corresponding identifier.
 
-== Getting a proxy ==
+=== Getting a proxy ===
 
 The second and third methods directly return a proxy. This method will not return for a considerable amount of time because MATLAB must fully launch before the proxy can be created. Both methods will return after the proxy has been created. The `getProxy(long timeout)` will throw a `MatlabConnectionException`s if the proxy cannot be created in the specified amount of time; `getProxy()` operates identically with a timeout of 60 seconds.
 
