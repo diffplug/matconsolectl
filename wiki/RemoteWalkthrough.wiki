@@ -63,7 +63,7 @@ public class HelloWorld
     //Get a proxy, launching MATLAB in the process
     RemoteMatlabProxy proxy = factory.getProxy();
 
-    //Use the proxy to display hello world
+    //Use the proxy to display 'hello world' in the MATLAB Command Window
     proxy.eval("disp('hello world')");
   }
 }
