@@ -30,9 +30,11 @@ The second and third methods directly return a proxy. This method will not retur
 
 When the proxy is constructed it will be returned directly. Any `MatlabConnectionListener`s that have been added to the factory will also be notified.
 
+= Proxy methods =
+
 = Hello World =
 
-Following in tradition, let's start with a Hello World example:
+Using the above information, let's put together a simple Hello World example:
 
 {{{
 import matlabcontrol.*;
