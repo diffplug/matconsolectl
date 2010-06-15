@@ -43,7 +43,7 @@ class MatlabInternalProxyImpl extends UnicastRemoteObject implements MatlabInter
 {
 	private static final long serialVersionUID = 1L;
 	
-	private JMIWrapper _wrapper;
+	private final JMIWrapper _wrapper;
 	
 	public MatlabInternalProxyImpl(JMIWrapper wrapper) throws RemoteException
 	{

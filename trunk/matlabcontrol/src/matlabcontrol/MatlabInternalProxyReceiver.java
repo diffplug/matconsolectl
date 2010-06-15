@@ -39,5 +39,5 @@ import java.rmi.RemoteException;
  */
 interface MatlabInternalProxyReceiver extends Remote
 {
-	public void registerControl(String bindValue, MatlabInternalProxy controller) throws RemoteException;
+	public void registerControl(String proxyID, MatlabInternalProxy internalProxy) throws RemoteException;
 }

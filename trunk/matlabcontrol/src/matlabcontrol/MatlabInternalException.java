@@ -17,7 +17,7 @@ class MatlabInternalException extends Exception
 	 * The <code>String</code> representation of the <code>MatlabException</code>
 	 * so that this exception can pretend to be a <code>MatlabException</code>
 	 */
-	private String _toString;
+	private final String _toString;
 
 	/**
 	 * Creates a wrapper around <code>innerException</code> so that

@@ -67,7 +67,7 @@ interface MatlabInternalProxy extends Remote
 	
 	public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
 
-	public void setEchoEval(boolean echo) throws RemoteException;
+	public void setEchoEval(boolean echo) throws RemoteException, MatlabInvocationException;
 	
 	/**
 	 * This method does nothing. It is used internally to check if a connection

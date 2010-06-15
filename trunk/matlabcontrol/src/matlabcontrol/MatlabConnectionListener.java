@@ -32,24 +32,23 @@ package matlabcontrol;
  * Implement this interface to be informed when a remote connection has been
  * established or lost.
  * 
- * @see RemoteMatlabProxyFactory
+ * @see RemoteMatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
+ * @see RemoteMatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
 public interface MatlabConnectionListener
 {
 	/**
-	 * Called when the connection to the proxy has been established.
+	 * Called when the connection to the session of MATLAB launched has been
+	 * established.
 	 * 
 	 * @param proxy the proxy created when the connection was established
-	 * 
-	 * @see RemoteMatlabProxyFactory#requestProxy()
 	 */
 	public void connectionEstablished(RemoteMatlabProxy proxy);
 	
 	/**
-	 * Called when the connection to the proxy has been lost.
-	 * To get a new connection, use an instance of {@link RemoteMatlabProxyFactory}.
+	 * Called when the connection to the session of MATLAB has been lost.
 	 * 
 	 * @param proxy the proxy that is no longer connected
 	 */

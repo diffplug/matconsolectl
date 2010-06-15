@@ -29,6 +29,9 @@ package matlabcontrol;
  */
 
 /**
+ * <b>This class is deprecated. It will be removed in a later release of matlabcontrol.
+ * Use of this class is strongly discouraged.</b>
+ * <br><br>
  * A convenience class that allows for controlling a single remote session of MATLAB
  * without having to create a {@link RemoteMatlabProxyFactory} and then create a
  * {@link RemoteMatlabProxy}.
@@ -37,6 +40,7 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
+@Deprecated
 public class RemoteMatlabProxyController
 {
 	/**
@@ -122,32 +126,8 @@ public class RemoteMatlabProxyController
 				}
 			});
 			
-			_factory.getProxy();
+			_proxy = _factory.getProxy();
 		}
-	}
-	
-	/**
-	 * Set the location of the MATLAB program. If this property is not set an
-	 * appropriate default for your operating system will be used. If that
-	 * fails, then use this method to give the correct location.
-	 * 
-	 * @param matlabLocation
-	 */
-	public static void setMatlabLocation(String matlabLocation)
-	{
-		_factory.setMatlabLocation(matlabLocation);
-	}
-	
-	/**
-	 * Sets the maximum amount of time to wait in attempting to setup a
-	 * connection to MATLAB in milliseconds. The default value is 60
-	 * seconds.
-	 * 
-	 * @param ms
-	 */
-	public static void setTimeout(int ms)
-	{
-		_factory.setTimeout(ms);
 	}
 	
 	/**

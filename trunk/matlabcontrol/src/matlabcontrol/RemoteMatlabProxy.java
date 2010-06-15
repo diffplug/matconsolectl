@@ -32,25 +32,43 @@ import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
 
 /**
- * Allows for calling MATLAB from <b>outside</b> of MATLAB. Methods that are
- * relayed to MATLAB may throw exceptions. They will be thrown if something
- * occurs to disrupt the communication between this JVM and the one MATLAB is
- * running in. For instance, closing MATLAB will terminate its JVM and then all
- * method calls on this proxy will throw exceptions. Exceptions may also be
- * thrown if an internal MATLAB exception occurs.
+ * Allows for calling MATLAB from <b>outside</b> of MATLAB. This class cannot
+ * be instantiated, instead create a proxy by using {@link RemoteMatlabProxyFactory}.
  * <br><br>
- * Create this class by using {@link RemoteMatlabProxyFactory}.
+ * Methods in this proxy that are relayed to MATLAB may throw exceptions. They
+ * will be thrown if:
+ * <ul>
  * 
- * @see RemoteMatlabProxyController
+ * <li>
+ * communication between this JVM and the one MATLAB is running in is
+ * disrupted (most likely due to closing MATLAB)
+ * </li>
+ * <li>
+ * an internal MATLAB exception occurs
+ * </li>
+ * <li>
+ * the class of the object to be returned is not {@link java.io.Serializable}
+ * </li>
+ * <li>
+ * the class of the object to be sent or returned is not defined in the
+ * JVM receiving the object
+ * </li>
+ * 
+ * </ul>
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
 public final class RemoteMatlabProxy
-{	
+{
 	/**
 	 * The underlying proxy which is a remote object connected over RMI.
 	 */
-	private MatlabInternalProxy _internalProxy;
+	private final MatlabInternalProxy _internalProxy;
+	
+	/**
+	 * Unique identifier for this proxy.
+	 */
+	private final String _id;
 	
 	/**
 	 * The proxy is never to be created outside of this package, it is to be
@@ -59,9 +77,22 @@ public final class RemoteMatlabProxy
 	 * 
 	 * @param internalProxy
 	 */
-	RemoteMatlabProxy(MatlabInternalProxy internalProxy)
+	RemoteMatlabProxy(MatlabInternalProxy internalProxy, String id)
 	{
 		_internalProxy = internalProxy;
+		_id = id;
+	}
+	
+	/**
+	 * Returns the unique identifier for this proxy. This value matches that
+	 * returned when calling {@link RemoteMatlabProxyFactory#requestProxy()}
+	 * to create this proxy.
+	 * 
+	 * @return identifier
+	 */
+	public String getIdentifier()
+	{
+		return _id;
 	}
 	
 	/**
