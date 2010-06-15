@@ -7,11 +7,11 @@ Below are questions that I have frequently been asked via email or the [https://
 
 * Is there a tutorial / walkthrough of how to use matlabcontrol? *
 
-No. A tutorial will be posted at the same time that the next version comes out (mid June).
+Yes, it can be found [http://code.google.com/p/matlabcontrol/wiki/RemoteWalkthrough here].
 
 * Is the source code for the demo available? *
 
-No. When the next version comes out (mid June) a new demo will also be released. The source code for that demo will be available.
+Yes. The source code can be downloaded under the Downloads tab; this contains both the source for the library and demo. The source code can also be viewed without downloading it by using the Source tab.
 
 * I'm trying to do {your project here}, is matlabcontrol what I am looking for? *
 
