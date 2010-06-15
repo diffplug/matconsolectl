@@ -29,13 +29,20 @@ package matlabcontrol;
  */
 
 /**
- * Allows for calling MATLAB from <b>within</b> MATLAB. All of the methods in
- * this class can be called from any thread. The way methods are relayed to
- * MATLAB differs depending on whether or not the methods were invoked on the
- * main MATLAB thread; unexpected behavior may occur if methods are invoked
- * from both the main MATLAB thread and any other thread. Any of the methods
- * that are relayed to MATLAB may throw exceptions. Exceptions may be thrown
- * if an internal MATLAB exception occurs.
+ * Allows for calling MATLAB from <b>within</b> MATLAB.
+ * <br><br>
+ * Methods may be called from any thread; however, calling from the Event
+ * Dispatch Thread (EDT) used by AWT and Swing components can be problematic.
+ * When a call is made the calling thread is paused. If the call into MATLAB
+ * makes use of the EDT then MATLAB will hang indefinitely. The EDT is used
+ * extensively by MATLAB when accessing graphical components such as a figure
+ * window, uicontrols or plots. 
+ * <br><br>
+ * The way methods are relayed to MATLAB differs depending on whether or not
+ * the methods were invoked on the main MATLAB thread; unexpected behavior may
+ * occur if methods are invoked from multiple threads. Any of the methods that
+ * are relayed to MATLAB may throw exceptions. Exceptions may be thrown if an
+ * internal MATLAB exception occurs.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */

@@ -29,6 +29,7 @@ package matlabcontrol;
  */
 
 import java.util.HashMap;
+import java.util.Map;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.MatlabException;
@@ -62,15 +63,15 @@ class JMIWrapper
     private MatlabException _thrownException = null;
 
     /**
-     * The default value that _returnVal is set to before an actual return
-     * value is returned.
+     * The default value that {@link JMIWrapper#_returnVal} is set to before an
+     * actual return value is returned.
      */
     private static final String BEFORE_RETURN_VALUE = "noReturnValYet";
     
     /**
      * Map of variables used by {@link #getVariableValue(String)}, and {@link #setVariable(String, Object)}.
      */
-	private static HashMap<String, Object> VARIABLES = new HashMap<String, Object>();
+	private static final Map<String, Object> VARIABLES = new HashMap<String, Object>();
 	
     /**
      * The name of this class and package.
