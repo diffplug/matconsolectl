@@ -8,7 +8,7 @@ Below is a chart of known compatibility:
 || OS X 10.5    ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 || OS X 10.6    ||   Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
 || Windows XP   ||   Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||
-|| Windows Vista||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
+|| Windows Vista||  Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
 || Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 ||Windows Server 2008 R2 || Yes || ? || ? || ? || ? || ? || ? ||
 
