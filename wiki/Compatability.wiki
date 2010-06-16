@@ -10,7 +10,6 @@ Below is a chart of known compatibility:
 || Windows XP   ||   Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||
 || Windows Vista||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
 || Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
-|| Debian 2.6   ||    ?   ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 
 Due to the large diversity of Linux distributions; Linux is not shown in the above table. However, the following combinations are known to work:
 Debian 2.6 & `R2008b`
