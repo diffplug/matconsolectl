@@ -12,8 +12,7 @@ Below is a chart of known compatibility:
 || Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 
 Due to the large diversity of Linux distributions; Linux is not shown in the above table. However, the following combinations are known to work:
-
 Debian 2.6 & `R2008b`
-Ubunto 9.10 & `R2010a` 
+Ubuntu 9.10 & `R2010a` 
 
 If your configuration has a question mark (?) in its cell, please leave a comment with the relevant data and the table will be updated.
