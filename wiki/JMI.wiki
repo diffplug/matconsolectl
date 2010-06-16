@@ -23,6 +23,6 @@ The interface comes in the form of a jar file called jmi.jar with MATLAB. It is 
   * `com.mathworks.jmi.types.resources`
   * `com.mathworks.jmi.util`
 
-The only classes matlabcontrol uses are `com.mathworks.jmi.Matlab` and`com.mathworks.jmi.NativeMatlab` as well as the exception `com.mathworks.jmi.MatlabException`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
+The only classes matlabcontrol uses are `com.mathworks.jmi.Matlab` and `com.mathworks.jmi.NativeMatlab` as well as the exception `com.mathworks.jmi.MatlabException`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
 
 The methods and fields of the `Matlab` class can easily be viewed by using MATLAB. To list all of the method names of the class in MATLAB's Command Window type `methods com.mathworks.jmi.Matlab`. This will list all of the method names, but it won't provide any other important information. To see more detailed information, instead type `methodsview com.mathworks.jmi.Matlab`. To see the fields (also known as member or instance variables) type `fieldnames(com.mathworks.jmi.Matlab)`. There are a great number of methods and fields. matlabcontrol only uses a small number of those methods and none of the fields. 
