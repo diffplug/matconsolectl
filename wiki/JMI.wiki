@@ -23,25 +23,6 @@ The interface comes in the form of a jar file called jmi.jar with MATLAB. It is 
   * `com.mathworks.jmi.types.resources`
   * `com.mathworks.jmi.util`
 
-The only class matlabcontrol uses is `com.mathworks.jmi.Matlab`, as well as the interface `com.mathworks.jmi.CompletionObserver`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
+The only classes matlabcontrol uses are `com.mathworks.jmi.Matlab` and`com.mathworks.jmi.NativeMatlab` as well as the exception `com.mathworks.jmi.MatlabException`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
 
-The methods and fields of the `Matlab` class can easily be viewed by using MATLAB. To list all of the method names of the class in MATLAB's Command Window type `methods com.mathworks.jmi.Matlab`. This will list all of the method names, but it won't provide any other important information. To see more detailed information, instead type `methodsview com.mathworks.jmi.Matlab`. To see the fields (also known as member or instance variables) type `fieldnames(com.mathworks.jmi.Matlab)`.
-
-There are a great number of methods and fields. matlabcontrol only uses a small number of those methods and none of the fields. `matlab.MatlabController` which is part of matlabcontrol is the only class that calls `com.mathworks.jmi.Matlab`'s methods. The methods it calls are:
-  * `public static void whenMatlabReady(Runnable toRun)`
-  This tells MATLAB to invoke the `Runnable` passed in when MATLAB is ready for it.
-
-  * `public void evalConsoleOutput(String command)`
-  * `public void evalConsoleOutput(String command, com.mathworks.jmi.CompletionObserver observer)`
-  * `public void fevalConsoleOutput(String functionName, Object[] args, int returnCount,  com.mathworks.jmi.CompletionObserver observer)`
-  These methods send either a statement (eval methods) or a function call (feval) to MATLAB. They can visibly effect the running instance. The `com.mathworks.jmi.CompletionObserver` passed into the latter two methods allow for knowing when MATLAB is done executing the command. This is often after MATLAB is ready for the next command. (That is, when `whenMatlabReady(Runnable toRun)` would invoke the `run()` method of the `Runnable`.) If another method were to be called on MATLAB before the `CompletionObserver` indicates the command is complete problems could arise where the next command is referring to a variable created in the previous command, but that command has yet to finish.
-
-  The `evalConsoleOutput(String command)` is used to allow for exiting MATLAB, because in that case there will never be feedback from the `CompletionObserver` as MATLAB is no longer running.
-
-
-  * `public static Object mtEval(String command, int returnCount)`
-  * `public static Object mtFeval(String functionName, Object[] args, int returnCount)`
-  These methods allow for the retrieval of data from MATLAB. The data returned will be converted into Java objects and primitives. It seems to follow the guidelines listed [http://www.mathworks.com/access/helpdesk/help/techdoc/matlab_external/f6425.html#bq__5xw-1 here]. Everything that is returned is a *copy*, even Java objects created in MATLAB. This means changing these objects will not change them in MATLAB. Note that MATLAB structs and arrays can be returned rather oddly. Structs will be returned as arrays of arrays, often nested quite deeply. MATLAB arrays of several dimensions can be returned as a single dimension array to Java. In order for any data to be returned the `returnCount` value must match the number of arguments that will be returned by the MATLAB call.
-
-  * `public static void setEchoEval(boolean echo)`
-  When set to `true` this turns on a diagnostic mode that allows you to see all of the calls being made from Java to MATLAB.
+The methods and fields of the `Matlab` class can easily be viewed by using MATLAB. To list all of the method names of the class in MATLAB's Command Window type `methods com.mathworks.jmi.Matlab`. This will list all of the method names, but it won't provide any other important information. To see more detailed information, instead type `methodsview com.mathworks.jmi.Matlab`. To see the fields (also known as member or instance variables) type `fieldnames(com.mathworks.jmi.Matlab)`. There are a great number of methods and fields. matlabcontrol only uses a small number of those methods and none of the fields. 
