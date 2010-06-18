@@ -1,4 +1,4 @@
-#summary An overview of different approaches to controlling MATLAB.
+#summary An overview of different approaches to controlling MATLAB
 
 = Introduction =
 
