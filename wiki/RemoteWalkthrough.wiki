@@ -26,7 +26,7 @@ When the `connectionEstablished(RemoteMatlabProxy proxy)` method is called a pro
 
 === Getting a proxy ===
 
-The second and third methods directly return a proxy. These methods will not return for a considerable amount of time because MATLAB must fully launch before the proxy can be created. Both methods will return after the proxy has been created. The `getProxy(long timeout)` will throw a `MatlabConnectionException`s if the proxy cannot be created in the specified amount of time; `getProxy()` operates identically with a timeout of 60 seconds.
+The second and third methods directly return a proxy. These methods will not return for a considerable amount of time because MATLAB must fully launch before the proxy can be created. Both methods will return after the proxy has been created. The `getProxy(long timeout)` will throw a `MatlabConnectionException` if the proxy cannot be created in the specified amount of time; `getProxy()` operates identically with a timeout of 60 seconds.
 
 When the proxy is constructed it will be returned directly. Any `MatlabConnectionListener`s that have been added to the factory will also be notified.
 
