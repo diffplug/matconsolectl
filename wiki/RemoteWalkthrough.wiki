@@ -32,7 +32,7 @@ When the proxy is constructed it will be returned directly. Any `MatlabConnectio
 
 = Proxy methods =
 
-For detailed information on each of the proxy's methods consult the [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/RemoteMatlabProxy.html javadocs for `RemoteMatlabProxy`]. All of the methods that communicate with MATLAB will throw `MatlabInvocationException` if the method cannot complete succesfully.
+For detailed information on each of the proxy's methods consult the [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/RemoteMatlabProxy.html javadocs for RemoteMatlabProxy]. All of the methods that communicate with MATLAB will throw `MatlabInvocationException` if the method cannot complete succesfully.
 
 ||`boolean isConnected() `||Whether the proxy is connected to MATLAB. The most likely reason it would become disconnected is if MATLAB closed.||
 ||`void exit()`||Exits MATLAB. MATLAB should always be programmatically closed in this manner, any other way has a high likelihood of failure.||
