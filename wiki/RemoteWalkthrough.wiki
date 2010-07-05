@@ -44,8 +44,7 @@ For detailed information on each of the proxy's methods consult the [http://matl
 ||`Object returningFeval(java.lang.String functionName, java.lang.Object[] args)`||Same as above except that the result is returned.||
 ||`Object returningFeval(java.lang.String functionName, java.lang.Object[] args, int returnCount)`||Same as above except that the number of arguments returned must be passed in. This method is meant to be used when the above method fails at correctly determining the number of return arguments.||
 
-
- To interact with these methods play around with the demo.
+To interact with these methods play around with the demo.
 
 = Hello World =
 
