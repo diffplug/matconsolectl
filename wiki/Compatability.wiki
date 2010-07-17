@@ -12,7 +12,7 @@ Below is a chart of known compatibility:
 || Windows 7    ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 ||Windows Server 2008 R2 || Yes || ? || ? || ? || ? || ? || ? ||
 
-It is strongly suspected that matlabcontrol will work for all of the configurations in the above table; however, only the above have been confirmed. Older versions of MATLAB have also been known to work but are not shown in the above table.
+It is strongly suspected that matlabcontrol will work for all of the configurations in the above table; however, only the above have been confirmed. Older versions of MATLAB have also been known to work but are not shown in the above table. *No effort is (or will be) made to ensure compatibility with versions prior to `R2007a`.
 
 Due to the large diversity of Linux distributions, Linux is not shown in the above table. However, the following combinations are known to work:
 Debian 2.6 & `R2008b`, Ubuntu 9.10 & `R2010a` 
