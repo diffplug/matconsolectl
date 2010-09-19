@@ -1,6 +1,6 @@
 #summary Known compatibility for operating systems and versions of MATLAB
 
-= Known Compatability =
+= Known Compatibility =
 
 Below is a chart of known compatibility:
 
