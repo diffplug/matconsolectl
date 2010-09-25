@@ -5,7 +5,7 @@
 Below is a chart of known compatibility:
 
 ||              || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||`R2007a`||
-|| OS X 10.5    ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
+|| OS X 10.5    ||    ?   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
 || OS X 10.6    ||    ?   ||    Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
 || Windows XP   ||    No   ||    Yes  ||   Yes  ||    Yes   ||   Yes  ||    ?   ||   Yes  ||   Yes   ||
 || Windows Vista||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
