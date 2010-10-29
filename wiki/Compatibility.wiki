@@ -9,7 +9,7 @@ Below is a chart of known compatibility:
 || OS X 10.6    ||    ?   ||    Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
 || Windows XP   ||    No   ||    Yes  ||   Yes  ||    Yes   ||   Yes  ||    ?   ||   Yes  ||   Yes   ||
 || Windows Vista||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
-|| Windows 7    ||    ?   ||    Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
+|| Windows 7    ||    ?   ||    Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||    ?   ||
 
 Several reports have been received of matlabcontrol being incompatible with `R2010b`.
 
