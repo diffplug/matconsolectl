@@ -11,7 +11,7 @@ Below is a chart of known compatibility:
 || Windows Vista||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
 || Windows 7    ||    ?   ||    Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||    ?   ||
 
-Some issues with `R2010b` have been reported. `R2010b` can take longer to initialize which means that the default timeout of 60 seconds for connecting the proxy smay not be enough. If proxy timeout is encountered with `R2010b` please use the `RemoteMatlabProxyFactory.getProxy(long timeout)` method and specify a longer timeout. If other problems with `R2010b` are encountered please communicate them via the survey.
+Some issues with `R2010b` have been reported. `R2010b` can take longer to initialize which means that the default timeout of 60 seconds for connecting the proxy smay not be enough. If proxy timeout is encountered with `R2010b` please use the [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/RemoteMatlabProxyFactory.html#getProxy(long) RemoteMatlabProxyFactory.getProxy(long timeout)] method and specify a longer timeout. If other problems with `R2010b` are encountered please communicate them via the survey.
 
 It is strongly suspected that matlabcontrol will work for `R2007a` to `R2010b` on all of the above operating systems; however, only the cells marked with `Yes` have been confirmed. Older versions of MATLAB have also been known to work but are not shown in the above table. *No effort is (or will be) made to ensure compatibility with versions prior to `R2007a`.*
 
