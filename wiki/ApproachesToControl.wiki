@@ -20,6 +20,8 @@ This approach is for those that want to control a MATLAB session (or multiple se
 
   * Bowen Hui from the University of Toronto [http://www.cs.utoronto.ca/~bowen/code/code.html#matjav wrote code] that uses Kamin Whitehouse's code to allow for controlling MATLAB from Java. Like the code on this website, his code can control MATLAB from a Java program that is not launched from within MATLAB. However, his code requires configuration on the part of the user, and it writes the results to a text file as opposed to returning those results as Java objects.
 
+ * Maksim Khadkevich created [http://jamal.sourceforge.net/ JAMAL (JAva MAtlab Linking)] can control a MATLAB GUI from an external Java application. However, unlike matlabcontrol additional [http://jamal.sourceforge.net/documentation.shtml setup] is required.
+
   * Simon Caton from Cardiff University has a [http://beryl.cs.cf.ac.uk/Web/Guides/Java%20Control%20of%20Matlab/1.php walk through] on controlling MATLAB and the results it returns.
 
   * Debprakash Patnaik from Virginia Tech wrote a [http://debprakash.blogspot.com/2007/01/java-matlab-connection-11-jan-2007-see.html blog post] and some [http://debprakash.googlepages.com/MatlabInterface.zip simple example code] on how to call MATLAB from Java from inside of MATLAB. The code is much less sophisticated than the above solutions.
@@ -27,8 +29,6 @@ This approach is for those that want to control a MATLAB session (or multiple se
   * Aguido Horatio Davis from Griffith University wrote a [http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.133.1715&rep=rep1&type=pdf paper] where he describes a framework for controlling MATLAB from Java. Extensive code is provided in the paper beginning on page 117, although many previous pages describe the approach.
 
   * David Allen from the Virginia Polytechnic Institute addresses controlling MATLAB from Java in his [http://institutes.lanl.gov/ei/pdf_files/dallenThesis1.pdf thesis]. His description on the process is on page 32, which is actually page 38 of the PDF.
-
- * Maksim Khadkevich created [http://jamal.sourceforge.net/ JAMAL (JAva MAtlab Linking)] can control a MATLAB GUI from an external Java application. However, unlike matlabcontrol additional [http://jamal.sourceforge.net/documentation.shtml setup] is required.
 
 = Approach 2: Controlling the MATLAB engine =
 
