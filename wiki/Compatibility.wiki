@@ -4,12 +4,12 @@
 
 Below is a chart of known compatibility:
 
-||              || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||`R2007a`||
-|| OS X 10.5    ||    Yes   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
-|| OS X 10.6    ||    ?   ||    Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
-|| Windows XP   ||   Yes   ||    Yes  ||   Yes  ||    Yes   ||   Yes  ||    Yes   ||   Yes  ||   Yes   ||
-|| Windows Vista||    Yes   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
-|| Windows 7    ||    ?   ||    Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||    ?   ||
+||              || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||`R2007a`||
+|| OS X 10.5    || ? ||    Yes   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||    ?   ||
+|| OS X 10.6    || ? ||    ?   ||    Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
+|| Windows XP   || ? ||   Yes   ||    Yes  ||   Yes  ||    Yes   ||   Yes  ||    Yes   ||   Yes  ||   Yes   ||
+|| Windows Vista|| ? ||    Yes   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||   Yes  ||
+|| Windows 7    ||  ? ||   ?   ||    Yes  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||    ?   ||
 
 Some issues with `R2010b` have been reported. `R2010b` can take longer to initialize which means that the default timeout of 60 seconds for connecting the proxy may not be enough. If proxy timeout is encountered with `R2010b` please use [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/RemoteMatlabProxyFactory.html#getProxy(long) RemoteMatlabProxyFactory's getProxy(long timeout) method] and specify a longer timeout. If other problems with `R2010b` are encountered please communicate them via the survey.
 
