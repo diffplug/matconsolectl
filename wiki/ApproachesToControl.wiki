@@ -46,6 +46,8 @@ This approach is to use MATLAB purely for computation. It does not allow for use
 
   * Erlangung der Würde from the Technischen Universität Carolo‐Wilhelmina zu Braunschweig describes another [http://rzbl04.biblio.etc.tu-bs.de:8080/docportal/servlets/MCRFileNodeServlet/DocPortal_derivate_00005520/MeMo.pdf;jsessionid=68EFECE2491240789B79447B2803F3DE solution]. The relevant pages appear to be 91 and 92, but the entire document is in German, so I'm less than certain.
 
+ * [http://ptolemy.berkeley.edu/ptolemyII/ptIIfaq.htm#simulink Ptolemy II] contains the ability to interact with the MATLAB engine. Zoltan Kemenczy at Research In Motion, Ltd. added this [http://ptolemy.eecs.berkeley.edu/ptolemyII/ptIIlatest/ptII/ptolemy/matlab/matlab.htm functionality].
+
   * A commercial approach is to use [http://j-integra.intrinsyc.com/ JIntegra]. They have a [http://j-integra.intrinsyc.com/support/com/doc/other_examples/Matlab.htm web page] on how to use their product with MATLAB.
 
   * Another, now defunct, commercial approach is called MatlabServerAgent. Their website no longer exists, but it can be found [http://web.archive.org/web/20040318183559/http://www.matlabserveragent.com here] on the Internet Archive.
