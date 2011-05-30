@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -43,120 +43,120 @@ package matlabcontrol;
 @Deprecated
 public class RemoteMatlabProxyController
 {
-	/**
-	 * The factory used to create the proxy.
-	 */
-	private static RemoteMatlabProxyFactory _factory;
-	
-	/**
-	 * The proxy which the static methods are being relayed to.
-	 */
-	private static RemoteMatlabProxy _proxy;
-	
-	/**
-	 * This class cannot be constructed, all methods of use are static.
-	 */
-	private RemoteMatlabProxyController() {}
-	
-	/**
-	 * Sets the variable to the given <code>value</code>.
-	 * 
-	 * @param variableName
-	 * @param value
-	 * 
-	 * @throws MatlabInvocationException
-	 */
-	public static void setVariable(String variableName, Object value) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			_proxy.setVariable(variableName, value);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
-	/**
-	 * Gets the value of the variable named </code>variableName</code> from MATLAB.
-	 * 
-	 * @param variableName
-	 * 
-	 * @return value
-	 * 
-	 * @throws MatlabInvocationException
-	 */
-	public static Object getVariable(String variableName) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			return _proxy.getVariable(variableName);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
-	/**
-	 * Create a connection to MATLAB. If a connection already exists this
-	 * method will not do anything. This must be called before any methods
-	 * that control MATLAB are called, or those methods will throw runtime
-	 * exceptions.
-	 * 
-	 * @throws MatlabConnectionException
-	 */
-	public static void createConnection() throws MatlabConnectionException
-	{
-		if(!RemoteMatlabProxyController.isConnected())
-		{
-			_factory = new RemoteMatlabProxyFactory();
-			
-			_factory.addConnectionListener(new MatlabConnectionListener()
-			{
-				public void connectionEstablished(RemoteMatlabProxy proxy)
-				{
-					_proxy = proxy;
-				}
-	
-				public void connectionLost(RemoteMatlabProxy proxy)
-				{
-					_proxy = null;
-				}
-			});
-			
-			_proxy = _factory.getProxy();
-		}
-	}
-	
-	/**
-	 * Returns whether or not this controller is connected to MATLAB.
-	 *
-	 * @return if connected to MATLAB
-	 */
-	public static boolean isConnected()
-	{
-		return (_proxy != null && _proxy.isConnected());
-	}
-	
-	/**
-	 * Exits MATLAB.
-	 * 
-	 * @throws MatlabInvocationException 
-	 */
-	public static void exit() throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			_proxy.exit();
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
+    /**
+     * The factory used to create the proxy.
+     */
+    private static RemoteMatlabProxyFactory _factory;
+    
+    /**
+     * The proxy which the static methods are being relayed to.
+     */
+    private static RemoteMatlabProxy _proxy;
+    
+    /**
+     * This class cannot be constructed, all methods of use are static.
+     */
+    private RemoteMatlabProxyController() {}
+    
+    /**
+     * Sets the variable to the given <code>value</code>.
+     * 
+     * @param variableName
+     * @param value
+     * 
+     * @throws MatlabInvocationException
+     */
+    public static void setVariable(String variableName, Object value) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            _proxy.setVariable(variableName, value);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
+    /**
+     * Gets the value of the variable named </code>variableName</code> from MATLAB.
+     * 
+     * @param variableName
+     * 
+     * @return value
+     * 
+     * @throws MatlabInvocationException
+     */
+    public static Object getVariable(String variableName) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            return _proxy.getVariable(variableName);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
+    /**
+     * Create a connection to MATLAB. If a connection already exists this
+     * method will not do anything. This must be called before any methods
+     * that control MATLAB are called, or those methods will throw runtime
+     * exceptions.
+     * 
+     * @throws MatlabConnectionException
+     */
+    public static void createConnection() throws MatlabConnectionException
+    {
+        if(!RemoteMatlabProxyController.isConnected())
+        {
+            _factory = new RemoteMatlabProxyFactory();
+            
+            _factory.addConnectionListener(new MatlabConnectionListener()
+            {
+                public void connectionEstablished(RemoteMatlabProxy proxy)
+                {
+                    _proxy = proxy;
+                }
+    
+                public void connectionLost(RemoteMatlabProxy proxy)
+                {
+                    _proxy = null;
+                }
+            });
+            
+            _proxy = _factory.getProxy();
+        }
+    }
+    
+    /**
+     * Returns whether or not this controller is connected to MATLAB.
+     *
+     * @return if connected to MATLAB
+     */
+    public static boolean isConnected()
+    {
+        return (_proxy != null && _proxy.isConnected());
+    }
+    
+    /**
+     * Exits MATLAB.
+     * 
+     * @throws MatlabInvocationException 
+     */
+    public static void exit() throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            _proxy.exit();
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
     /**
      * Evaluates a command in MATLAB. The result of this command will not be
      * returned.
@@ -168,18 +168,18 @@ public class RemoteMatlabProxyController
      * 
      * @see #returningEval(String, int)
      */
-	public static void eval(String command) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			_proxy.eval(command);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
+    public static void eval(String command) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            _proxy.eval(command);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
     /**
      * Evaluates a command in MATLAB. The result of this command can be
      * returned.
@@ -205,18 +205,18 @@ public class RemoteMatlabProxyController
      * @return result of MATLAB eval
      * @throws MatlabInvocationException 
      */
-	public static Object returningEval(String command, int returnCount) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			return _proxy.returningEval(command, returnCount);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
+    public static Object returningEval(String command, int returnCount) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            return _proxy.returningEval(command, returnCount);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -235,18 +235,18 @@ public class RemoteMatlabProxyController
      * @see #returningFeval(String, Object[], int)
      * @see #returningFeval(String, Object[])
      */
-	public static void feval(String functionName, Object[] args) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			_proxy.feval(functionName, args);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
+    public static void feval(String functionName, Object[] args) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            _proxy.feval(functionName, args);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -274,18 +274,18 @@ public class RemoteMatlabProxyController
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
      */
-	public static Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			return _proxy.returningFeval(functionName, args);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}	
-	
+    public static Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            return _proxy.returningFeval(functionName, args);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }    
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -318,18 +318,18 @@ public class RemoteMatlabProxyController
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
      */
-	public static Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
-	{
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			return _proxy.returningFeval(functionName, args, returnCount);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
-	
+    public static Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+    {
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            return _proxy.returningFeval(functionName, args, returnCount);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
+    
     /**
      * Allows for enabling a diagnostic mode that will show in MATLAB each time
      * a Java method that calls into MATLAB is invoked.
@@ -337,15 +337,15 @@ public class RemoteMatlabProxyController
      * @param echo
      * @throws MatlabInvocationException 
      */
-	public static void setEchoEval(boolean echo) throws MatlabInvocationException
-	{		
-		if(RemoteMatlabProxyController.isConnected())
-		{
-			_proxy.setEchoEval(echo);
-		}
-		else
-		{
-			throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
-		}
-	}
+    public static void setEchoEval(boolean echo) throws MatlabInvocationException
+    {        
+        if(RemoteMatlabProxyController.isConnected())
+        {
+            _proxy.setEchoEval(echo);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.CONTROLLER_NO_CONNECTION_MSG);
+        }
+    }
 }

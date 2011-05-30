@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -51,29 +51,29 @@ import java.rmi.RemoteException;
  */
 interface MatlabInternalProxy extends Remote
 {
-	public void exit() throws RemoteException, MatlabInvocationException;
-	
-	public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException;
+    public void exit() throws RemoteException, MatlabInvocationException;
+    
+    public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException;
 
-	public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException;
-	
-	public void eval(String command) throws RemoteException, MatlabInvocationException;
-	
-	public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
-	
-	public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
-	
-	public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException;
-	
-	public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
+    public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException;
+    
+    public void eval(String command) throws RemoteException, MatlabInvocationException;
+    
+    public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+    
+    public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+    
+    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException;
+    
+    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
 
-	public void setEchoEval(boolean echo) throws RemoteException, MatlabInvocationException;
-	
-	/**
-	 * This method does nothing. It is used internally to check if a connection
-	 * is still active.
-	 * 
-	 * @throws RemoteException
-	 */
-	public void checkConnection() throws RemoteException;
+    public void setEchoEval(boolean echo) throws RemoteException, MatlabInvocationException;
+    
+    /**
+     * This method does nothing. It is used internally to check if a connection
+     * is still active.
+     * 
+     * @throws RemoteException
+     */
+    public void checkConnection() throws RemoteException;
 }

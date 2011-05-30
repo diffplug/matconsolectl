@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -35,15 +35,15 @@ package matlabcontrol;
  */
 public class MatlabConnectionException extends Exception
 {
-	private static final long serialVersionUID = 2463872677611859435L;
+    private static final long serialVersionUID = 2463872677611859435L;
 
-	MatlabConnectionException(String msg)
-	{
-		super(msg);
-	}
-	
-	MatlabConnectionException(String msg, Throwable cause)
-	{
-		super(msg, cause);
-	}
+    MatlabConnectionException(String msg)
+    {
+        super(msg);
+    }
+    
+    MatlabConnectionException(String msg, Throwable cause)
+    {
+        super(msg, cause);
+    }
 }

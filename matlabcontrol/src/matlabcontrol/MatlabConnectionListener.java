@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,18 +39,18 @@ package matlabcontrol;
  */
 public interface MatlabConnectionListener
 {
-	/**
-	 * Called when the connection to the session of MATLAB launched has been
-	 * established.
-	 * 
-	 * @param proxy the proxy created when the connection was established
-	 */
-	public void connectionEstablished(RemoteMatlabProxy proxy);
-	
-	/**
-	 * Called when the connection to the session of MATLAB has been lost.
-	 * 
-	 * @param proxy the proxy that is no longer connected
-	 */
-	public void connectionLost(RemoteMatlabProxy proxy);
+    /**
+     * Called when the connection to the session of MATLAB launched has been
+     * established.
+     * 
+     * @param proxy the proxy created when the connection was established
+     */
+    public void connectionEstablished(RemoteMatlabProxy proxy);
+    
+    /**
+     * Called when the connection to the session of MATLAB has been lost.
+     * 
+     * @param proxy the proxy that is no longer connected
+     */
+    public void connectionLost(RemoteMatlabProxy proxy);
 }

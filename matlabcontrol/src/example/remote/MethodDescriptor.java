@@ -1,7 +1,7 @@
 package example.remote;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -36,100 +36,100 @@ package example.remote;
  */
 class MethodDescriptor
 {
-	/**
-	 * Method signature
-	 */
-	public final String signature;
-	
-	/**
-	 * Description of method.
-	 */
-	public final String message;
-	
-	/**
-	 * Text that surrounds the border of the text input field.
-	 */
-	public final String stringInputName;
-	
-	/**
-	 * Text that surrounds the border of the arguments input field.
-	 */
-	public final String argsInputName;
-	
-	/**
-	 * Whether the return count field is enabled.
-	 */
-	public final boolean returnCountEnabled;
-	
-	/**
-	 * Number of entries enabled in the argument input field.
-	 */
-	public final int argsInputNumberEnabled;
-	
-	public MethodDescriptor(String signature, String message,
-					 String stringInputName, String argsInputName,
-					 boolean returnCountEnabled, int argsInputNumberEnabled)
-	{
-		this.signature = signature;
-		this.message = message;
-		
-		this.stringInputName = stringInputName;
-		this.argsInputName = argsInputName;
-		
-		this.returnCountEnabled = returnCountEnabled;
-		this.argsInputNumberEnabled = argsInputNumberEnabled;
-	}
-	
-	/**
-	 * Return signature as the description so that this is what will
-	 * appear in the drop down list.
-	 */
-	public String toString()
-	{
-		return signature;
-	}
-	
-	/**
-	 * Descriptions and signatures of the methods shown off in the demo.
-	 */
-	private static final String	
-	EVAL_MSG =
-	"Evaluates a command in MATLAB. The result of this command will not be returned. \n\n" +
+    /**
+     * Method signature
+     */
+    public final String signature;
+    
+    /**
+     * Description of method.
+     */
+    public final String message;
+    
+    /**
+     * Text that surrounds the border of the text input field.
+     */
+    public final String stringInputName;
+    
+    /**
+     * Text that surrounds the border of the arguments input field.
+     */
+    public final String argsInputName;
+    
+    /**
+     * Whether the return count field is enabled.
+     */
+    public final boolean returnCountEnabled;
+    
+    /**
+     * Number of entries enabled in the argument input field.
+     */
+    public final int argsInputNumberEnabled;
+    
+    public MethodDescriptor(String signature, String message,
+                     String stringInputName, String argsInputName,
+                     boolean returnCountEnabled, int argsInputNumberEnabled)
+    {
+        this.signature = signature;
+        this.message = message;
+        
+        this.stringInputName = stringInputName;
+        this.argsInputName = argsInputName;
+        
+        this.returnCountEnabled = returnCountEnabled;
+        this.argsInputNumberEnabled = argsInputNumberEnabled;
+    }
+    
+    /**
+     * Return signature as the description so that this is what will
+     * appear in the drop down list.
+     */
+    public String toString()
+    {
+        return signature;
+    }
+    
+    /**
+     * Descriptions and signatures of the methods shown off in the demo.
+     */
+    private static final String    
+    EVAL_MSG =
+    "Evaluates a command in MATLAB. The result of this command will not be returned. \n\n" +
     "This is equivalent to MATLAB's eval(['command here']).",
     
     EVAL_SIGNATURE =
     "eval(String command)",
-	
-	RETURNING_EVAL_MSG = 
-	"Evaluates a command in MATLAB. The result of this command can be returned.\n\n" +
-	"This is equivalent to MATLAB's eval(['command']).\n\n" +
-	"In order for the result of this command to be returned the " +
-	"number of arguments to be returned must be specified by " +
-	"returnCount. If the command you are evaluating is a MATLAB " +
-	"function you can determine the amount of arguments it returns by using " +
-	"the nargout function in the MATLAB Command Window. If it " +
-	"returns -1 that means the function returns a variable number of " +
-	"arguments based on what you pass in. In that case, you will need to " +
-	"manually determine the number of arguments returned. If the number of " +
-	"arguments returned differs from returnCount then either " +
-	"null or an empty String will be returned.",
-	
-	RETURNING_EVAL_SIGNATURE =
-	"returningEval(String command, int returnCount)",
-	
-	FEVAL_MSG =
-	"Calls a MATLAB function with the name functionName. " +
-	"Arguments to the function may be provided as args, if you " +
-	"wish to call the function with no arguments pass in null. " +
-	"The result of this command will not be returned.\n\n" +
-	"The Objects in the array will be converted into MATLAB " + 
-	"equivalents as appropriate. Importantly, this means that any " + 
-	"String will be converted to a MATLAB char array, not a " + 
-	"variable name.",
-	
-	FEVAL_SIGNATURE = 
-	"feval(String functionName, Object[] args)",
-			
+    
+    RETURNING_EVAL_MSG = 
+    "Evaluates a command in MATLAB. The result of this command can be returned.\n\n" +
+    "This is equivalent to MATLAB's eval(['command']).\n\n" +
+    "In order for the result of this command to be returned the " +
+    "number of arguments to be returned must be specified by " +
+    "returnCount. If the command you are evaluating is a MATLAB " +
+    "function you can determine the amount of arguments it returns by using " +
+    "the nargout function in the MATLAB Command Window. If it " +
+    "returns -1 that means the function returns a variable number of " +
+    "arguments based on what you pass in. In that case, you will need to " +
+    "manually determine the number of arguments returned. If the number of " +
+    "arguments returned differs from returnCount then either " +
+    "null or an empty String will be returned.",
+    
+    RETURNING_EVAL_SIGNATURE =
+    "returningEval(String command, int returnCount)",
+    
+    FEVAL_MSG =
+    "Calls a MATLAB function with the name functionName. " +
+    "Arguments to the function may be provided as args, if you " +
+    "wish to call the function with no arguments pass in null. " +
+    "The result of this command will not be returned.\n\n" +
+    "The Objects in the array will be converted into MATLAB " + 
+    "equivalents as appropriate. Importantly, this means that any " + 
+    "String will be converted to a MATLAB char array, not a " + 
+    "variable name.",
+    
+    FEVAL_SIGNATURE = 
+    "feval(String functionName, Object[] args)",
+            
     RETURNING_AUTO_FEVAL_MSG = 
     "Calls a MATLAB function with the name functionName. " + 
     "Arguments to the function may be provided as args, if you " +
@@ -182,31 +182,31 @@ class MethodDescriptor
     
     SET_VARIABLE_SIGNATURE = 
     "setVariable(String variableName, Object value)";
-	
-	/**
-	 * Indices of entries in the array of methods.
-	 */
-	public static final int EVAL_INDEX = 0,
-							RETURNING_EVAL_INDEX = 1,
-							FEVAL_INDEX = 2,
-							RETURNING_AUTO_FEVAL_INDEX = 3,
-							RETURNING_FEVAL_INDEX = 4,
-							SET_VARIABLE_INDEX = 5,
-							GET_VARIABLE_INDEX = 6,
-							METHODS_ARRAY_SIZE = GET_VARIABLE_INDEX + 1;
-	
-	/**
-	 * The methods in the API that are part of the demo.
-	 */
-	public static final MethodDescriptor[] METHODS = new MethodDescriptor[METHODS_ARRAY_SIZE];
-	static
-	{
-		METHODS[EVAL_INDEX] = new MethodDescriptor(EVAL_SIGNATURE, EVAL_MSG, "command", "args (disabled)", false, 0);
-		METHODS[RETURNING_EVAL_INDEX] = new MethodDescriptor(RETURNING_EVAL_SIGNATURE, RETURNING_EVAL_MSG, "command", "args (disabled)", true, 0);
-		METHODS[FEVAL_INDEX] = new MethodDescriptor(FEVAL_SIGNATURE, FEVAL_MSG, "functionName", "args", false, ArrayPanel.NUM_ENTRIES);
-		METHODS[RETURNING_AUTO_FEVAL_INDEX] = new MethodDescriptor(RETURNING_AUTO_FEVAL_SIGNATURE, RETURNING_AUTO_FEVAL_MSG, "functionName", "args", false, ArrayPanel.NUM_ENTRIES);
-		METHODS[RETURNING_FEVAL_INDEX] = new MethodDescriptor(RETURNING_FEVAL_SIGNATURE, RETURNING_FEVAL_MSG, "functionName", "args", true, ArrayPanel.NUM_ENTRIES);
-		METHODS[SET_VARIABLE_INDEX] = new MethodDescriptor(SET_VARIABLE_SIGNATURE, SET_VARIABLE_MSG, "variableName", "value", false, 1);
-		METHODS[GET_VARIABLE_INDEX] = new MethodDescriptor(GET_VARIABLE_SIGNATURE, GET_VARIABLE_MSG, "variableName", "args (disabled)", false, 0);
-	}
+    
+    /**
+     * Indices of entries in the array of methods.
+     */
+    public static final int EVAL_INDEX = 0,
+                            RETURNING_EVAL_INDEX = 1,
+                            FEVAL_INDEX = 2,
+                            RETURNING_AUTO_FEVAL_INDEX = 3,
+                            RETURNING_FEVAL_INDEX = 4,
+                            SET_VARIABLE_INDEX = 5,
+                            GET_VARIABLE_INDEX = 6,
+                            METHODS_ARRAY_SIZE = GET_VARIABLE_INDEX + 1;
+    
+    /**
+     * The methods in the API that are part of the demo.
+     */
+    public static final MethodDescriptor[] METHODS = new MethodDescriptor[METHODS_ARRAY_SIZE];
+    static
+    {
+        METHODS[EVAL_INDEX] = new MethodDescriptor(EVAL_SIGNATURE, EVAL_MSG, "command", "args (disabled)", false, 0);
+        METHODS[RETURNING_EVAL_INDEX] = new MethodDescriptor(RETURNING_EVAL_SIGNATURE, RETURNING_EVAL_MSG, "command", "args (disabled)", true, 0);
+        METHODS[FEVAL_INDEX] = new MethodDescriptor(FEVAL_SIGNATURE, FEVAL_MSG, "functionName", "args", false, ArrayPanel.NUM_ENTRIES);
+        METHODS[RETURNING_AUTO_FEVAL_INDEX] = new MethodDescriptor(RETURNING_AUTO_FEVAL_SIGNATURE, RETURNING_AUTO_FEVAL_MSG, "functionName", "args", false, ArrayPanel.NUM_ENTRIES);
+        METHODS[RETURNING_FEVAL_INDEX] = new MethodDescriptor(RETURNING_FEVAL_SIGNATURE, RETURNING_FEVAL_MSG, "functionName", "args", true, ArrayPanel.NUM_ENTRIES);
+        METHODS[SET_VARIABLE_INDEX] = new MethodDescriptor(SET_VARIABLE_SIGNATURE, SET_VARIABLE_MSG, "variableName", "value", false, 1);
+        METHODS[GET_VARIABLE_INDEX] = new MethodDescriptor(GET_VARIABLE_SIGNATURE, GET_VARIABLE_MSG, "variableName", "args (disabled)", false, 0);
+    }
 }
