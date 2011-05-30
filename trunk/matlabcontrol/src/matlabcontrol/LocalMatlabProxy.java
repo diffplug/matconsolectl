@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -48,26 +48,26 @@ package matlabcontrol;
  */
 public final class LocalMatlabProxy
 {
-	/**
-	 * The underlying wrapper to JMI.
-	 */
-	private final static JMIWrapper _wrapper = new JMIWrapper();
+    /**
+     * The underlying wrapper to JMI.
+     */
+    private final static JMIWrapper _wrapper = new JMIWrapper();
 
-	/**
-	 * Private constructor so that this class cannot be constructed.
-	 */
-	private LocalMatlabProxy() {}
-	
+    /**
+     * Private constructor so that this class cannot be constructed.
+     */
+    private LocalMatlabProxy() {}
+    
     /**
      * Exits MATLAB.
      * 
      * @throws MatlabInvocationException 
      */
-	public static void exit() throws MatlabInvocationException
-	{
-		_wrapper.exit();
-	}
-	
+    public static void exit() throws MatlabInvocationException
+    {
+        _wrapper.exit();
+    }
+    
     /**
      * Evaluates a command in MATLAB. The result of this command will not be
      * returned.
@@ -80,10 +80,10 @@ public final class LocalMatlabProxy
      * 
      * @see #returningEval(String, int)
      */
-	public static void eval(String command) throws MatlabInvocationException
-	{
-		_wrapper.eval(command);
-	}
+    public static void eval(String command) throws MatlabInvocationException
+    {
+        _wrapper.eval(command);
+    }
 
     /**
      * Evaluates a command in MATLAB. The result of this command can be
@@ -111,11 +111,11 @@ public final class LocalMatlabProxy
      * 
      * @return result of MATLAB eval
      */
-	public static Object returningEval(String command, int returnCount) throws MatlabInvocationException
-	{
-		return _wrapper.returningEval(command, returnCount);
-	}
-	
+    public static Object returningEval(String command, int returnCount) throws MatlabInvocationException
+    {
+        return _wrapper.returningEval(command, returnCount);
+    }
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -134,11 +134,11 @@ public final class LocalMatlabProxy
      * @see #returningFeval(String, Object[], int)
      * @see #returningFeval(String, Object[])
      */
-	public static void feval(String functionName, Object[] args) throws MatlabInvocationException
-	{
-		_wrapper.feval(functionName, args);
-	}
-	
+    public static void feval(String functionName, Object[] args) throws MatlabInvocationException
+    {
+        _wrapper.feval(functionName, args);
+    }
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -167,11 +167,11 @@ public final class LocalMatlabProxy
      * 
      * @throws MatlabInvocationException 
      */
-	public static Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
-	{
-		return _wrapper.returningFeval(functionName, args);
-	}
-	
+    public static Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+    {
+        return _wrapper.returningFeval(functionName, args);
+    }
+    
     /**
      * Calls a MATLAB function with the name <code>functionName</code>.
      * Arguments to the function may be provided as <code>args</code>, if you
@@ -205,38 +205,38 @@ public final class LocalMatlabProxy
      * 
      * @throws MatlabInvocationException 
      */
-	public static Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
-	{
-		return _wrapper.returningFeval(functionName, args, returnCount);
-	}
-	
-	/**
-	 * Sets the variable to the given <code>value</code>.
-	 * 
-	 * @param variableName
-	 * @param value
-	 * 
-	 * @throws MatlabInvocationException
-	 */
-	public static void setVariable(String variableName, Object value) throws MatlabInvocationException
-	{
-		_wrapper.setVariable(variableName, value);
-	}
-	
-	/**
-	 * Gets the value of the variable named </code>variableName</code> from MATLAB.
-	 * 
-	 * @param variableName
-	 * 
-	 * @return value
-	 * 
-	 * @throws MatlabInvocationException
-	 */
-	public static Object getVariable(String variableName) throws MatlabInvocationException
-	{
-		return _wrapper.getVariable(variableName);
-	}
-	
+    public static Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+    {
+        return _wrapper.returningFeval(functionName, args, returnCount);
+    }
+    
+    /**
+     * Sets the variable to the given <code>value</code>.
+     * 
+     * @param variableName
+     * @param value
+     * 
+     * @throws MatlabInvocationException
+     */
+    public static void setVariable(String variableName, Object value) throws MatlabInvocationException
+    {
+        _wrapper.setVariable(variableName, value);
+    }
+    
+    /**
+     * Gets the value of the variable named </code>variableName</code> from MATLAB.
+     * 
+     * @param variableName
+     * 
+     * @return value
+     * 
+     * @throws MatlabInvocationException
+     */
+    public static Object getVariable(String variableName) throws MatlabInvocationException
+    {
+        return _wrapper.getVariable(variableName);
+    }
+    
     /**
      * Allows for enabling a diagnostic mode that will show in MATLAB each time
      * a Java method that calls into MATLAB is invoked.
@@ -245,8 +245,8 @@ public final class LocalMatlabProxy
      * 
      * @throws MatlabInvocationException 
      */
-	public static void setEchoEval(boolean echo) throws MatlabInvocationException
-	{
-		_wrapper.setEchoEval(echo);
-	}
+    public static void setEchoEval(boolean echo) throws MatlabInvocationException
+    {
+        _wrapper.setEchoEval(echo);
+    }
 }

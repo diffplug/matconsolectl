@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,59 +41,59 @@ import java.rmi.server.UnicastRemoteObject;
  */
 class MatlabInternalProxyImpl extends UnicastRemoteObject implements MatlabInternalProxy
 {
-	private static final long serialVersionUID = 1L;
-	
-	private final JMIWrapper _wrapper;
-	
-	public MatlabInternalProxyImpl(JMIWrapper wrapper) throws RemoteException
-	{
-		_wrapper = wrapper;
-	}
-	
-	public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException
-	{
-		_wrapper.setVariable(variableName, value);
-	}
-	
-	public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException
-	{
-		return _wrapper.getVariable(variableName);
-	}
-	
-	public void exit() throws RemoteException, MatlabInvocationException
-	{
-		_wrapper.exit();
-	}
+    private static final long serialVersionUID = 1L;
+    
+    private final JMIWrapper _wrapper;
+    
+    public MatlabInternalProxyImpl(JMIWrapper wrapper) throws RemoteException
+    {
+        _wrapper = wrapper;
+    }
+    
+    public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException
+    {
+        _wrapper.setVariable(variableName, value);
+    }
+    
+    public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException
+    {
+        return _wrapper.getVariable(variableName);
+    }
+    
+    public void exit() throws RemoteException, MatlabInvocationException
+    {
+        _wrapper.exit();
+    }
 
-	public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException
-	{
-		return _wrapper.returningFeval(command, args);
-	}
-	
-	public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException
-	{
-		return _wrapper.returningFeval(command, args, returnCount);
-	}
-	
-	public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException
-	{	
-		return _wrapper.returningEval(command, returnCount);
-	}
+    public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException
+    {
+        return _wrapper.returningFeval(command, args);
+    }
+    
+    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException
+    {
+        return _wrapper.returningFeval(command, args, returnCount);
+    }
+    
+    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException
+    {    
+        return _wrapper.returningEval(command, returnCount);
+    }
 
-	public void eval(String command) throws RemoteException, MatlabInvocationException
-	{
-		_wrapper.eval(command);
-	}
+    public void eval(String command) throws RemoteException, MatlabInvocationException
+    {
+        _wrapper.eval(command);
+    }
 
-	public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException
-	{
-		_wrapper.feval(command, args);
-	}
+    public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException
+    {
+        _wrapper.feval(command, args);
+    }
 
-	public void setEchoEval(boolean echo) throws RemoteException
-	{
-		_wrapper.setEchoEval(echo);
-	}
-	
-	public void checkConnection() throws RemoteException { }
+    public void setEchoEval(boolean echo) throws RemoteException
+    {
+        _wrapper.setEchoEval(echo);
+    }
+    
+    public void checkConnection() throws RemoteException { }
 }

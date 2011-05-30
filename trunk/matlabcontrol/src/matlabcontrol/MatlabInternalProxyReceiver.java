@@ -1,7 +1,7 @@
 package matlabcontrol;
 
 /*
- * Copyright (c) 2010, Joshua Kaplan
+ * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -39,5 +39,5 @@ import java.rmi.RemoteException;
  */
 interface MatlabInternalProxyReceiver extends Remote
 {
-	public void registerControl(String proxyID, MatlabInternalProxy internalProxy) throws RemoteException;
+    public void registerControl(String proxyID, MatlabInternalProxy internalProxy) throws RemoteException;
 }
