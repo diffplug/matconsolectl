@@ -73,16 +73,16 @@ class RemoteMain extends JFrame
                                 RETURNED_EXCEPTION = "Java Exception";
     
     //Panel/Pane sizes
-    private static final int WIDTH = 600;
-    private static final Dimension CONNECTION_PANEL_SIZE = new Dimension(WIDTH, 70),
-                                   RETURN_PANEL_SIZE = new Dimension(WIDTH, 250),
-                                   METHOD_PANEL_SIZE = new Dimension(WIDTH, 110 + 28 * ArrayPanel.NUM_ENTRIES),
-                                   DESCRIPTION_PANE_SIZE = new Dimension(WIDTH, 200),
-                                   COMMAND_PANEL_SIZE = new Dimension(WIDTH, METHOD_PANEL_SIZE.height +
-                                                                                      DESCRIPTION_PANE_SIZE.height),
-                                   MAIN_PANEL_SIZE = new Dimension(WIDTH, CONNECTION_PANEL_SIZE.height +
-                                                                                   COMMAND_PANEL_SIZE.height + 
-                                                                                   RETURN_PANEL_SIZE.height);
+    private static final int PANEL_WIDTH = 600;
+    private static final Dimension CONNECTION_PANEL_SIZE = new Dimension(PANEL_WIDTH, 70),
+                                   RETURN_PANEL_SIZE = new Dimension(PANEL_WIDTH, 250),
+                                   METHOD_PANEL_SIZE = new Dimension(PANEL_WIDTH, 110 + 28 * ArrayPanel.NUM_ENTRIES),
+                                   DESCRIPTION_PANE_SIZE = new Dimension(PANEL_WIDTH, 200),
+                                   COMMAND_PANEL_SIZE = new Dimension(PANEL_WIDTH, METHOD_PANEL_SIZE.height +
+                                                                                   DESCRIPTION_PANE_SIZE.height),
+                                   MAIN_PANEL_SIZE = new Dimension(PANEL_WIDTH, CONNECTION_PANEL_SIZE.height +
+                                                                                COMMAND_PANEL_SIZE.height + 
+                                                                                RETURN_PANEL_SIZE.height);
     //Factory to create proxy
     private RemoteMatlabProxyFactory _factory;
     

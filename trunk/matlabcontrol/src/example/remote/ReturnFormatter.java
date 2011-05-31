@@ -31,6 +31,7 @@ package example.remote;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Array;
 
 /**
  * Formats returned {@code Object}s and {@code Exception}s from MATLAB.
@@ -56,21 +57,10 @@ class ReturnFormatter
         {
             stringWriter.close();
         }
-        catch (IOException ex) { }
+        catch(IOException ex) { }
 
         return stringWriter.toString();
     }
-    
-    //Class signatures of base type arrays
-    @SuppressWarnings("unchecked")
-    private static final Class BOOLEAN_ARRAY = new boolean[0].getClass(),
-                               DOUBLE_ARRAY = new double[0].getClass(),
-                               FLOAT_ARRAY = new float[0].getClass(),
-                               BYTE_ARRAY = new byte[0].getClass(),
-                               SHORT_ARRAY = new short[0].getClass(),
-                               INT_ARRAY = new int[0].getClass(),
-                               LONG_ARRAY = new long[0].getClass(),
-                               CHAR_ARRAY = new char[0].getClass();
     
     /**
      * Takes in the result from MATLAB and turns it into an easily readable format.
@@ -90,15 +80,14 @@ class ReturnFormatter
      * @param level, pass in 0 to initialize, used recursively
      * @return description
      */
-    @SuppressWarnings("unchecked")
     private static String formatResult(Object result, int level)
     {
-        //Message to the built
-        String msg = "";
+        //Message builder
+        StringBuilder builder = new StringBuilder();
         
         //Tab offset for levels
         String tab = "";
-        for(int i = 0; i < level+1; i++)
+        for(int i = 0; i < level + 1; i++)
         {
             tab += "  ";
         }
@@ -106,104 +95,64 @@ class ReturnFormatter
         //If the result is null
         if(result == null)
         {
-            msg += "null encountered" + "\n";
+            builder.append("null encountered\n");
         }
         //If the result is an array
         else if(result.getClass().isArray())
         {
-            //Check for all of the different types of arrays
-            //For each array type, read out all of the array elements
-            Class classType = result.getClass();
+            Class<?> componentClass = result.getClass().getComponentType();
             
-            if(classType.equals(BOOLEAN_ARRAY))
+            //Primitive array
+            if(componentClass.isPrimitive())
             {
-                boolean[] array = (boolean[]) result;
-                msg += "boolean array, length = " + array.length + "\n";    
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", boolean: " + array[i] + "\n";
+                String componentName = componentClass.toString();
+                int length = Array.getLength(result);
+                
+                builder.append(componentName);
+                builder.append(" array, length = ");
+                builder.append(length);
+                builder.append("\n");
+                
+                for(int i = 0; i < length; i++)
+                {   
+                    builder.append(tab);
+                    builder.append("index ");
+                    builder.append(i);
+                    builder.append(", ");
+                    builder.append(componentName);
+                    builder.append(": ");
+                    builder.append(Array.get(result, i));
+                    builder.append("\n");
                 }
             }
-            else if(classType.equals(DOUBLE_ARRAY))
-            {
-                double[] array = (double[]) result;
-                msg += "double array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", double: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(FLOAT_ARRAY))
-            {
-                float[] array = (float[]) result;
-                msg += "float array, length = " + array.length + "\n";        
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", float: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(BYTE_ARRAY))
-            {
-                byte[] array = (byte[]) result;
-                msg += "byte array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", byte: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(SHORT_ARRAY))
-            {
-                short[] array = (short[]) result;
-                msg += "short array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", short: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(INT_ARRAY))
-            {
-                int[] array = (int[]) result;
-                msg += "int array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", int: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(LONG_ARRAY))
-            {
-                long[] array = (long[]) result;
-                msg += "long array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", long: " + array[i] + "\n";
-                }
-            }
-            else if(classType.equals(CHAR_ARRAY))
-            {
-                char[] array = (char[]) result;
-                msg += "char array, length = " + array.length + "\n";
-                for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", char: " + array[i] + "\n";
-                }
-            }
-            //Otherwise it must be an array of Objects
+            //Object array
             else
             {
                 Object[] array = (Object[]) result;
-                msg += "Object array, length = " + array.length + "\n";
+                
+                builder.append("Object array, length = ");
+                builder.append(array.length);
+                builder.append("\n");
+                
                 for(int i = 0; i < array.length; i++)
-                {
-                    msg += tab + "index " + i + ", " + formatResult(array[i], level+1);
+                {   
+                    builder.append(tab);
+                    builder.append("index ");
+                    builder.append(i);
+                    builder.append(", ");
+                    builder.append(formatResult(array[i], level + 1));
                 }
             }
         }
-        //If an Object and not an Array
+        //If an Object and not an array
         else
-        {
-            msg += result.getClass().getCanonicalName() + ": " + result + "\n";
+        {   
+            builder.append(result.getClass().getCanonicalName());
+            builder.append(": ");
+            builder.append(result);
+            builder.append("\n");
         }
         
-        return msg;
+        return builder.toString();
     }
 }

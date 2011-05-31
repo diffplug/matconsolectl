@@ -65,7 +65,7 @@ class MethodDescriptor
      */
     public final int argsInputNumberEnabled;
     
-    public MethodDescriptor(String signature, String message,
+    private MethodDescriptor(String signature, String message,
                      String stringInputName, String argsInputName,
                      boolean returnCountEnabled, int argsInputNumberEnabled)
     {
