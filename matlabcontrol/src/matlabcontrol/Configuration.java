@@ -34,8 +34,7 @@ import java.net.JarURLConnection;
 import java.net.URL;
 
 /**
- * Contains important configuration information regarding the setup of
- * MATLAB and matlabcontrol.
+ * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -69,19 +68,15 @@ class Configuration
     }
 
     /**
-     * Returns the location or alias of MATLAB on an operating system specific
-     * basis.
+     * Returns the location or alias of MATLAB on an operating system specific basis.
      * <br><br>
-     * For OS X this will be the location, for Windows or Linux this will be
-     * an alias. For any other operating system an exception will be thrown.
+     * For OS X this will be the location, for Windows or Linux this will be an alias. For any other operating system an 
+     * exception will be thrown.
      * 
      * @return MATLAB's location or alias
      * 
-     * @throws MatlabConnectionException thrown if the location of MATLAB
-     *                                      cannot be determined on OS X, or the
-     *                                      alias cannot be determined because
-     *                                      the operating system is not Windows
-     *                                      or Linux
+     * @throws MatlabConnectionException thrown if the location of MATLAB cannot be determined on OS X, or the alias
+     *                                   cannot be determined because the operating system is not Windows or Linux
      */
     static String getMatlabLocation() throws MatlabConnectionException
     {
@@ -109,8 +104,8 @@ class Configuration
     }
     
     /**
-     * Determines the location of the MATLAB executable on OS X.
-     * If multiple versions are found, the last one encountered will be used.
+     * Determines the location of the MATLAB executable on OS X. If multiple versions are found, the last one
+     * encountered will be used.
      * 
      * @return MATLAB's location on OS X
      * 
@@ -148,9 +143,8 @@ class Configuration
     }
     
     /**
-     * Determines the location of this source code. Either it will be the directory
-     * or jar this .class file is in. The location format is then adjusted to be
-     * understood by RMI as a codebase location.
+     * Determines the location of this source code. Either it will be the directory or jar this .class file is in. The
+     * location format is then adjusted to be understood by RMI as a codebase location.
      * 
      * @return directory or jar file this class is in, for RMI
      * 
@@ -166,10 +160,9 @@ class Configuration
     }
     
     /**
-     * Determines the location of this source code. Either it will be the directory
-     * or jar this .class file is in. (That is, the .class file built from compiling
-     * this .java file.) The location format is then adjusted to be compatible with
-     * MATLAB.
+     * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
+     * is, the .class file built from compiling this .java file.) The location format is then adjusted to be compatible
+     * with MATLAB.
      * 
      * @return directory or jar file this class is in, for MATLAB
      * 
@@ -177,7 +170,7 @@ class Configuration
      */
     static String getSupportCodeLocation() throws MatlabConnectionException
     {
-        URL location = RemoteMatlabProxyFactory.class.getProtectionDomain().getCodeSource().getLocation();
+        URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
         String protocol = location.getProtocol();
         String path;
         
@@ -193,7 +186,7 @@ class Configuration
                 throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
                                                     "however, the connection returned was not for a jar", e);
             }
-            catch (IOException e)
+            catch(IOException e)
             {
                 throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
                                                     "however, a connection to the jar cannot be established", e);
@@ -225,5 +218,27 @@ class Configuration
         }
 
         return path;
+    }
+    
+    /**
+     * Determines if JMI is available. This is determined by checking if the class {@code com.mathworks.jmi.Matlab}
+     * exists for this class's class loader.
+     *
+     * @return if JMI exists
+     */
+    static boolean isJMIAvailable()
+    {
+        boolean available;
+        try
+        {
+            Class.forName("com.mathworks.jmi.Matlab", false, Configuration.class.getClassLoader());
+            available = true;
+        }
+        catch(ClassNotFoundException e)
+        {
+            available = false;
+        }
+        
+        return available;
     }
 }

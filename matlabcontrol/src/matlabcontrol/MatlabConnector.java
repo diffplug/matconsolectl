@@ -32,8 +32,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 
 /**
- * This class is used only from inside of the MATLAB JVM. It is responsible for
- * creating proxies and sending them to the receiver over RMI.
+ * This class is used only from inside of the MATLAB JVM. It is responsible for creating proxies and sending them to
+ * the receiver over RMI.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -45,8 +45,8 @@ class MatlabConnector
     private MatlabConnector() { }
     
     /**
-     * Called from MATLAB to create a controller, wrap it in a proxy, and then send it over RMI
-     * to the Java program running in a separate JVM.
+     * Called from MATLAB to create a controller, wrap it in a proxy, and then send it over RMI to the Java program
+     * running in a separate JVM.
      * 
      * @param receiverID the key that binds the receiver in the registry
      * @param proxyID the unique identifier of the proxy being created

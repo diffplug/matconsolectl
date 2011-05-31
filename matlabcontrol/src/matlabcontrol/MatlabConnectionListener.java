@@ -29,8 +29,7 @@ package matlabcontrol;
  */
 
 /**
- * Implement this interface to be informed when a remote connection has been
- * established or lost.
+ * Implement this interface to be informed when a remote connection has been established or lost.
  * 
  * @see RemoteMatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
  * @see RemoteMatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
@@ -40,8 +39,7 @@ package matlabcontrol;
 public interface MatlabConnectionListener
 {
     /**
-     * Called when the connection to the session of MATLAB launched has been
-     * established.
+     * Called when the connection to the session of MATLAB launched has been established.
      * 
      * @param proxy the proxy created when the connection was established
      */

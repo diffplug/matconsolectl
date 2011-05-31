@@ -55,8 +55,7 @@ import matlabcontrol.RemoteMatlabProxy;
 import matlabcontrol.RemoteMatlabProxyFactory;
 
 /**
- * A GUI example to demonstrate the main functionality of controlling
- * a remote session with matlabcontrol.
+ * A GUI example to demonstrate the main functionality of controlling a remote session with matlabcontrol.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -159,6 +158,7 @@ class RemoteMain extends JFrame
             _factory.addConnectionListener(new MatlabConnectionListener()
             {
                 //When the connection is established, store the proxy, update UI
+                @Override
                 public void connectionEstablished(RemoteMatlabProxy proxy)
                 {
                     _proxy = proxy;
@@ -170,6 +170,7 @@ class RemoteMain extends JFrame
                 }
     
                 //When the connection is lost, null the proxy, update UI
+                @Override
                 public void connectionLost(RemoteMatlabProxy proxy)
                 {
                     _proxy = null;
@@ -187,6 +188,7 @@ class RemoteMain extends JFrame
         //Connect to Matlab when the Connect button is pressed
         connectionButton.addActionListener(new ActionListener()
         {
+            @Override
             public void actionPerformed(ActionEvent e)
             {
                 try
@@ -215,6 +217,7 @@ class RemoteMain extends JFrame
              * On window appearance set the minimum size to the same width
              * and 80% of the height.
              */
+            @Override
             public void windowOpened(WindowEvent e)
             {
                 Dimension size = RemoteMain.this.getSize();
@@ -225,6 +228,7 @@ class RemoteMain extends JFrame
             /**
              * When this window closes, if MATLAB is open, close it
              */
+            @Override
             public void windowClosing(WindowEvent e)
             {
                 if(_proxy != null && _proxy.isConnected())
@@ -315,6 +319,7 @@ class RemoteMain extends JFrame
         //Listen for method choices
         methodBox.addActionListener(new ActionListener()
         {
+            @Override
             public void actionPerformed(ActionEvent e)
             {
                 //Get selected method
@@ -355,6 +360,7 @@ class RemoteMain extends JFrame
         //Invoke button action
         _invokeButton.addActionListener(new ActionListener()
         {
+            @Override
             public void actionPerformed(ActionEvent e)
             {
                 //eval(String command)

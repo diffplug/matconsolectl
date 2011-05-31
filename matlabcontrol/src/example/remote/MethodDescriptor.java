@@ -29,8 +29,7 @@ package example.remote;
  */
 
 /**
- * Represents a method in the matlabcontrol API along with
- * information to adjust the GUI.
+ * Represents a method in the matlabcontrol API along with information to adjust the GUI.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -81,9 +80,9 @@ class MethodDescriptor
     }
     
     /**
-     * Return signature as the description so that this is what will
-     * appear in the drop down list.
+     * Return signature as the description so that this is what will appear in the drop down list.
      */
+    @Override
     public String toString()
     {
         return signature;
