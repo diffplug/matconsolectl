@@ -30,7 +30,7 @@ package example.remote;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.util.Vector;
+import java.util.ArrayList;
 
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
@@ -94,7 +94,7 @@ class ArrayPanel extends JPanel
      */
     public Object[] getArray()
     {
-        Vector<Object> entries = new Vector<Object>();
+        ArrayList<Object> entries = new ArrayList<Object>();
         for(int i = 0; i < NUM_ENTRIES; i++)
         {
             if(!_entryFields[i].getText().isEmpty())
@@ -136,8 +136,7 @@ class ArrayPanel extends JPanel
     }
     
     /**
-     * Enable the first <code>n</code> fields for input.
-     * The others are disabled.
+     * Enable the first <code>n</code> fields for input. The others are disabled.
      * 
      * @param n
      */

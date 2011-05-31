@@ -33,8 +33,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 /**
- * Formats returned <code>Object</code>s and <code>Exception</code>s
- * from MATLAB.
+ * Formats returned {@code Object}s and {@code Exception}s from MATLAB.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */

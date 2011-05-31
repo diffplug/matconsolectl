@@ -39,11 +39,10 @@ import com.mathworks.jmi.NativeMatlab;
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
  * <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">MatlabControl</a>.
  * <br><br>
- * This class runs inside of the MATLAB Java Virtual Machine and relies upon
- * the jmi.jar which is distributed with MATLAB in order to send commands to
- * MATLAB and receive results.
+ * This class runs inside of the MATLAB Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
+ * with MATLAB in order to send commands to MATLAB and receive results.
  * <br><br>
- * Only this class and {@link MatlabInvocationException} directly interact with jmi.jar.
+ * Only this class and {@link MatlabInvocationException} directly interact with {@code jmi.jar}.
  *
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -56,9 +55,8 @@ class JMIWrapper
     
     /**
      * A MatlabException that may be thrown during execution of {@link #returningEval(String, int)},
-     * {@link #returningFeval(String, Object[])}, or {@link #returningFeval(String, Object[], int)}.
-     * The exception must be stored as the direction cannot be thrown directly because it is inside
-     * of a Runnable.
+     * {@link #returningFeval(String, Object[])}, or {@link #returningFeval(String, Object[], int)}. The exception must
+     * be stored as the direction cannot be thrown directly because it is inside of a {@link Runnable}.
      */
     private MatlabException _thrownException = null;
 
@@ -94,8 +92,8 @@ class JMIWrapper
     }
     
     /**
-     * Sets the variable to the given value. This is done by storing the variable in Java and then
-     * retrieving it in MATLAB by calling a Java method that will return it.
+     * Sets the variable to the given value. This is done by storing the variable in Java and then retrieving it in
+     * MATLAB by calling a Java method that will return it.
      * 
      * @param variableName
      * @param value
@@ -141,10 +139,9 @@ class JMIWrapper
     }
     
     /**
-     * Evaluates a command in MATLAB. The result of this command will not be
-     * returned.
+     * Evaluates a command in MATLAB. The result of this command will not be returned.
      * <br><br>
-     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
+     * This is equivalent to MATLAB's {@code eval(['command'])}.
      * 
      * @param command the command to be evaluated in MATLAB
      * 
@@ -158,21 +155,16 @@ class JMIWrapper
     }
     
     /**
-     * Evaluates a command in MATLAB. The result of this command can be
-     * returned.
+     * Evaluates a command in MATLAB. The result of this command can be returned.
      * <br><br>
-     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
+     * This is equivalent to MATLAB's {@code eval(['command'])}.
      * <br><br>
-     * In order for the result of this command to be returned the
-     * number of arguments to be returned must be specified by
-     * <code>returnCount</code>. If the command you are evaluating is a MATLAB
-     * function you can determine the amount of arguments it returns by using
-     * the <code>nargout</code> function in the MATLAB Command Window. If it
-     * returns -1 that means the function returns a variable number of
-     * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of arguments returned. If the number of
-     * arguments returned differs from <code>returnCount</code> then either
-     * <code>null</code> or an empty <code>String</code> will be returned.
+     * In order for the result of this command to be returned the number of arguments to be returned must be specified
+     * by {@code returnCount}. If the command you are evaluating is a MATLAB function you can determine the amount of
+     * arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns {@code -1}
+     * that means the function returns a variable number of arguments based on what you pass in. In that case, you will
+     * need to manually determine the number of arguments returned. If the number of arguments returned differs from
+     * {@code returnCount} then either {@code null} or an empty {@code String} will be returned.
      * 
      * @param command the command to be evaluated in MATLAB
      * @param returnCount the number of arguments that will be returned from evaluating the command
@@ -189,18 +181,15 @@ class JMIWrapper
     }
 
     /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
-     * The result of this command will not be returned.
+     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
+     * <code>args</code>, if you wish to call the function with no arguments pass in {@code null}. The result of this
+     * command will not be returned.
      * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
      * 
      * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
+     * @param args the arguments to the function, {@code null} if none
      * 
      * @throws MatlabInvocationException 
      * 
@@ -212,29 +201,22 @@ class JMIWrapper
     }
 
     /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
+     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
+     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
      * <br><br>
-     * The result of this function can be returned. In order for the result of
-     * this function to be returned the number of arguments to be returned must
-     * be specified by <code>returnCount</code>. You can use the 
-     * <code>nargout</code> function in the MATLAB Command Window to determine
-     * the number of arguments that will be returned. If <code>nargout</code>
-     * returns -1 that means the function returns a variable number of
-     * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of arguments returned. If the number of
-     * arguments returned differs from <code>returnCount</code> then either
-     * only some of the items will be returned or <code>null</code> will be
+     * The result of this function can be returned. In order for the result of this function to be returned the number
+     * of arguments to be returned must be specified by {@code returnCount}. You can use the {@code nargout} function in
+     * the MATLAB Command Window to determine the number of arguments that will be returned. If {@code nargout} returns
+     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
+     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
+     * differs from {@code returnCount} then either only some of the items will be returned or {@code null} will be
      * returned.
      * 
      * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
+     * @param args the arguments to the function, {@code null} if none
      * @param returnCount the number of arguments that will be returned from this function
      * 
      * @see #feval(String, Object[])
@@ -287,25 +269,20 @@ class JMIWrapper
     }
     
     /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
+     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
+     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
      * <br><br>
-     * The result of this function can be returned. In order for a function's
-     * return data to be returned to MATLAB it is necessary to know how many
-     * arguments will be returned. This method will attempt to determine that
-     * automatically, but in the case where a function has a variable number of
-     * arguments returned it will only return one of them. To have all of them
-     * returned use {@link #returningFeval(String, Object[], int)} and specify
-     * the number of arguments that will be returned.
+     * The result of this function can be returned. In order for a function's return data to be returned to MATLAB it is
+     * necessary to know how many arguments will be returned. This method will attempt to determine that automatically,
+     * but in the case where a function has a variable number of arguments returned it will only return one of them. To
+     * have all of them returned use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
+     * that will be returned.
      * 
      * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
+     * @param args the arguments to the function, {@code null} if none
      * 
      * @see #feval(String, Object[])
      * @see #returningFeval(String, Object[])
@@ -336,8 +313,8 @@ class JMIWrapper
     }
 
     /**
-     * Allows for enabling a diagnostic mode that will show in MATLAB each time
-     * a Java method that calls into MATLAB is invoked.
+     * Allows for enabling a diagnostic mode that will show in MATLAB each time a Java method that calls into MATLAB is
+     * invoked.
      * 
      * @param echo
      */
@@ -360,10 +337,10 @@ class JMIWrapper
     }
     
     /**
-     * Returns the value returned by MATLAB to {@link #returningFeval(String, Object[], int)}.
-     * Throws a MatlabException if the JMI call threw an exception.
+     * Returns the value returned by MATLAB to {@link #returningFeval(String, Object[], int)}. Throws a
+     * {@link MatlabInvocationException} if the JMI call threw an exception.
      * <br><br>
-     * Returning this operates by pausing the thread until MATLAB returns a value.
+     * This method operates by pausing the thread until MATLAB returns a value.
      * 
      * @return result of MATLAB call
      * 
@@ -399,9 +376,8 @@ class JMIWrapper
     }
 
     /**
-     * Sets the return value from any of the eval or feval commands. In the
-     * case of the non-returning value null is passed in, but it still provides
-     * the functionality of waking up the thread so that {@link #getReturnValue()}
+     * Sets the return value from any of the eval or feval commands. In the case of the non-returning value {@code null}
+     * is passed in, but it still provides the functionality of waking up the thread so that {@link #getReturnValue()}
      * will be able to return.
      * 
      * @param val
