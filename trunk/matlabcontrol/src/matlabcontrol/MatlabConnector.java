@@ -39,10 +39,23 @@ import java.rmi.registry.Registry;
  */
 class MatlabConnector
 {
+    private static JMIWrapper _wrapper = null;
+    private static String _proxyID = null;
+    
     /**
      * Private constructor so this class cannot be constructed.
      */
     private MatlabConnector() { }
+    
+    static JMIWrapper getJMIWrapper()
+    {
+        return _wrapper;
+    }
+    
+    static String getProxyID()
+    {
+        return _proxyID;
+    }
     
     /**
      * Called from MATLAB to create a controller, wrap it in a proxy, and then send it over RMI to the Java program
@@ -55,6 +68,16 @@ class MatlabConnector
      */
     public static void connectFromMatlab(String receiverID, String proxyID) throws MatlabConnectionException
     {
+        if(_wrapper == null)
+        {
+            _wrapper = new JMIWrapper();
+            _proxyID = proxyID;
+        }
+        else
+        {
+            throw new MatlabConnectionException("A connection between MATLAB and Java can only be made once");
+        }
+        
         //Attempt to connect to external Java program and transmit proxy
         try
         {                
@@ -64,11 +87,11 @@ class MatlabConnector
             //Get the receiver from the registry
             MatlabInternalProxyReceiver receiver = (MatlabInternalProxyReceiver) registry.lookup(receiverID);
             
-            //Create the wrapper, then pass the internal proxy over RMI to the Java application in its own JVM
-            receiver.registerControl(proxyID, new MatlabInternalProxyImpl(new JMIWrapper()));
+            //Create the internal proxy and then pass it over RMI to the Java application in its own JVM
+            receiver.registerControl(proxyID, new MatlabInternalProxyImpl(_wrapper));
         }
         //If for any reason the attempt fails, throw exception that indicates connection could not be established
-        catch (Exception e)
+        catch(Exception e)
         {
             throw new MatlabConnectionException("Connection to Java application could not be established", e);
         }

@@ -30,6 +30,7 @@ package matlabcontrol;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.net.JarURLConnection;
 import java.net.URL;
 
@@ -221,9 +222,8 @@ class Configuration
     }
     
     /**
-     * Determines if JMI is available. This is determined by checking if the class {@code com.mathworks.jmi.Matlab}
-     * exists for this class's class loader.
-     *
+     * Determines if JMI is available. This is determined by checking if {@code com.mathworks.jmi.Matlab} exists.
+     * 
      * @return if JMI exists
      */
     static boolean isJMIAvailable()
@@ -237,6 +237,28 @@ class Configuration
         catch(ClassNotFoundException e)
         {
             available = false;
+        }
+        
+        return available;
+    }
+    
+    /**
+     * Whether MATLAB is available from this virtual machine.
+     * 
+     * @return 
+     */
+    static boolean isMatlabAvailable()
+    {
+        boolean available;
+        try
+        {
+            Object matlab = Class.forName("com.mathworks.jmi.Matlab", true, Configuration.class.getClassLoader());
+            Method isAvailableMethod = matlab.getClass().getMethod("isMatlabAvailable");
+            available = (boolean) isAvailableMethod.invoke(matlab);
+        }
+        catch(Throwable t)
+        {
+            available = false;      
         }
         
         return available;
