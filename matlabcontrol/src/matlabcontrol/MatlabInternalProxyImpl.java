@@ -32,8 +32,10 @@ import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 
 /**
- * Passes method calls off to the {@link JMIWrapper}. This proxy is necessary because
- * fields that {@link JMIWrapper} uses cannot be marshalled, as is required by RMI.
+ * Passes method calls off to {@link JMIWrapper}.
+ * <br><br>
+ * Methods called on this proxy will be performed inside of the JVM that created this object. This class is only created
+ * inside of the MATLAB's JVM and so {@code JMIWrapper}'s calls will be able to communicate with MATLAB.
  * 
  * These methods are documented in {@link JMIWrapper}.
  * 
@@ -50,50 +52,60 @@ class MatlabInternalProxyImpl extends UnicastRemoteObject implements MatlabInter
         _wrapper = wrapper;
     }
     
+    @Override
     public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException
     {
         _wrapper.setVariable(variableName, value);
     }
     
+    @Override
     public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException
     {
         return _wrapper.getVariable(variableName);
     }
     
+    @Override
     public void exit() throws RemoteException, MatlabInvocationException
     {
         _wrapper.exit();
     }
 
+    @Override
     public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException
     {
         return _wrapper.returningFeval(command, args);
     }
     
+    @Override
     public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException
     {
         return _wrapper.returningFeval(command, args, returnCount);
     }
     
+    @Override
     public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException
     {    
         return _wrapper.returningEval(command, returnCount);
     }
 
+    @Override
     public void eval(String command) throws RemoteException, MatlabInvocationException
     {
         _wrapper.eval(command);
     }
 
+    @Override
     public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException
     {
         _wrapper.feval(command, args);
     }
 
+    @Override
     public void setEchoEval(boolean echo) throws RemoteException
     {
         _wrapper.setEchoEval(echo);
     }
     
+    @Override
     public void checkConnection() throws RemoteException { }
 }

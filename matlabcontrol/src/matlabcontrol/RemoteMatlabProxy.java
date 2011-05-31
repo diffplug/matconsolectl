@@ -58,11 +58,11 @@ import java.rmi.UnmarshalException;
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-public final class RemoteMatlabProxy
+public final class RemoteMatlabProxy implements MatlabProxy
 {
     /**
      * The underlying proxy which is a remote object connected over RMI.
-     */
+     */ 
     private final MatlabInternalProxy _internalProxy;
     
     /**
@@ -82,7 +82,7 @@ public final class RemoteMatlabProxy
         _internalProxy = internalProxy;
         _id = id;
     }
-    
+        
     /**
      * Returns the unique identifier for this proxy. This value matches that
      * returned when calling {@link RemoteMatlabProxyFactory#requestProxy()}
@@ -90,356 +90,207 @@ public final class RemoteMatlabProxy
      * 
      * @return identifier
      */
+    @Override
     public String getIdentifier()
     {
         return _id;
     }
-    
-    /**
-     * Sets the variable to the given <code>value</code>.
-     * 
-     * @param variableName
-     * @param value
-     * 
-     * @throws MatlabInvocationException
-     */
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
-    {
-        try
-        {
-            _internalProxy.setVariable(variableName, value);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Gets the value of the variable named </code>variableName</code> from MATLAB.
-     * 
-     * @param variableName
-     * 
-     * @return value
-     * 
-     * @throws MatlabInvocationException
-     */
-    public Object getVariable(String variableName) throws MatlabInvocationException
-    {
-        try
-        {
-            return _internalProxy.getVariable(variableName);
-        }
-        catch(UnmarshalException e)
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Exits MATLAB.
-     * 
-     * @throws MatlabInvocationException 
-     */
-    public void exit() throws MatlabInvocationException
-    {
-        try
-        {
-            _internalProxy.exit();
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Evaluates a command in MATLAB. The result of this command will not be
-     * returned.
-     * <br><br>
-     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
-     * 
-     * @param command the command to be evaluated in MATLAB
-     * @throws MatlabInvocationException 
-     * 
-     * @see #returningEval(String, int)
-     */
-    public void eval(String command) throws MatlabInvocationException
-    {
-        try
-        {
-            _internalProxy.eval(command);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-
-    /**
-     * Evaluates a command in MATLAB. The result of this command can be
-     * returned.
-     * <br><br>
-     * This is equivalent to MATLAB's <code>eval(['command'])</code>.
-     * <br><br>
-     * In order for the result of this command to be returned the
-     * number of arguments to be returned must be specified by
-     * <code>returnCount</code>. If the command you are evaluating is a MATLAB
-     * function you can determine the amount of arguments it returns by using
-     * the <code>nargout</code> function in the MATLAB Command Window. If it
-     * returns -1 that means the function returns a variable number of
-     * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of arguments returned. If the number of
-     * arguments returned differs from <code>returnCount</code> then either
-     * <code>null</code> or an empty <code>String</code> will be returned.
-     * 
-     * @param command the command to be evaluated in MATLAB
-     * @param returnCount the number of arguments that will be returned from evaluating the command
-     * 
-     * @see #eval(String)
-     * 
-     * @return result of MATLAB eval
-     * @throws MatlabInvocationException 
-     */
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
-    {
-        try
-        {
-            return _internalProxy.returningEval(command, returnCount);
-        }
-        catch(UnmarshalException e)
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
-        }
-        catch(RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
-     * The result of this command will not be returned.
-     * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
-     * @throws MatlabInvocationException 
-     * 
-     * @see #returningFeval(String, Object[], int)
-     * @see #returningFeval(String, Object[])
-     */
-    public void feval(String functionName, Object[] args) throws MatlabInvocationException
-    {
-        try
-        {
-            _internalProxy.feval(functionName, args);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
-     * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
-     * <br><br>
-     * The result of this function can be returned. In order for a function's
-     * return data to be returned to MATLAB it is necessary to know how many
-     * arguments will be returned. This method will attempt to determine that
-     * automatically, but in the case where a function has a variable number of
-     * arguments returned it will only return one of them. To have all of them
-     * returned use {@link #returningFeval(String, Object[], int)} and specify
-     * the number of arguments that will be returned.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     * 
-     * @return result of MATLAB function
-     * @throws MatlabInvocationException 
-     */
-    public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
-    {
-        try
-        {
-            return _internalProxy.returningFeval(functionName, args);
-        }
-        catch(UnmarshalException e)
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
-    /**
-     * Calls a MATLAB function with the name <code>functionName</code>.
-     * Arguments to the function may be provided as <code>args</code>, if you
-     * wish to call the function with no arguments pass in <code>null</code>.
-     * <br><br>
-     * The <code>Object</code>s in the array will be converted into MATLAB
-     * equivalents as appropriate. Importantly, this means that any
-     * <code>String</code> will be converted to a MATLAB char array, not a
-     * variable name.
-     * <br><br>
-     * The result of this function can be returned. In order for the result of
-     * this function to be returned the number of arguments to be returned must
-     * be specified by <code>returnCount</code>. You can use the 
-     * <code>nargout</code> function in the MATLAB Command Window to determine
-     * the number of arguments that will be returned. If <code>nargout</code>
-     * returns -1 that means the function returns a variable number of
-     * arguments based on what you pass in. In that case, you will need to
-     * manually determine the number of arguments returned. If the number of
-     * arguments returned differs from <code>returnCount</code> then either
-     * only some of the items will be returned or <code>null</code> will be
-     * returned.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
-     * @param returnCount the number of arguments that will be returned from this function
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     * 
-     * @return result of MATLAB function
-     * @throws MatlabInvocationException 
-     */
-    public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
-    {
-        try
-        {
-            return _internalProxy.returningFeval(functionName, args, returnCount);
-        }
-        catch(UnmarshalException e)
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-
-    /**
-     * Allows for enabling a diagnostic mode that will show in MATLAB each time
-     * a Java method that calls into MATLAB is invoked.
-     * 
-     * @param echo
-     * @throws MatlabInvocationException 
-     */
-    public void setEchoEval(boolean echo) throws MatlabInvocationException
-    {
-        try
-        {
-            _internalProxy.setEchoEval(echo);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
-            }
-            else
-            {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
-            }
-        }
-    }
-    
+        
     /**
      * Whether this proxy is connected to MATLAB. The most likely reason this
-     * method would return false is if MATLAB has been closed.
+     * method would return {@code false} is if MATLAB has been closed.
      * 
      * @return if connected to MATLAB
      */
+    @Override
     public boolean isConnected()
     {
+        boolean connected;
         try
         {
             _internalProxy.checkConnection();    
-            return true;
+            connected = true;
         }
         catch(Exception e)
         {
-            return false;
+            connected = false;
         }
+        
+        return connected;
+    }
+    
+    private static interface RemoteVoidInvocation
+    {
+        public void invoke() throws RemoteException, MatlabInvocationException;
+    }
+    
+    private static interface RemoteReturningInvocation<T>
+    {
+        public T invoke() throws RemoteException, MatlabInvocationException;
+    }
+	
+    private void invoke(RemoteVoidInvocation invocation) throws MatlabInvocationException
+    {
+        try
+        {
+            invocation.invoke();
+        }
+        catch (RemoteException e)
+        {
+            if(this.isConnected())
+            {
+                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+            }
+            else
+            {
+                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+            }
+        }
+    }
+	
+    private <T> T invoke(RemoteReturningInvocation<T> invocation) throws MatlabInvocationException
+    {
+        try
+        {
+            return invocation.invoke();
+        }
+        catch(UnmarshalException e)
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
+        }
+        catch (RemoteException e)
+        {
+            if(this.isConnected())
+            {
+                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+            }
+            else
+            {
+                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+            }
+        }
+    }
+    
+    @Override
+    public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
+    {
+        this.invoke(new RemoteVoidInvocation()
+        {
+            @Override
+            public void invoke() throws RemoteException, MatlabInvocationException
+            {
+                _internalProxy.setVariable(variableName, value);
+            }
+        });
+    }
+    
+    @Override
+    public Object getVariable(final String variableName) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<Object>()
+        {
+            @Override
+            public Object invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _internalProxy.getVariable(variableName);
+            }
+        });
+    }
+    
+    @Override
+    public void exit() throws MatlabInvocationException
+    {
+        this.invoke(new RemoteVoidInvocation()
+        {
+            @Override
+            public void invoke() throws RemoteException, MatlabInvocationException
+            {
+                _internalProxy.exit();
+            }
+        });
+    }
+    
+    @Override
+    public void eval(final String command) throws MatlabInvocationException
+    {
+        this.invoke(new RemoteVoidInvocation()
+        {
+            @Override
+            public void invoke() throws RemoteException, MatlabInvocationException
+            {
+                _internalProxy.eval(command);
+            }
+        });
+    }
+
+    @Override
+    public Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<Object>()
+        {
+            @Override
+            public Object invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _internalProxy.returningEval(command, returnCount);
+            }
+        });
+    }
+
+    @Override
+    public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    {
+        this.invoke(new RemoteVoidInvocation()
+        {
+            @Override
+            public void invoke() throws RemoteException, MatlabInvocationException
+            {
+                _internalProxy.feval(functionName, args);
+            }
+        });
+    }
+    
+    @Override
+    public Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<Object>()
+        {
+            @Override
+            public Object invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _internalProxy.returningFeval(functionName, args);
+            }
+        });
+    }
+    
+    @Override
+    public Object returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<Object>()
+        {
+            @Override
+            public Object invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _internalProxy.returningFeval(functionName, args, returnCount);
+            }
+        });
+    }
+
+    @Override
+    public void setEchoEval(final boolean echo) throws MatlabInvocationException
+    {        
+        this.invoke(new RemoteVoidInvocation()
+        {
+            @Override
+            public void invoke() throws RemoteException, MatlabInvocationException
+            {
+                _internalProxy.setEchoEval(echo);
+            }
+        });
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "[RemoteMatlabProxy identifier:" + _id + "]";
     }
 }

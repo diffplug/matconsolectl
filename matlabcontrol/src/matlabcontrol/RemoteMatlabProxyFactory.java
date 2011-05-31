@@ -37,7 +37,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
-import java.util.Vector;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -61,7 +61,7 @@ public class RemoteMatlabProxyFactory
      * @see #addConnectionListener(MatlabConnectionListener)
      * @see #removeConnectionListener(MatlabConnectionListener)
      */
-    private final Vector<MatlabConnectionListener> _listeners = new Vector<MatlabConnectionListener>();
+    private final ArrayList<MatlabConnectionListener> _listeners = new ArrayList<MatlabConnectionListener>();
     
     /**
      * Specified location of MATLAB executable. If none is ever provided then
@@ -468,12 +468,12 @@ public class RemoteMatlabProxyFactory
     private void checkConnections()
     {
         //Proxies that have become disconnected
-        final Vector<RemoteMatlabProxy> disconnectedProxies = new Vector<RemoteMatlabProxy>();
+        final ArrayList<RemoteMatlabProxy> disconnectedProxies = new ArrayList<RemoteMatlabProxy>();
 
         //Check each proxy's connection, if it has died add to disconnectedProxies
         synchronized(_proxies)
         {
-            Vector<String> proxyKeys = new Vector<String>(_proxies.keySet());
+            ArrayList<String> proxyKeys = new ArrayList<String>(_proxies.keySet());
             for(String proxyKey : proxyKeys)
             {
                 RemoteMatlabProxy proxy = _proxies.get(proxyKey);
