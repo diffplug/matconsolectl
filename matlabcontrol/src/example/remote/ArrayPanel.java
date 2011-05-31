@@ -59,7 +59,7 @@ class ArrayPanel extends JPanel
      */
     public static final int NUM_ENTRIES = 3;
     
-/**
+    /**
      * Drop down lists to choose between object types.
      */
     private final JComboBox[] _optionBoxes;
@@ -136,7 +136,7 @@ class ArrayPanel extends JPanel
     }
     
     /**
-     * Enable the first <code>n</code> fields for input. The others are disabled.
+     * Enable the first {@code n} fields for input. The others are disabled.
      * 
      * @param n
      */
