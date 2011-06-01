@@ -30,18 +30,18 @@ import java.rmi.server.UnicastRemoteObject;
  * <br><br>
  * Methods called on this proxy will be performed inside of the JVM that created this object. This class is only created
  * inside of the MATLAB's JVM and so {@code JMIWrapper}'s calls will be able to communicate with MATLAB.
- * 
+ * <br><br>
  * These methods are documented in {@link JMIWrapper}.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-class MatlabInternalProxyImpl extends UnicastRemoteObject implements MatlabInternalProxy
+class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemote
 {
     private static final long serialVersionUID = 1L;
     
     private final JMIWrapper _wrapper;
     
-    public MatlabInternalProxyImpl(JMIWrapper wrapper) throws RemoteException
+    public JMIWrapperRemoteImpl(JMIWrapper wrapper) throws RemoteException
     {
         _wrapper = wrapper;
     }
@@ -95,9 +95,9 @@ class MatlabInternalProxyImpl extends UnicastRemoteObject implements MatlabInter
     }
 
     @Override
-    public void setEchoEval(boolean echo) throws RemoteException
+    public void setDiagnosticMode(final boolean enable) throws RemoteException
     {
-        _wrapper.setEchoEval(echo);
+        _wrapper.setDiagnosticMode(enable);
     }
     
     @Override

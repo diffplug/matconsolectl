@@ -33,14 +33,13 @@ import java.rmi.RemoteException;
  * JVM and then all method calls on this proxy will throw exceptions.
  * <br><br>
  * Additionally, many of these methods throw InterruptedException. This occurs if while waiting for MATLAB to return
- * from a method called on it, the thread
- * waiting is interrupted.
+ * from a method called on it, the thread waiting is interrupted.
  * <br><br>
  * For descriptions of what these methods do see the corresponding methods in {@link MatlabProxy}.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-interface MatlabInternalProxy extends Remote
+interface JMIWrapperRemote extends Remote
 {
     public void exit() throws RemoteException, MatlabInvocationException;
     
@@ -58,7 +57,7 @@ interface MatlabInternalProxy extends Remote
     
     public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
 
-    public void setEchoEval(boolean echo) throws RemoteException, MatlabInvocationException;
+    public void setDiagnosticMode(final boolean enable) throws RemoteException, MatlabInvocationException;
     
     /**
      * This method does nothing. It is used internally to check if a connection is still active.

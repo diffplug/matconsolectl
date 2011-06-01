@@ -26,9 +26,9 @@ package matlabcontrol;
  * Creates instances of {@link MatlabProxy}. How these instances will be created depends on whether this code is running
  * inside MATLAB or outside MATLAB.
  */
-public class MatlabProxyFactory implements ProxyCreator
+public class MatlabProxyFactory implements ProxyFactory
 {
-    private final ProxyCreator _delegateFactory;
+    private final ProxyFactory _delegateFactory;
     
     public MatlabProxyFactory() throws MatlabConnectionException
     {

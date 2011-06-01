@@ -156,11 +156,11 @@ final class LocalMatlabProxy implements MatlabProxy
     }
 
     @Override
-    public void setEchoEval(boolean echo) throws MatlabInvocationException
+    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
     {
         if(this.isConnected())
         {
-            _wrapper.setEchoEval(echo);
+            _wrapper.setDiagnosticMode(enable);
         }
         else
         {

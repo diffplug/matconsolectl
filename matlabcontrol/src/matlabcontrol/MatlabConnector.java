@@ -79,10 +79,10 @@ class MatlabConnector
             Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
             
             //Get the receiver from the registry
-            MatlabInternalProxyReceiver receiver = (MatlabInternalProxyReceiver) registry.lookup(receiverID);
+            JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(receiverID);
             
             //Create the internal proxy and then pass it over RMI to the Java application in its own JVM
-            receiver.registerControl(proxyID, new MatlabInternalProxyImpl(_wrapper));
+            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(_wrapper));
         }
         //If for any reason the attempt fails, throw exception that indicates connection could not be established
         catch(Exception e)

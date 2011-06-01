@@ -35,7 +35,7 @@ final class RemoteMatlabProxy implements MatlabProxy
     /**
      * The underlying proxy which is a remote object connected over RMI.
      */ 
-    private final MatlabInternalProxy _internalProxy;
+    private final JMIWrapperRemote _internalProxy;
     
     /**
      * Unique identifier for this proxy.
@@ -44,11 +44,11 @@ final class RemoteMatlabProxy implements MatlabProxy
     
     /**
      * The proxy is never to be created outside of this package, it is to be constructed after a
-     * {@link MatlabInternalProxy} has been received via RMI.
+     * {@link JMIWrapperRemote} has been received via RMI.
      * 
      * @param internalProxy
      */
-    RemoteMatlabProxy(MatlabInternalProxy internalProxy, String id)
+    RemoteMatlabProxy(JMIWrapperRemote internalProxy, String id)
     {
         _internalProxy = internalProxy;
         _id = id;
@@ -234,14 +234,14 @@ final class RemoteMatlabProxy implements MatlabProxy
     }
 
     @Override
-    public void setEchoEval(final boolean echo) throws MatlabInvocationException
+    public void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
     {        
         this.invoke(new RemoteVoidInvocation()
         {
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.setEchoEval(echo);
+                _internalProxy.setDiagnosticMode(enable);
             }
         });
     }
