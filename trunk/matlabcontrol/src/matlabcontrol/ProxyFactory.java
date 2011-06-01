@@ -23,9 +23,9 @@ package matlabcontrol;
  */
 
 /**
- *
+ * A factory which creates instances of {@link MatlabProxy}.
  */
-interface ProxyCreator
+interface ProxyFactory
 {
     /**
      * Returns a {@link MatlabProxy}. Connection listeners will be notified upon successful creation. An exception will

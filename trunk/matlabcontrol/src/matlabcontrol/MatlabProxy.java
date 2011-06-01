@@ -33,7 +33,6 @@ package matlabcontrol;
  * <li>the class of the object to be returned is not {@link java.io.Serializable}</li>
  * <li>the class of the object to be sent or returned is not defined in the JVM receiving the object</li>
  * </ul>
- * <br><br>
  * <strong>Running inside MATLAB</strong><br>
  * An exception may be thrown if an internal MATLAB exception occurs.
  * <br><br>
@@ -166,7 +165,7 @@ public interface MatlabProxy
      * returned.
      * 
      * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, <code>null</code> if none
+     * @param args the arguments to the function, {@code null} if none
      * @param returnCount the number of arguments that will be returned from this function
      * 
      * @see #feval(String, Object[])
@@ -202,8 +201,8 @@ public interface MatlabProxy
      * Allows for enabling a diagnostic mode that will show in MATLAB each time a Java method that calls into MATLAB is
      * invoked.
      * 
-     * @param echo
+     * @param enable
      * @throws MatlabInvocationException 
      */
-    public void setEchoEval(boolean echo) throws MatlabInvocationException;
+    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException;
 }

@@ -30,7 +30,7 @@ import com.mathworks.jmi.MatlabException;
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-class MatlabInternalException extends Exception
+class MatlabExceptionWrapper extends Exception
 {    
     private static final long serialVersionUID = 1L;
     
@@ -46,7 +46,7 @@ class MatlabInternalException extends Exception
      * 
      * @param innerException
      */
-    MatlabInternalException(MatlabException innerException)
+    MatlabExceptionWrapper(MatlabException innerException)
     {
         //Store innerException's toString() value
         _toString = innerException.toString();

@@ -36,7 +36,7 @@ import com.mathworks.jmi.NativeMatlab;
  * This class runs inside of the MATLAB Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
  * with MATLAB in order to send commands to MATLAB and receive results.
  * <br><br>
- * Only this class and {@link MatlabInternalException} directly interact with {@code jmi.jar}.
+ * Only this class and {@link MatlabExceptionWrapper} directly interact with {@code jmi.jar}.
  *
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
@@ -225,13 +225,13 @@ class JMIWrapper
     }
 
     /**
-     * @see MatlabProxy#setEchoEval(boolean)
+     * @see MatlabProxy#setDiagnosticMode(boolean)
      */
-    void setEchoEval(final boolean echo)
+    void setDiagnosticMode(final boolean enable)
     {
         if(isMatlabThread())
         {
-            Matlab.setEchoEval(echo);
+            Matlab.setEchoEval(enable);
         }
         else
         {
@@ -240,7 +240,7 @@ class JMIWrapper
                 @Override
                 public void run()
                 {
-                    Matlab.setEchoEval(echo);
+                    Matlab.setEchoEval(enable);
                 }
             });
         }
@@ -279,7 +279,7 @@ class JMIWrapper
         
         if(_thrownException != null)
         {
-            throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, new MatlabInternalException(_thrownException));
+            throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, new MatlabExceptionWrapper(_thrownException));
         }
 
         return _returnValue;

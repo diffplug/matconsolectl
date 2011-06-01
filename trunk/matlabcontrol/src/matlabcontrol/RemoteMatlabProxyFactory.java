@@ -40,7 +40,7 @@ import java.util.ArrayList;
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-class RemoteMatlabProxyFactory implements ProxyCreator
+class RemoteMatlabProxyFactory implements ProxyFactory
 {
     /**
      * A timer that periodically checks if the proxies are still connected.
@@ -64,7 +64,7 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     private final String _supportCodeLocation;
     
     /**
-     * Default number of milliseconds to wait for a {@link MatlabInternalProxy} to be received.
+     * Default number of milliseconds to wait for a {@link JMIWrapperRemote} to be received.
      */
     private static final int DEFAULT_TIMEOUT = 60000;
     
@@ -88,10 +88,10 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     /**
      * Receiver for proxies created and sent over RMI.
      */
-    private final MatlabInternalProxyReceiver _receiver = new ProxyReceiver();
+    private final JMIWrapperRemoteReceiver _receiver = new ProxyReceiver();
     
     /**
-     * Value used to bind the {@link ProxyReceiver}, as a {@link MatlabInternalProxyReceiver} so that it can be
+     * Value used to bind the {@link ProxyReceiver}, as a {@link JMIWrapperRemoteReceiver} so that it can be
      * retrieved from within the MATLAB JVM with this value.
      */
     private final String _receiverID = getRandomValue();
@@ -161,7 +161,7 @@ class RemoteMatlabProxyFactory implements ProxyCreator
                 _registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
             }
             //If we can't create one, try to retrieve an existing one
-            catch (Exception e)
+            catch(Exception e)
             {
                 try
                 {
@@ -181,7 +181,7 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     }
     
     /**
-     * Binds the receiver for RMI so it can be retrieved from the MATLAB JVM as a {@link MatlabInternalProxyReceiver}.
+     * Binds the receiver for RMI so it can be retrieved from the MATLAB JVM as a {@link JMIWrapperRemoteReceiver}.
      * 
      * @throws MatlabConnectionException
      */
@@ -199,11 +199,11 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     
     /**
      * Receives the inner proxy from MATLAB. This inner class exists to hide the
-     * {@link MatlabInternalProxyReceiver#registerControl(String, MatlabInternalProxy)} method which must be public
+     * {@link JMIWrapperRemoteReceiver#registerControl(String, JMIWrapperRemote)} method which must be public
      * because it is implementing an interface; however, this method should not be visible to users of the API so
      * instead it is hidden inside of this private class.
      */
-    private class ProxyReceiver implements MatlabInternalProxyReceiver
+    private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
         /**
          * This method is to be called by {@link MatlabConnector} running inside
@@ -213,7 +213,7 @@ class RemoteMatlabProxyFactory implements ProxyCreator
          * @param internalProxy the proxy used internally
          */
         @Override
-        public void registerControl(String proxyID, MatlabInternalProxy internalProxy)
+        public void registerControl(String proxyID, JMIWrapperRemote internalProxy)
         {
             //Create proxy, store it
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(internalProxy, proxyID);
@@ -273,13 +273,13 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     }
     
     @Override
-    public MatlabProxy getProxy() throws MatlabConnectionException
+    public RemoteMatlabProxy getProxy() throws MatlabConnectionException
     {
         return this.getProxy(DEFAULT_TIMEOUT);
     }
 
     @Override
-    public MatlabProxy getProxy(long timeout) throws MatlabConnectionException
+    public RemoteMatlabProxy getProxy(long timeout) throws MatlabConnectionException
     {
         String proxyID = this.requestProxy();
         

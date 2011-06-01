@@ -33,7 +33,7 @@ package matlabcontrol;
 public interface MatlabConnectionListener
 {
     /**
-     * Called when the connection to the session of MATLAB launched has been established.
+     * Called when the connection to the session of MATLAB has been established.
      * 
      * @param proxy the proxy created when the connection was established
      */

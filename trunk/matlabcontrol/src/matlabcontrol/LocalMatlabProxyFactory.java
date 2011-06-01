@@ -28,11 +28,11 @@ import java.util.concurrent.Executors;
 /**
  * Creates local instances of {@link MatlabProxy}.
  */
-class LocalMatlabProxyFactory implements ProxyCreator
+class LocalMatlabProxyFactory implements ProxyFactory
 {
     private boolean _isShutdown = false;
     
-    private final MatlabProxy _proxy;
+    private final LocalMatlabProxy _proxy;
     private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
     private final ExecutorService _requestExecutor = Executors.newSingleThreadExecutor();
     
@@ -55,7 +55,7 @@ class LocalMatlabProxyFactory implements ProxyCreator
     }
     
     @Override
-    public MatlabProxy getProxy() throws MatlabConnectionException
+    public LocalMatlabProxy getProxy() throws MatlabConnectionException
     {
         if(_isShutdown)
         {
@@ -68,7 +68,7 @@ class LocalMatlabProxyFactory implements ProxyCreator
     }
     
     @Override
-    public MatlabProxy getProxy(long timeout) throws MatlabConnectionException
+    public LocalMatlabProxy getProxy(long timeout) throws MatlabConnectionException
     {
         return this.getProxy();
     }
@@ -99,7 +99,6 @@ class LocalMatlabProxyFactory implements ProxyCreator
         
         return _proxy.getIdentifier();
     }
-    
 
     @Override
     public void addConnectionListener(MatlabConnectionListener listener)
