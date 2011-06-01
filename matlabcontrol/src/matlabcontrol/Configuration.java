@@ -4,28 +4,22 @@ package matlabcontrol;
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *  - Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *  - Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *  - Neither the name of matlabcontrol nor the names of its contributors may
- *    be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ *  - Neither the name of matlabcontrol nor the names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 import java.io.File;
@@ -33,6 +27,8 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.JarURLConnection;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
@@ -222,19 +218,23 @@ class Configuration
     }
     
     /**
-     * Determines if JMI is available. This is determined by checking if {@code com.mathworks.jmi.Matlab} exists.
+     * Whether this code is running inside of MATLAB.
      * 
-     * @return if JMI exists
+     * @return 
      */
-    static boolean isJMIAvailable()
+    static boolean isRunningInsideMatlab()
     {
         boolean available;
         try
         {
-            Class.forName("com.mathworks.jmi.Matlab", false, Configuration.class.getClassLoader());
-            available = true;
+            //Load the class com.mathworks.jmi.Matlab and then calls its static method isMatlabAvailable()
+            //All of this is done with reflection so that this class does not cause the class loader to attempt
+            //to load JMI classes (and if not running inside of MATLAB - fail)
+            Class<?> matlabClass = Class.forName("com.mathworks.jmi.Matlab");
+            Method isAvailableMethod = matlabClass.getMethod("isMatlabAvailable");
+            available = (Boolean) isAvailableMethod.invoke(null);
         }
-        catch(ClassNotFoundException e)
+        catch(Throwable t)
         {
             available = false;
         }
@@ -242,25 +242,36 @@ class Configuration
         return available;
     }
     
-    /**
-     * Whether MATLAB is available from this virtual machine.
-     * 
-     * @return 
-     */
-    static boolean isMatlabAvailable()
-    {
-        boolean available;
-        try
+    static Map<String, File> getPathEntries()
+    {   
+        Map<String, File> map = new HashMap<String, File>();
+        
+        String path = System.getenv("PATH");
+        String[] pathDirs = path.split(":");
+        
+        for(String pathDir : pathDirs)
         {
-            Object matlab = Class.forName("com.mathworks.jmi.Matlab", true, Configuration.class.getClassLoader());
-            Method isAvailableMethod = matlab.getClass().getMethod("isMatlabAvailable");
-            available = (boolean) isAvailableMethod.invoke(matlab);
-        }
-        catch(Throwable t)
-        {
-            available = false;      
+            File dir = new File(pathDir);
+            
+            File[] entries = dir.listFiles();
+            for(File entry : entries)
+            {
+                if(entry.isFile() && entry.canExecute())
+                {
+                    map.put(entry.getName(), entry);
+                }
+            }
         }
         
-        return available;
+        return map;
+    }
+    
+    public static void main(String[] args) throws Throwable
+    {
+        
+        for(java.util.Map.Entry<String, File> entry : getPathEntries().entrySet())
+        {
+            System.out.println(entry);
+        }
     }
 }
