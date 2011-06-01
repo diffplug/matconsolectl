@@ -4,61 +4,33 @@ package matlabcontrol;
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
  *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *  - Redistributions of source code must retain the above copyright notice,
- *    this list of conditions and the following disclaimer.
- *  - Redistributions in binary form must reproduce the above copyright notice,
- *    this list of conditions and the following disclaimer in the documentation
- *    and/or other materials provided with the distribution.
- *  - Neither the name of matlabcontrol nor the names of its contributors may
- *    be used to endorse or promote products derived from this software
- *    without specific prior written permission.
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ *  - Neither the name of matlabcontrol nor the names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
 
 /**
- * Allows for calling MATLAB from <b>outside</b> of MATLAB. This class cannot
- * be instantiated, instead create a proxy by using {@link RemoteMatlabProxyFactory}.
- * <br><br>
- * Methods in this proxy that are relayed to MATLAB may throw exceptions. They
- * will be thrown if:
- * <ul>
- * 
- * <li>
- * communication between this JVM and the one MATLAB is running in is
- * disrupted (most likely due to closing MATLAB)
- * </li>
- * <li>
- * an internal MATLAB exception occurs
- * </li>
- * <li>
- * the class of the object to be returned is not {@link java.io.Serializable}
- * </li>
- * <li>
- * the class of the object to be sent or returned is not defined in the
- * JVM receiving the object
- * </li>
- * 
- * </ul>
+ * Allows for calling MATLAB from <b>outside</b> of MATLAB.
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-public final class RemoteMatlabProxy implements MatlabProxy
+final class RemoteMatlabProxy implements MatlabProxy
 {
     /**
      * The underlying proxy which is a remote object connected over RMI.
@@ -71,9 +43,8 @@ public final class RemoteMatlabProxy implements MatlabProxy
     private final String _id;
     
     /**
-     * The proxy is never to be created outside of this package, it is to be
-     * constructed after a {@link MatlabInternalProxy} has been received via
-     * RMI.
+     * The proxy is never to be created outside of this package, it is to be constructed after a
+     * {@link MatlabInternalProxy} has been received via RMI.
      * 
      * @param internalProxy
      */
@@ -82,26 +53,13 @@ public final class RemoteMatlabProxy implements MatlabProxy
         _internalProxy = internalProxy;
         _id = id;
     }
-        
-    /**
-     * Returns the unique identifier for this proxy. This value matches that
-     * returned when calling {@link RemoteMatlabProxyFactory#requestProxy()}
-     * to create this proxy.
-     * 
-     * @return identifier
-     */
+    
     @Override
     public String getIdentifier()
     {
         return _id;
     }
-        
-    /**
-     * Whether this proxy is connected to MATLAB. The most likely reason this
-     * method would return {@code false} is if MATLAB has been closed.
-     * 
-     * @return if connected to MATLAB
-     */
+    
     @Override
     public boolean isConnected()
     {
@@ -128,7 +86,7 @@ public final class RemoteMatlabProxy implements MatlabProxy
     {
         public T invoke() throws RemoteException, MatlabInvocationException;
     }
-	
+
     private void invoke(RemoteVoidInvocation invocation) throws MatlabInvocationException
     {
         try
@@ -147,7 +105,7 @@ public final class RemoteMatlabProxy implements MatlabProxy
             }
         }
     }
-	
+
     private <T> T invoke(RemoteReturningInvocation<T> invocation) throws MatlabInvocationException
     {
         try

@@ -23,21 +23,64 @@ package matlabcontrol;
  */
 
 /**
- * Represents a failure to connect to MATLAB or disconnect from MATLAB.
- * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * Creates instances of {@link MatlabProxy}. How these instances will be created depends on whether this code is running
+ * inside MATLAB or outside MATLAB.
  */
-public class MatlabConnectionException extends Exception
+public class MatlabProxyFactory implements ProxyCreator
 {
-    private static final long serialVersionUID = 2463872677611859435L;
-
-    MatlabConnectionException(String msg)
-    {
-        super(msg);
-    }
+    private final ProxyCreator _delegateFactory;
     
-    MatlabConnectionException(String msg, Throwable cause)
+    public MatlabProxyFactory() throws MatlabConnectionException
     {
-        super(msg, cause);
+        if(Configuration.isRunningInsideMatlab())
+        {
+            _delegateFactory = new LocalMatlabProxyFactory();
+        }
+        else
+        {
+            _delegateFactory = new RemoteMatlabProxyFactory();
+        }
+    }
+
+    @Override
+    public MatlabProxy getProxy() throws MatlabConnectionException
+    {
+        return _delegateFactory.getProxy();
+    }
+
+    @Override
+    public MatlabProxy getProxy(long timeout) throws MatlabConnectionException
+    {
+        return _delegateFactory.getProxy(timeout);
+    }
+
+    @Override
+    public String requestProxy() throws MatlabConnectionException
+    {
+        return _delegateFactory.requestProxy();
+    }
+
+    @Override
+    public void addConnectionListener(MatlabConnectionListener listener)
+    {
+        _delegateFactory.addConnectionListener(listener);
+    }
+
+    @Override
+    public void removeConnectionListener(MatlabConnectionListener listener)
+    {
+        _delegateFactory.removeConnectionListener(listener);
+    }
+
+    @Override
+    public void shutdown() throws MatlabConnectionException
+    {
+        _delegateFactory.shutdown();
+    }
+
+    @Override
+    public boolean isShutdown()
+    {
+        return _delegateFactory.isShutdown();
     }
 }
