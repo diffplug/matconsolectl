@@ -241,37 +241,4 @@ class Configuration
         
         return available;
     }
-    
-    static Map<String, File> getPathEntries()
-    {   
-        Map<String, File> map = new HashMap<String, File>();
-        
-        String path = System.getenv("PATH");
-        String[] pathDirs = path.split(":");
-        
-        for(String pathDir : pathDirs)
-        {
-            File dir = new File(pathDir);
-            
-            File[] entries = dir.listFiles();
-            for(File entry : entries)
-            {
-                if(entry.isFile() && entry.canExecute())
-                {
-                    map.put(entry.getName(), entry);
-                }
-            }
-        }
-        
-        return map;
-    }
-    
-    public static void main(String[] args) throws Throwable
-    {
-        
-        for(java.util.Map.Entry<String, File> entry : getPathEntries().entrySet())
-        {
-            System.out.println(entry);
-        }
-    }
 }

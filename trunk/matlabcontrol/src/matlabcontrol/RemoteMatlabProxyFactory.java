@@ -241,7 +241,7 @@ class RemoteMatlabProxyFactory implements ProxyCreator
         return UUID.randomUUID().toString();
     }
     
-
+    @Override
     public String requestProxy() throws MatlabConnectionException
     {
         if(_isShutdown)
@@ -272,12 +272,11 @@ class RemoteMatlabProxyFactory implements ProxyCreator
         return proxyID;
     }
     
-
+    @Override
     public MatlabProxy getProxy() throws MatlabConnectionException
     {
         return this.getProxy(DEFAULT_TIMEOUT);
     }
-    
 
     @Override
     public MatlabProxy getProxy(long timeout) throws MatlabConnectionException
@@ -361,38 +360,6 @@ class RemoteMatlabProxyFactory implements ProxyCreator
     public boolean isShutdown()
     {
         return _isShutdown;
-    }
-    
-    public static void main(String[] args) throws Throwable
-    {
-        System.out.println("Starting");
-        
-        RemoteMatlabProxyFactory factory = new RemoteMatlabProxyFactory();
-        factory.addConnectionListener(new MatlabConnectionListener()
-        {
-            @Override
-            public void connectionEstablished(MatlabProxy proxy)
-            {
-                System.out.println("Established: " + proxy);
-            }
-
-            @Override
-            public void connectionLost(MatlabProxy proxy)
-            {
-                System.out.println("Lost: " + proxy);
-            }
-        });
-        MatlabProxy proxy = factory.getProxy();
-        
-        proxy.eval(("disp('hello world')"));
-        
-        Thread.sleep(3000);
-        
-        proxy.exit();
-        
-        factory.shutdown();
-        
-        System.out.println("Shut down complete");
     }
     
     /**
