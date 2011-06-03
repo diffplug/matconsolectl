@@ -35,7 +35,7 @@ public interface MatlabConnectionListener
     /**
      * Called when the connection to the session of MATLAB has been established.
      * 
-     * @param proxy the proxy created when the connection was established
+     * @param proxy the proxy that is now connected
      */
     public void connectionEstablished(MatlabProxy proxy);
     

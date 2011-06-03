@@ -37,7 +37,8 @@ public class MatlabInvocationException extends Exception
                         PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
                         UNKNOWN_REMOTE_REASON_MSG = "Method could not be invoked for an unknown reason",
                         UNMARSHALLING_MSG = "Object attempting to be returned cannot be sent across Java Virtual Machines",
-                        INTERNAL_EXCEPTION_MSG = "Method could not return a value because of an internal MATLAB exception";
+                        INTERNAL_EXCEPTION_MSG = "Method could not return a value because of an internal MATLAB exception",
+                        EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread";
                  
     MatlabInvocationException(String msg)
     {

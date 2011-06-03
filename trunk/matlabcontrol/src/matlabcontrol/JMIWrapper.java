@@ -22,6 +22,7 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.awt.EventQueue;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -116,18 +117,25 @@ class JMIWrapper
      */
     void exit() throws MatlabInvocationException
     {
-        Matlab.whenMatlabReady(new Runnable()
+        new Thread()
         {
             @Override
             public void run()
             {
-                try
+                Matlab.whenMatlabReady(new Runnable()
                 {
-                    Matlab.mtFevalConsoleOutput("exit", null, 0);
-                }
-                catch (Exception e) { }
+                    @Override
+                    public void run()
+                    {
+                        try
+                        {
+                            Matlab.mtFevalConsoleOutput("exit", null, 0);
+                        }
+                        catch (Exception e) { }
+                    }
+                });
             }
-        });
+        }.start();
     }
     
     /**
@@ -158,14 +166,18 @@ class JMIWrapper
      * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[], int)
      */
     Object returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
-    {
-        if(isMatlabThread())
+    {   
+        if(EventQueue.isDispatchThread())
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
+        }
+        else if(isMatlabThread())
         {
             try
             {
                 return Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
             }
-            catch (Exception e)
+            catch(Exception e)
             {
                 throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, e);
             }
@@ -227,9 +239,13 @@ class JMIWrapper
     /**
      * @see MatlabProxy#setDiagnosticMode(boolean)
      */
-    void setDiagnosticMode(final boolean enable)
+    void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
     {
-        if(isMatlabThread())
+        if(EventQueue.isDispatchThread())
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
+        }
+        else if(isMatlabThread())
         {
             Matlab.setEchoEval(enable);
         }
@@ -262,7 +278,7 @@ class JMIWrapper
     {
         //If _returnVal has not been changed yet (in all likelihood it has not)
         //then wait, it will be resumed when the call to MATLAB returns
-        if (_returnValue == BEFORE_RETURN_VALUE)
+        if(_returnValue == BEFORE_RETURN_VALUE)
         {
             synchronized(_returnValue)
             {
