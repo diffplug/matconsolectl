@@ -30,15 +30,37 @@ public class MatlabProxyFactory implements ProxyFactory
 {
     private final ProxyFactory _delegateFactory;
     
+    /**
+     * Constructs the factory with the default options.
+     * 
+     * @throws MatlabConnectionException 
+     */
     public MatlabProxyFactory() throws MatlabConnectionException
+    {        
+        this(new MatlabProxyFactoryOptions());
+    }
+    
+    /**
+     * Constructs the factory with the specified {@code options}. Depending on the whether the factory is running inside
+     * MATLAB or outside MATLAB will determine if a given option is used.
+     * <br><br>
+     * Modifying the options after they have been provided to this constructor will have no effect; they may be modified
+     * and used to construct another factory.
+     * 
+     * @param options
+     * @throws MatlabConnectionException 
+     */
+    public MatlabProxyFactory(MatlabProxyFactoryOptions options) throws MatlabConnectionException
     {
+        MatlabProxyFactoryOptions.ImmutableFactoryOptions immutableOptions = options.getImmutableCopy();
+                
         if(Configuration.isRunningInsideMatlab())
         {
-            _delegateFactory = new LocalMatlabProxyFactory();
+            _delegateFactory = new LocalMatlabProxyFactory(immutableOptions);
         }
         else
         {
-            _delegateFactory = new RemoteMatlabProxyFactory();
+            _delegateFactory = new RemoteMatlabProxyFactory(immutableOptions);
         }
     }
 

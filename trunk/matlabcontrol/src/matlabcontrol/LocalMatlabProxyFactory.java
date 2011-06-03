@@ -36,7 +36,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
     private final ExecutorService _requestExecutor = Executors.newSingleThreadExecutor();
     
-    public LocalMatlabProxyFactory()
+    public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
     {
         JMIWrapper wrapper = MatlabConnector.getJMIWrapper();
         String proxyID = MatlabConnector.getProxyID();

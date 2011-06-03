@@ -27,8 +27,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.JarURLConnection;
 import java.net.URL;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
@@ -37,17 +35,17 @@ import java.util.Map;
  */
 class Configuration
 {
-    private static boolean isOSX() throws MatlabConnectionException
+    static boolean isOSX() throws MatlabConnectionException
     {
         return getOperatingSystem().startsWith("Mac OS X");
     }
     
-    private static boolean isWindows() throws MatlabConnectionException
+    static boolean isWindows() throws MatlabConnectionException
     {
         return getOperatingSystem().startsWith("Windows");
     }
     
-    private static boolean isLinux() throws MatlabConnectionException
+    static boolean isLinux() throws MatlabConnectionException
     {
         return getOperatingSystem().toLowerCase().startsWith("linux");
     }
