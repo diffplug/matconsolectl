@@ -33,6 +33,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will launch MATLAB. Each proxy created will control
@@ -53,9 +55,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
     
     /**
-     * Specified location of MATLAB executable. If none is ever provided then an OS specific value is used.
+     * The arguments that will be used to launch MATLAB.
      */
-    private final String _matlabLocation;
+    private final List<String> _processArguments;
     
     /**
      * The location of this support code. This location is provided to MATLAB so that it can add the location of this
@@ -102,24 +104,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private boolean _isShutdown = false;
     
-    /**
-     * Constructs this factory with a specified location or alias for the MATLAB executable. Typically this will not be
-     * necessary and so using the {@link #RemoteMatlabProxyFactory() the other constructor} will be the preferred
-     * option. The location or alias specified by {@code matlabLocation} will not be verified at construction time,
-     * and so if the value is invalid it will not cause this constructor to throw an exception. If it is invalid then an
-     * exception will be thrown when creating a proxy with {@link #requestProxy()}, {@link #getProxy()}, or
-     * {@link #getProxy(long)}.
-     * 
-     * @param matlabLocation
-     * 
-     * @throws MatlabConnectionException thrown if the initialization necessary for connecting to MATLAB cannot be
-     *                                   properly configured
-     */
-    public RemoteMatlabProxyFactory(String matlabLocation) throws MatlabConnectionException
+    public RemoteMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options) throws MatlabConnectionException
     {
-        //Store location/alias of the MATLAB executable
-        _matlabLocation = matlabLocation;
-
+        //Build arguments that will launch MATLAB
+        _processArguments = this.getProcessArguments(options); 
+        
         //Location of where this code is
         _supportCodeLocation = Configuration.getSupportCodeLocation();
         
@@ -131,17 +120,51 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Constructs this factory with a default location or alias for the MATLAB executable (on an operating system
-     * specific basis). If that default does not work, then construct this class with 
-     * {@link #RemoteMatlabProxyFactory(String) the other constructor} so that the correct location or alias can be
-     * specified.
+     * Turns the {@code options} into arguments that launch MATLAB.
      * 
-     * @throws MatlabConnectionException thrown if the initialization necessary for connecting to MATLAB cannot be
-     *                                   properly configured
+     * @param options
+     * @return
+     * @throws MatlabConnectionException 
      */
-    public RemoteMatlabProxyFactory() throws MatlabConnectionException
+    private List<String> getProcessArguments(MatlabProxyFactoryOptions.ImmutableFactoryOptions options) throws MatlabConnectionException
     {
-        this(Configuration.getMatlabLocation());
+        List<String> processArguments = new ArrayList<String>();
+        
+        //Location of MATLAB
+        if(options.getMatlabLocation() != null)
+        {
+            processArguments.add(options.getMatlabLocation());
+        }
+        else
+        {
+            processArguments.add(Configuration.getMatlabLocation());
+        }
+        
+        //MATLAB flags
+        if(options.getHidden())
+        {
+            if(Configuration.isWindows())
+            {
+                processArguments.add("-automation");
+            }
+            else
+            {
+                processArguments.add("-nosplash");
+                processArguments.add("-nodesktop");
+            }
+        }
+        else
+        {
+            if(Configuration.isOSX() || Configuration.isLinux())
+            {
+                processArguments.add("-desktop");
+            }
+        }
+        
+        //Code to run on startup
+        processArguments.add("-r");
+        
+        return Collections.unmodifiableList(processArguments); 
     }
     
     /**
@@ -206,8 +229,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
         /**
-         * This method is to be called by {@link MatlabConnector} running inside
-         * of the MATLAB JVM.
+         * This method is to be called by {@link MatlabConnector} running inside of the MATLAB JVM.
          * 
          * @param proxyID the identifier for this proxy
          * @param internalProxy the proxy used internally
@@ -258,15 +280,18 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
                         MatlabConnector.class.getName() + 
                         ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "');";
+        List<String> args = new ArrayList<String>(_processArguments);
+        args.add(runArg);
         
         //Attempt to run MATLAB
         try
-        {
-            Runtime.getRuntime().exec(new String[]{ _matlabLocation, "-desktop", "-r", runArg });
+        {   
+            ProcessBuilder builder = new ProcessBuilder(args);
+            builder.start();
         }
-        catch (IOException e)
+        catch(IOException e)
         {
-            throw new MatlabConnectionException("Could not launch MATLAB. Used location/alias: " + _matlabLocation, e);
+            throw new MatlabConnectionException("Could not launch MATLAB. Process arguments: " + args, e);
         }
         
         return proxyID;
@@ -290,7 +315,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             {
                 this.wait(timeout);
             }
-            catch (InterruptedException e)
+            catch(InterruptedException e)
             {
                 throw new MatlabConnectionException("Thread was interrupted while waiting for MATLAB proxy", e);
             }
