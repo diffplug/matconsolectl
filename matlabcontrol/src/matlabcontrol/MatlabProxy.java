@@ -23,34 +23,32 @@ package matlabcontrol;
  */
 
 /**
- * Allows for Java to communicate with a running MATLAB session.
+ * Allows for Java to communicate with a running MATLAB session. Unexpected behavior may occurs if methods are invoked
+ * from multiple threads.
  * <br><br>
  * <strong>Running outside MATLAB</strong><br>
  * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
  * <ul>
- * <li>communication between this JVM and the one MATLAB is running in is disrupted (likely due to closing MATLAB)</li>
  * <li>an internal MATLAB exception occurs</li>
+ * <li>communication between this JVM and the one MATLAB is running in is disrupted (likely due to closing MATLAB)</li>
  * <li>the class of the object to be returned is not {@link java.io.Serializable}</li>
  * <li>the class of the object to be sent or returned is not defined in the JVM receiving the object</li>
  * </ul>
  * <strong>Running inside MATLAB</strong><br>
- * An exception may be thrown if an internal MATLAB exception occurs.
- * <br><br>
- * Proxy methods may be called from any thread; however, calling from the Event Dispatch Thread (EDT) used by AWT and
- * Swing components can be problematic. When a call is made the calling thread is paused. If the call into MATLAB makes
- * use of the EDT then MATLAB will hang indefinitely. The EDT is used extensively by MATLAB when accessing graphical
- * components such as a figure window, uicontrols or plots. 
- * <br><br>
- * The way methods are relayed to MATLAB differs depending on whether or not the methods were invoked on the main MATLAB
- * thread; unexpected behavior may occur if methods are invoked from multiple threads.
+ * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
+ * <ul>
+ * <li>an internal MATLAB exception occurs</li>
+ * <li>the method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components*</li>
+ * </ul>
+ * * This is done to prevent MATLAB from becoming non-responsive or hanging indefinitely.
  */
 public interface MatlabProxy
 {
     /**
      * Whether this proxy is connected to MATLAB.
      * <br><br>
-     * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or the factory
-     * that created this proxy has been shutdown.
+     * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or the factory that
+     * created this proxy has been shutdown.
      * 
      * @return 
      */
