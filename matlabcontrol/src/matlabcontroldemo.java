@@ -1,4 +1,3 @@
-package matlabcontrol;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -22,27 +21,45 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import demo.gui.MainFrame;
+import javax.swing.WindowConstants;
+
 /**
- * Implementers can be notified when a connection has been established or lost.
- * 
- * @see MatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
- * @see MatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
- * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * This class exists solely as a entry point to the demo when running it from inside of MATLAB. By placing it in the
+ * default package and giving it the name that it has, it means that once the code is added to the Java classpath then
+ * the demo can be launched just by typing {@code matlabcontroldemo}. Typing that will cause the constructor of this
+ * class to be called.
  */
-public interface MatlabConnectionListener
+class matlabcontroldemo
 {
     /**
-     * Called when the connection to the session of MATLAB has been established.
-     * 
-     * @param proxy the proxy that is now connected
+     * Launches the demo.
      */
-    public void connectionEstablished(MatlabProxy<Object> proxy);
+    public matlabcontroldemo()
+    {
+        MainFrame frame = new MainFrame("matlabcontrol demo - Running Inside MATLAB");
+        frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+        frame.setVisible(true);
+    }
     
     /**
-     * Called when the connection to the session of MATLAB has been lost.
+     * This method will be called by MATLAB to provide the text for the {@code ans} value. By overriding this method
+     * in this manner it will cause this method's return value to be used as a status message:
+     * <pre>
+     * {@code
+     * >> matlabcontroldemo
      * 
-     * @param proxy the proxy that is no longer connected
+     * ans =
+     * 
+     * matlabcontrol demo launching...
+     * }
+     * </pre>
+     * 
+     * @return 
      */
-    public void connectionLost(MatlabProxy<Object> proxy);
+    @Override
+    public String toString()
+    {
+        return "matlabcontrol demo launching...";
+    }
 }
