@@ -42,7 +42,7 @@ package matlabcontrol;
  * </ul>
  * * This is done to prevent MATLAB from becoming non-responsive or hanging indefinitely.
  */
-public interface MatlabProxy
+public interface MatlabProxy<E>
 {
     /**
      * Whether this proxy is connected to MATLAB.
@@ -104,7 +104,7 @@ public interface MatlabProxy
      * @return result of MATLAB eval
      * @throws MatlabInvocationException 
      */
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException;
+    public E returningEval(String command, int returnCount) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
@@ -145,7 +145,7 @@ public interface MatlabProxy
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
      */
-    public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
+    public E returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
@@ -172,7 +172,7 @@ public interface MatlabProxy
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
      */
-    public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
+    public E returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
     
     /**
      * Sets the variable to the given {@code value}.
@@ -193,7 +193,7 @@ public interface MatlabProxy
      * 
      * @throws MatlabInvocationException
      */
-    public Object getVariable(String variableName) throws MatlabInvocationException;
+    public E getVariable(String variableName) throws MatlabInvocationException;
     
     /**
      * Allows for enabling a diagnostic mode that will show in MATLAB each time a Java method that calls into MATLAB is

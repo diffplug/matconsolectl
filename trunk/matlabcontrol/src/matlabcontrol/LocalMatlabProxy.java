@@ -27,7 +27,7 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-final class LocalMatlabProxy implements MatlabProxy
+final class LocalMatlabProxy implements MatlabProxy<Object>
 {
     /**
      * The underlying wrapper to JMI.

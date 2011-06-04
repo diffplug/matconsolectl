@@ -75,7 +75,7 @@ class MatlabConnectionListenerManager
      * 
      * @param proxy
      */
-    void connectionEstablished(final MatlabProxy proxy)
+    void connectionEstablished(final MatlabProxy<Object> proxy)
     {
         _connectionExecutor.submit(new Runnable()
         {
@@ -96,7 +96,7 @@ class MatlabConnectionListenerManager
      * Notify the listeners that the connection has been lost in a separate thread so that it whatever users of this API
      * are doing it does not interfere with checking the proxies.
      */
-    void connectionLost(final MatlabProxy proxy)
+    void connectionLost(final MatlabProxy<Object> proxy)
     {
         _connectionExecutor.submit(new Runnable()
         {

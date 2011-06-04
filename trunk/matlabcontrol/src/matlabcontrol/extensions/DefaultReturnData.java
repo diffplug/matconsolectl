@@ -1,4 +1,4 @@
-package matlabcontrol;
+package matlabcontrol.extensions;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -23,26 +23,66 @@ package matlabcontrol;
  */
 
 /**
- * Implementers can be notified when a connection has been established or lost.
  * 
- * @see MatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
- * @see MatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
- * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
-public interface MatlabConnectionListener
+public class DefaultReturnData implements ReturnData
 {
-    /**
-     * Called when the connection to the session of MATLAB has been established.
-     * 
-     * @param proxy the proxy that is now connected
-     */
-    public void connectionEstablished(MatlabProxy<Object> proxy);
+    protected final Object _data;
     
-    /**
-     * Called when the connection to the session of MATLAB has been lost.
-     * 
-     * @param proxy the proxy that is no longer connected
-     */
-    public void connectionLost(MatlabProxy<Object> proxy);
+    protected DefaultReturnData(Object data)
+    {
+        _data = data;
+    }
+    
+    @Override
+    public Object get()
+    {
+        return _data;
+    }
+    
+    public <E> E getAs(Class<E> clazz) throws ClassCastException
+    {
+        return clazz.cast(_data);
+    }
+    
+    public String getAsString() throws ClassCastException
+    {
+        return this.getAs(String.class);
+    }
+    
+    public double[] getAsDoubleArray() throws ClassCastException
+    {
+        return this.getAs(double[].class);
+    }
+    
+    public Object[] getAsObjectArray() throws ClassCastException
+    {
+        return this.getAs(Object[].class);
+    }
+    
+    public <E> E getIf(Class<E> clazz)
+    {
+        E convertedData = null;
+        if(clazz.isInstance(_data))
+        {
+            convertedData = clazz.cast(_data);
+        }
+        
+        return convertedData;
+    }
+    
+    public String getIfString()
+    {
+        return this.getIf(String.class);
+    }
+    
+    public double[] getIfDoubleArray()
+    {
+        return this.getIf(double[].class);
+    }
+    
+    public Object[] getIfObjectArray()
+    {
+        return this.getIf(Object[].class);
+    }
 }

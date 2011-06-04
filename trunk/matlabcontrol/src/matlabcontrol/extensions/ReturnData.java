@@ -1,4 +1,4 @@
-package matlabcontrol;
+package matlabcontrol.extensions;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -23,26 +23,9 @@ package matlabcontrol;
  */
 
 /**
- * Implementers can be notified when a connection has been established or lost.
- * 
- * @see MatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
- * @see MatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
- * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ *
  */
-public interface MatlabConnectionListener
+public interface ReturnData
 {
-    /**
-     * Called when the connection to the session of MATLAB has been established.
-     * 
-     * @param proxy the proxy that is now connected
-     */
-    public void connectionEstablished(MatlabProxy<Object> proxy);
-    
-    /**
-     * Called when the connection to the session of MATLAB has been lost.
-     * 
-     * @param proxy the proxy that is no longer connected
-     */
-    public void connectionLost(MatlabProxy<Object> proxy);
+    public Object get();
 }
