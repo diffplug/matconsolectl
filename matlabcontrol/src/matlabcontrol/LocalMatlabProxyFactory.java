@@ -55,7 +55,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public LocalMatlabProxy getProxy() throws MatlabConnectionException
+    public synchronized LocalMatlabProxy getProxy() throws MatlabConnectionException
     {
         if(_isShutdown)
         {
@@ -68,13 +68,13 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public LocalMatlabProxy getProxy(long timeout) throws MatlabConnectionException
+    public synchronized LocalMatlabProxy getProxy(long timeout) throws MatlabConnectionException
     {
         return this.getProxy();
     }
     
     @Override
-    public String requestProxy() throws MatlabConnectionException
+    public synchronized String requestProxy() throws MatlabConnectionException
     {        
         if(_isShutdown)
         {
@@ -113,7 +113,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public void shutdown()
+    public synchronized void shutdown()
     {
         if(!_isShutdown)
         {
@@ -127,7 +127,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public boolean isShutdown()
+    public synchronized boolean isShutdown()
     {
         return _isShutdown;
     }
