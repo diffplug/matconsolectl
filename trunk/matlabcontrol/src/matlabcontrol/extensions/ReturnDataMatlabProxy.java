@@ -1,128 +1,164 @@
 package matlabcontrol.extensions;
 
-/*
- * Copyright (c) 2011, Joshua Kaplan
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
- * following conditions are met:
- *  - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
- *    disclaimer.
- *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
- *    following disclaimer in the documentation and/or other materials provided with the distribution.
- *  - Neither the name of matlabcontrol nor the names of its contributors may be used to endorse or promote products
- *    derived from this software without specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
- *
+ * Wraps around a proxy to conveniently handle casts of the data returned from MATLAB.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class ReturnDataMatlabProxy<E extends ReturnData> implements MatlabProxy<E>
+public class ReturnDataMatlabProxy implements MatlabProxy<ReturnData>
 {
-    private final ReturnDataProvider<E> _provider;
-    private final MatlabProxy _proxy;
+    private final MatlabProxy<Object> _delegateProxy;
     
-    public static ReturnDataMatlabProxy<DefaultReturnData> getProxy(MatlabProxy<Object> proxy)
-    {
-        ReturnDataProvider<DefaultReturnData> provider = new ReturnDataProvider<DefaultReturnData>()
-        {
-            @Override
-            public DefaultReturnData getMatlabReturnData(Object data)
-            {
-                return new DefaultReturnData(data);
-            }       
-        };
-        
-        return new ReturnDataMatlabProxy(proxy, provider);
-    }
-    
-    public static <T extends ReturnData> ReturnDataMatlabProxy<T> getProxy(MatlabProxy<Object> proxy, ReturnDataProvider<T> provider)
-    {
-        return new ReturnDataMatlabProxy(proxy, provider);
-    }
-    
-    private ReturnDataMatlabProxy(MatlabProxy proxy, ReturnDataProvider<E> provider)
-    {
-        _provider = provider;
-        _proxy = proxy;
+    public ReturnDataMatlabProxy(MatlabProxy<Object> proxy)
+    {   
+        _delegateProxy = proxy;
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @return 
+     */
     @Override
     public boolean isConnected()
     {
-        return _proxy.isConnected();
+        return _delegateProxy.isConnected();
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @return 
+     */
     @Override
     public String getIdentifier()
     {
-        return _proxy.getIdentifier();
+        return _delegateProxy.getIdentifier();
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void exit() throws MatlabInvocationException
     {
-        _proxy.exit();
+        _delegateProxy.exit();
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @param command
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void eval(String command) throws MatlabInvocationException
     {
-        _proxy.eval(command);
+        _delegateProxy.eval(command);
     }
 
+    /**
+     * Delegates to the proxy, wrapping the result in an instance of {@link ReturnData}.
+     * 
+     * @param command
+     * @param returnCount
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
-    public E returningEval(String command, int returnCount) throws MatlabInvocationException
+    public ReturnData returningEval(String command, int returnCount) throws MatlabInvocationException
     {
-        return _provider.getMatlabReturnData(_proxy.returningEval(command, returnCount));
+        return new ReturnData(this.returningEval(command, returnCount));
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @param functionName
+     * @param args
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void feval(String functionName, Object[] args) throws MatlabInvocationException
     {
-        _proxy.feval(functionName, args);
+        _delegateProxy.feval(functionName, args);
     }
 
+    /**
+     * Delegates to the proxy, wrapping the result in an instance of {@link ReturnData}.
+     * 
+     * @param functionName
+     * @param args
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
-    public E returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+    public ReturnData returningFeval(String functionName, Object[] args) throws MatlabInvocationException
     {
-        return _provider.getMatlabReturnData(_proxy.returningFeval(functionName, args));
+        return new ReturnData(this.returningFeval(functionName, args));
     }
 
+    /**
+     * Delegates to the proxy, wrapping the result in an instance of {@link ReturnData}.
+     * 
+     * @param functionName
+     * @param args
+     * @param returnCount
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
-    public E returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+    public ReturnData returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
     {
-        return _provider.getMatlabReturnData(_proxy.returningFeval(functionName, args, returnCount));
+        return new ReturnData(this.returningFeval(functionName, args, returnCount));
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @param variableName
+     * @param value
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        _proxy.setVariable(variableName, value);
+        _delegateProxy.setVariable(variableName, value);
     }
 
+    /**
+     * Delegates to the proxy, wrapping the result in an instance of {@link ReturnData}.
+     * 
+     * @param variableName
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
-    public E getVariable(String variableName) throws MatlabInvocationException
+    public ReturnData getVariable(String variableName) throws MatlabInvocationException
     {
-        return _provider.getMatlabReturnData(_proxy.getVariable(variableName));
+        return new ReturnData(this.getVariable(variableName));
     }
 
+    /**
+     * Delegates to the proxy.
+     * 
+     * @param enable
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
     {
-        _proxy.setDiagnosticMode(enable);
+        this.setDiagnosticMode(enable);
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "[ReturnDataMatlabProxy delegate:" + _delegateProxy + "]";
     }
 }

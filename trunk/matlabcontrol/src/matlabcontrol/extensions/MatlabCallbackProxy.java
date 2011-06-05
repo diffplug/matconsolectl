@@ -29,35 +29,50 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
- * 
+ * Wraps around a proxy making the method calls operate with callbacks instead of return values. Due to this difference
+ * this class does not implement {@link MatlabProxy}, but it closely matches the methods. For each method that calls
+ * MATLAB in {@code MatlabProxy} the same method exists but has one additional parameter that is either
+ * {@link MatlabCallbackProxy.MatlabCallback} or {@link MatlabCallbackProxy.MatlabDataCallback}. Because the actual
+ * proxy invocation occurs on a separate thread from the one calling the methods in this class, it can be used from
+ * within MATLAB on the Event Dispatch Thread (EDT).
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabCallbackProxy<E>
 {
     private final ExecutorService _executor = Executors.newSingleThreadExecutor();
-    private MatlabProxy<E> _proxy;
-    
-    public static <T> MatlabCallbackProxy<T> getProxy(MatlabProxy<T> proxy)
-    {
-        return new MatlabCallbackProxy<T>(proxy);
-    }
+    private MatlabProxy<E> _delegateProxy;
     
     public MatlabCallbackProxy(MatlabProxy<E> proxy)
     {
-        _proxy = proxy;
+        _delegateProxy = proxy;
     }
 
+    /**
+     * Delegates to the proxy without a callback.
+     * 
+     * @return 
+     */
     public boolean isConnected()
     {
-        return _proxy.isConnected();
+        return _delegateProxy.isConnected();
     }
 
+    /**
+     * Delegates to the proxy without a callback.
+     * 
+     * @return 
+     */
     public String getIdentifier()
     {
-        return _proxy.getIdentifier();
+        return _delegateProxy.getIdentifier();
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param callback 
+     */
     public void exit(final MatlabCallback callback)
     {
         _executor.submit(new Runnable()
@@ -67,17 +82,27 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _proxy.exit();
+                    _delegateProxy.exit();
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
                 {
                     callback.invocationFailed(e);
                 }
+                finally
+                {
+                    _executor.shutdown();
+                }
             }       
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param command
+     * @param callback 
+     */
     public void eval(final String command, final MatlabCallback callback)
     {
         _executor.submit(new Runnable()
@@ -87,7 +112,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _proxy.eval(command);
+                    _delegateProxy.eval(command);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -98,6 +123,13 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param command
+     * @param returnCount
+     * @param callback 
+     */
     public void returningEval(final String command, final int returnCount, final MatlabDataCallback<E> callback)
     {
         _executor.submit(new Runnable()
@@ -107,7 +139,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _proxy.returningEval(command, returnCount);
+                    E data = _delegateProxy.returningEval(command, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -118,6 +150,13 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param functionName
+     * @param args
+     * @param callback 
+     */
     public void feval(final String functionName, final Object[] args, final MatlabCallback callback)
     {        
         _executor.submit(new Runnable()
@@ -127,7 +166,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _proxy.feval(functionName, args);
+                    _delegateProxy.feval(functionName, args);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -138,6 +177,13 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param functionName
+     * @param args
+     * @param callback 
+     */
     public void returningFeval(final String functionName, final Object[] args, final MatlabDataCallback<E> callback)
     {        
         _executor.submit(new Runnable()
@@ -147,7 +193,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _proxy.returningFeval(functionName, args);
+                    E data = _delegateProxy.returningFeval(functionName, args);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -158,6 +204,14 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param functionName
+     * @param args
+     * @param returnCount
+     * @param callback 
+     */
     public void returningFeval(final String functionName, final Object[] args, final int returnCount, final MatlabDataCallback<E> callback)
     {
         _executor.submit(new Runnable()
@@ -167,7 +221,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _proxy.returningFeval(functionName, args, returnCount);
+                    E data = _delegateProxy.returningFeval(functionName, args, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -178,6 +232,13 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param variableName
+     * @param value
+     * @param callback 
+     */
     public void setVariable(final String variableName, final Object value, final MatlabCallback callback)
     {
         _executor.submit(new Runnable()
@@ -187,7 +248,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _proxy.setVariable(variableName, value);
+                    _delegateProxy.setVariable(variableName, value);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -198,6 +259,12 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param variableName
+     * @param callback 
+     */
     public void getVariable(final String variableName, final MatlabDataCallback<E> callback)
     {        
         _executor.submit(new Runnable()
@@ -207,7 +274,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _proxy.getVariable(variableName);
+                    E data = _delegateProxy.getVariable(variableName);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -218,6 +285,12 @@ public class MatlabCallbackProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * 
+     * @param enable
+     * @param callback 
+     */
     public void setDiagnosticMode(final boolean enable, final MatlabCallback callback)
     {        
         _executor.submit(new Runnable()
@@ -227,7 +300,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _proxy.setDiagnosticMode(enable);
+                    _delegateProxy.setDiagnosticMode(enable);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -238,15 +311,49 @@ public class MatlabCallbackProxy<E>
         });
     }
     
+    @Override
+    public String toString()
+    {
+        return "[MatlabCallbackProxy delegate:" + _delegateProxy + "]";
+    }
+    
+    /**
+     * A callback that supplies the results of the invocation or the raised exception.
+     * 
+     * @param <E> 
+     */
     public static interface MatlabDataCallback<E>
     {
+        /**
+         * Called when the method successfully completed.
+         * 
+         * @param data the data returned from MATLAB
+         */
         public void invocationSucceeded(E data);
+        
+        /**
+         * Called when the method failed.
+         * 
+         * @param e the exception raised 
+         */
         public void invocationFailed(MatlabInvocationException e);
     }
     
+    /**
+     * A callback that indicates either the invocation succeeding or an exception being raised.
+     */
     public static interface MatlabCallback
     {
+        /**
+         * Called when the method successfully completed.
+         */
         public void invocationSucceeded();
+        
+        /**
+         * Called when the method failed.
+         * 
+         * @param e the exception raised 
+         */
         public void invocationFailed(MatlabInvocationException e);
     }
 }
