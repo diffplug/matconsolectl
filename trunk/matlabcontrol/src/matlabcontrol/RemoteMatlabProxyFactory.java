@@ -236,7 +236,16 @@ class RemoteMatlabProxyFactory implements ProxyFactory
          */
         @Override
         public void registerControl(String proxyID, JMIWrapperRemote internalProxy)
-        {
+        {   
+            //Wait for 2 seconds so that MATLAB can properly initialize.
+            //Attempts to determine exactly when MATLAB is properly initialized have failed. This solution, while less
+            //than ideal, appears to work in practice.
+            try
+            {
+                Thread.sleep(2000);
+            }
+            catch(InterruptedException e) { }
+            
             //Create proxy, store it
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(internalProxy, proxyID);
             _proxies.put(proxyID, proxy);

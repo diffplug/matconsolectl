@@ -94,7 +94,7 @@ class JMIWrapper
      * 
      * @throws MatlabInvocationException
      */
-    void setVariable(String variableName, Object value) throws MatlabInvocationException
+    synchronized void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
         VARIABLES.put(variableName, value);
         this.eval(variableName + " = " + CLASS_NAME + ".retrieveVariableValue('" + variableName + "');");
@@ -107,7 +107,7 @@ class JMIWrapper
      * 
      * @throws MatlabInvocationException
      */
-    Object getVariable(String variableName) throws MatlabInvocationException
+    synchronized Object getVariable(String variableName) throws MatlabInvocationException
     {
         return this.returningEval(variableName, 1);
     }
@@ -115,7 +115,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#exit()
      */
-    void exit() throws MatlabInvocationException
+    synchronized void exit() throws MatlabInvocationException
     {
         new Thread()
         {
@@ -141,7 +141,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#eval(java.lang.String)
      */
-    void eval(final String command) throws MatlabInvocationException
+    synchronized void eval(final String command) throws MatlabInvocationException
     {   
         this.returningEval(command, 0);
     }
@@ -149,7 +149,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#returningEval(java.lang.String, int)
      */
-    Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    synchronized Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
         return this.returningFeval("eval", new Object[]{ command }, returnCount);
     }
@@ -157,7 +157,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[])
      */
-    void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    synchronized void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
         this.returningFeval(functionName, args, 0);
     }
@@ -165,7 +165,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[], int)
      */
-    Object returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
+    synchronized Object returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
     {   
         if(EventQueue.isDispatchThread())
         {
@@ -215,7 +215,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[])
      */
-    Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
+    synchronized Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
         //Get the number of arguments that will be returned
         Object result = this.returningFeval("nargout", new String[] { functionName }, 1);
@@ -239,7 +239,7 @@ class JMIWrapper
     /**
      * @see MatlabProxy#setDiagnosticMode(boolean)
      */
-    void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
+    synchronized void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
     {
         if(EventQueue.isDispatchThread())
         {
