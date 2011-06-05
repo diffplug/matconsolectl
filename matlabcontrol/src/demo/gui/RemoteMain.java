@@ -32,7 +32,7 @@ class RemoteMain
     public static void main(String[] args)
     {   
         OSXAppearance.applyIfApplicable();
-        MainFrame frame = new MainFrame("matlabcontrol demo - Running Outside MATLAB");
+        DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB");
         frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
