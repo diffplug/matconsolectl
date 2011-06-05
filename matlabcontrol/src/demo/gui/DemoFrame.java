@@ -59,7 +59,7 @@ import matlabcontrol.extensions.MatlabCallbackProxy.MatlabDataCallback;
  * licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-Noncommercial-Share
  * Alike 3.0 License</a>.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @SuppressWarnings("serial")
 public class DemoFrame extends JFrame

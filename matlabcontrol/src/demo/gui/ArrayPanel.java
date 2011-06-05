@@ -33,7 +33,7 @@ import javax.swing.JTextField;
 /**
  * The panel that contains the options to select elements of the array.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @SuppressWarnings("serial")
 class ArrayPanel extends JPanel

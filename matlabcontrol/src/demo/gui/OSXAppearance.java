@@ -24,10 +24,13 @@ package demo.gui;
 
 import java.awt.Image;
 import java.lang.reflect.Method;
+
 import javax.imageio.ImageIO;
 
 /**
  * On OS X, sets the demo to have a dock icon and a name in the menu bar. On other operating systems does nothing.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class OSXAppearance
 {

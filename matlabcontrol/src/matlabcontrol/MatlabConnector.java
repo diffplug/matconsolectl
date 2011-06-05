@@ -29,7 +29,7 @@ import java.rmi.registry.Registry;
  * This class is used only from inside of the MATLAB JVM. It is responsible for creating proxies and sending them to
  * the receiver over RMI.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabConnector
 {

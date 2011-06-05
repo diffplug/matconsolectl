@@ -28,7 +28,9 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
- *
+ * 
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
 {

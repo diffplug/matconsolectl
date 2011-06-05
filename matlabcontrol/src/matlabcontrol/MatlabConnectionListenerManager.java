@@ -28,7 +28,11 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Manages notification of {@link MatlabConnectionListener}s. This class is thread-safe.
+ * Manages notification of {@link MatlabConnectionListener}s.
+ * <br><br>
+ * This class is thread-safe.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabConnectionListenerManager
 {

@@ -26,9 +26,9 @@ import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
 
 /**
- * Allows for calling MATLAB from <b>outside</b> of MATLAB.
+ * Allows for calling MATLAB from <strong>outside</strong> of MATLAB.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 final class RemoteMatlabProxy implements MatlabProxy<Object>
 {

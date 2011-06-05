@@ -27,6 +27,8 @@ import matlabcontrol.MatlabProxy;
 
 /**
  *
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class ReturnDataMatlabProxy<E extends ReturnData> implements MatlabProxy<E>
 {

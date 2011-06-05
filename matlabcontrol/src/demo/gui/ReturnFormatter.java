@@ -30,7 +30,7 @@ import java.lang.reflect.Array;
 /**
  * Formats returned {@code Object}s and {@code Exception}s from MATLAB.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ReturnFormatter
 {

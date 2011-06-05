@@ -28,6 +28,8 @@ package matlabcontrol;
  * or outside MATLAB.
  * <br><br>
  * This class is thread-safe.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public final class MatlabProxyFactoryOptions
 {

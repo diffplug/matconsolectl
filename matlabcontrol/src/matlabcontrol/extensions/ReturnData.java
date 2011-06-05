@@ -24,6 +24,8 @@ package matlabcontrol.extensions;
 
 /**
  *
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface ReturnData
 {

@@ -29,6 +29,8 @@ import javax.swing.WindowConstants;
  * default package and giving it the name that it has, it means that once the code is added to the Java classpath then
  * the demo can be launched just by typing {@code matlabcontroldemo}. Typing that will cause the constructor of this
  * class to be called.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class matlabcontroldemo
 {
