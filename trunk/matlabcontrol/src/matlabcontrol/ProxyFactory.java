@@ -96,14 +96,14 @@ interface ProxyFactory
     public String requestProxy() throws MatlabConnectionException;
     
     /**
-     * Adds a listener to be notified when MATLAB connections are established and lost.
+     * Adds the {@code listener}. It will be notified when MATLAB connections are established and lost.
      * 
      * @param listener
      */
     public void addConnectionListener(MatlabConnectionListener listener);
     
     /**
-     * Removes a listener so that it is no longer notified.
+     * Removes the {@code listener}. It will no longer be notified.
      * 
      * @param listener
      */
@@ -111,8 +111,9 @@ interface ProxyFactory
     
     /**
      * Cleanly shuts down the factory, allowing for the program to terminate properly. After this method has been
-     * called, all calls to create proxies will fail. All proxies previously created by this factory will become
-     * disconnected. Once a factory has been shutdown it cannot be turned back on.
+     * called, all calls to create proxies will fail. If the factory is being shutdown while a proxy is being created
+     * it may still be created; however, listeners may not be notified. All proxies previously created by this factory
+     * will become disconnected. Once a factory has been shutdown it cannot be turned back on.
      * <br><br>
      * This method may be safely called any number of times.
      * 

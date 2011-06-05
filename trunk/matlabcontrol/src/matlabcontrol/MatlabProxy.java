@@ -23,24 +23,36 @@ package matlabcontrol;
  */
 
 /**
- * Allows for Java to communicate with a running MATLAB session. Unexpected behavior may occurs if methods are invoked
- * from multiple threads.
+ * Allows for Java to communicate with a running MATLAB session.
+ * <br><br>
+ * Implementations of this interface are thread-safe. While methods may be called concurrently, they will be completed
+ * sequentially on MATLAB's main thread.
+ * <br><br>
+ * The generic type parameter is provided so that classes which wrap around this can redefine the type of the data
+ * returned. This can be seen in the {@code matlabcontrol.extensions} package.
  * <br><br>
  * <strong>Running outside MATLAB</strong><br>
  * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
  * <ul>
- * <li>an internal MATLAB exception occurs</li>
+ * <li>an internal MATLAB exception occurs*</li>
  * <li>communication between this JVM and the one MATLAB is running in is disrupted (likely due to closing MATLAB)</li>
- * <li>the class of the object to be returned is not {@link java.io.Serializable}</li>
+ * <li>the class of the object to be returned is not {@code java.io.Serializable}</li>
  * <li>the class of the object to be sent or returned is not defined in the JVM receiving the object</li>
  * </ul>
  * <strong>Running inside MATLAB</strong><br>
  * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
  * <ul>
- * <li>an internal MATLAB exception occurs</li>
- * <li>the method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components*</li>
+ * <li>an internal MATLAB exception occurs*</li>
+ * <li>the method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components
+ *     (This is done to prevent MATLAB from becoming non-responsive or hanging indefinitely.)</li>
  * </ul>
- * * This is done to prevent MATLAB from becoming non-responsive or hanging indefinitely.
+ * *Internal MATLAB exceptions occur primarily for two reasons:
+ * <ul>
+ * <li>There is an error in the MATLAB code executing. An example of this includes attempting to call a function that
+ *     does not exist (frequently due to a typo).</li>
+ * <li>The Java MATLAB Interface (JMI) becoming out of sync with MATLAB. An example of this is an exception being thrown
+ *     when attempting to retrieve or make use of a variable that has already been defined.</li>
+ * </ul>
  */
 public interface MatlabProxy<E>
 {
