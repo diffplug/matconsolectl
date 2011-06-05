@@ -62,7 +62,7 @@ import matlabcontrol.extensions.MatlabCallbackProxy.MatlabDataCallback;
  * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
  */
 @SuppressWarnings("serial")
-public class MainFrame extends JFrame
+public class DemoFrame extends JFrame
 {    
     //Status messages
     private static final String STATUS_DISCONNECTED = "Connection Status: Disconnected",
@@ -99,7 +99,7 @@ public class MainFrame extends JFrame
     /**
      * Create the main GUI.
      */
-    public MainFrame(String title)
+    public DemoFrame(String title)
     {
         super(title);
         
@@ -229,9 +229,9 @@ public class MainFrame extends JFrame
             @Override
             public void windowOpened(WindowEvent e)
             {
-                Dimension size = MainFrame.this.getSize();
+                Dimension size = DemoFrame.this.getSize();
                 size.height *= .8;
-                MainFrame.this.setMinimumSize(size);
+                DemoFrame.this.setMinimumSize(size);
             }
         });
     }

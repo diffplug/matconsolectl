@@ -21,7 +21,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import demo.gui.MainFrame;
+import demo.gui.DemoFrame;
 import javax.swing.WindowConstants;
 
 /**
@@ -37,7 +37,7 @@ class matlabcontroldemo
      */
     public matlabcontroldemo()
     {
-        MainFrame frame = new MainFrame("matlabcontrol demo - Running Inside MATLAB");
+        DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Inside MATLAB");
         frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
         frame.setVisible(true);
     }
