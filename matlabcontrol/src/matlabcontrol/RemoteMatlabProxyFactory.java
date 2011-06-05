@@ -27,14 +27,16 @@ import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will launch MATLAB. Each proxy created will control
@@ -76,10 +78,15 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private static final int CONNECTION_CHECK_PERIOD = 1000;
     
     /**
+     * Map of proxyIDs to the threads that are sleeping and awaiting to return a proxy.
+     */
+    private final ConcurrentMap<String, Thread> _identifierToThread = new ConcurrentHashMap<String, Thread>();
+    
+    /**
      * Map of proxyIDs to {@link RemoteMatlabProxy} instances.
      */
-    private final Map<String, RemoteMatlabProxy> _proxies = new HashMap<String, RemoteMatlabProxy>();
-
+    private final ConcurrentMap<String, RemoteMatlabProxy> _proxies = new ConcurrentHashMap<String, RemoteMatlabProxy>();
+    
     /**
      * The RMI registry used to communicate between JVMs. There is only ever one registry actually running on a given
      * machine, so multiple distinct programs making use of matlabcontrol all share the same underlying registry
@@ -250,10 +257,12 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(internalProxy, proxyID);
             _proxies.put(proxyID, proxy);
             
-            //Wake up the thread potentially waiting for the proxy
-            synchronized(RemoteMatlabProxyFactory.this)
+            //If there is a thread waiting for the proxy, wake it up
+            if(_identifierToThread.containsKey(proxyID))
             {
-                RemoteMatlabProxyFactory.this.notifyAll();
+                Thread thread = _identifierToThread.get(proxyID);
+                _identifierToThread.remove(proxyID);
+                thread.interrupt();
             }
             _listenerManager.connectionEstablished(proxy);
             
@@ -317,19 +326,24 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {
         String proxyID = this.requestProxy();
         
+        //Associate the calling thread with the proxy to be created so that the thread can be woken up when the
+        //proxy is received
+        _identifierToThread.put(proxyID, Thread.currentThread());
+        
         //Wait until the controller is received or until timeout
-        synchronized(this)
+        try
         {
-            try
-            {
-                this.wait(timeout);
-            }
-            catch(InterruptedException e)
+            Thread.sleep(timeout);
+        }
+        catch(InterruptedException e)
+        {
+            //If interrupted, it should be because the proxy has been returned - if not throw an exception
+            if(!_proxies.containsKey(proxyID))
             {
                 throw new MatlabConnectionException("Thread was interrupted while waiting for MATLAB proxy", e);
             }
         }
-        
+                    
         //If the proxy has not be received before the timeout
         if(!_proxies.containsKey(proxyID))
         {
@@ -401,49 +415,32 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */    
     private void initConnectionTimer()
     {
-        //If there is no timer yet, create a timer to monitor the connections
-        if(_connectionTimer == null)
+        //If there is no timer yet and if the factory has not been shutdown
+        if(_connectionTimer == null && _isShutdown)
         {
+            //Create a timer to monitor the connections
             _connectionTimer = new Timer();
             _connectionTimer.schedule(new TimerTask()
             {
                 @Override
                 public void run()
                 {
-                    RemoteMatlabProxyFactory.this.checkConnections();
-                }                
-            }, CONNECTION_CHECK_PERIOD, CONNECTION_CHECK_PERIOD);
-        }
-    }
-    
-    /**
-     * Checks the connections to MATLAB. If a connection has died, the listeners are informed and all references to it
-     * by this class are removed.
-     */
-    private void checkConnections()
-    {
-        //Proxies that have become disconnected
-        final ArrayList<RemoteMatlabProxy> disconnectedProxies = new ArrayList<RemoteMatlabProxy>();
+                    //Check each proxy's connection, if it is no longer connected remove the reference
+                    //and notify the listeners
+                    Iterator<Entry<String, RemoteMatlabProxy>> iterator = _proxies.entrySet().iterator();
+                    while(iterator.hasNext())
+                    {
+                        RemoteMatlabProxy proxy = iterator.next().getValue();
+                        if(!proxy.isConnected())
+                        {
+                            iterator.remove();
 
-        //Check each proxy's connection, if it has died add to disconnectedProxies
-        synchronized(_proxies)
-        {
-            ArrayList<String> proxyKeys = new ArrayList<String>(_proxies.keySet());
-            for(String proxyKey : proxyKeys)
-            {
-                RemoteMatlabProxy proxy = _proxies.get(proxyKey);
-                if(!proxy.isConnected())
-                {
-                    _proxies.remove(proxyKey);
-                    disconnectedProxies.add(proxy);
+                            //The notification occurs on a seperate thread so this will not slow down the loop
+                            _listenerManager.connectionLost(proxy);
+                        }
+                    }
                 }
-            }
-        }
-        
-        //Notify the listeners of the disconnected proxies
-        for(RemoteMatlabProxy proxy : disconnectedProxies)
-        {
-            _listenerManager.connectionLost(proxy);
+            }, CONNECTION_CHECK_PERIOD, CONNECTION_CHECK_PERIOD);
         }
     }
 }

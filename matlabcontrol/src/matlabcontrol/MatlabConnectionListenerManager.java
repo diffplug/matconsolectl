@@ -28,7 +28,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * Manages notification of {@link MatlabConnectionListener}s.
+ * Manages notification of {@link MatlabConnectionListener}s. This class is thread-safe.
  */
 class MatlabConnectionListenerManager
 {
@@ -49,6 +49,8 @@ class MatlabConnectionListenerManager
     
     /**
      * Adds a listener to be notified when MATLAB connections are established and lost.
+     * <br><br>
+     * This will have no effect if this manager has been shutdown via {@link #shutdown()}.
      * 
      * @param listener
      */

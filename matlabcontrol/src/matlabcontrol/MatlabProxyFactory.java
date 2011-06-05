@@ -23,15 +23,16 @@ package matlabcontrol;
  */
 
 /**
- * Creates instances of {@link MatlabProxy}. How these instances will be created depends on whether this code is running
- * inside MATLAB or outside MATLAB.
+ * Creates instances of {@link MatlabProxy}.
+ * <br><br>
+ * This class is thread-safe.
  */
 public class MatlabProxyFactory implements ProxyFactory
 {
     private final ProxyFactory _delegateFactory;
     
     /**
-     * Constructs the factory with the default options.
+     * Constructs the factory using defaults.
      * 
      * @throws MatlabConnectionException 
      */

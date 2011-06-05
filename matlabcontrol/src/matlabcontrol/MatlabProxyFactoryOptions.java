@@ -23,11 +23,13 @@ package matlabcontrol;
  */
 
 /**
- * Advanced options to configure how {@link MatlabProxyFactory} operates. Any and all of these properties may be left
- * unset, if so then a default will be used. Whether a given property will be used depends on whether the factory is
- * creating proxies inside MATLAB or outside MATLAB.
+ * Options that configure how {@link MatlabProxyFactory} operates. Any and all of these properties may be left unset, if
+ * so then a default will be used. Whether a given property will be used depends on if the code is running inside MATLAB
+ * or outside MATLAB.
+ * <br><br>
+ * This class is thread-safe.
  */
-public class MatlabProxyFactoryOptions
+public final class MatlabProxyFactoryOptions
 {
     private String _matlabLocation = null;
     private boolean _hidden = false;
@@ -43,7 +45,8 @@ public class MatlabProxyFactoryOptions
      * <li>The {@code Windows} directory only (no subdirectories are searched)</li>
      * <li>The {@code Windows\System32} directory</li>
      * <li>Directories listed in the {@code PATH} environment variable</li>
-     * <li>The registry App Paths: {@code HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths}</li>
+     * <li>App Paths defined in the registry with key
+     *     {@code HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths}</li>
      * </ul>
      * By default on Windows, MATLAB places an App Path entry in the registry so that {@code matlab} can be used to
      * launch MATLAB.
@@ -67,7 +70,7 @@ public class MatlabProxyFactoryOptions
      * 
      * @param matlabLocation
      */
-    public void setMatlabLocation(String matlabLocation)
+    public synchronized void setMatlabLocation(String matlabLocation)
     {
         _matlabLocation = matlabLocation;
     }
@@ -86,7 +89,7 @@ public class MatlabProxyFactoryOptions
      * 
      * @param hidden 
      */
-    public void setHidden(boolean hidden)
+    public synchronized void setHidden(boolean hidden)
     {
         _hidden = hidden;
     }
@@ -96,11 +99,14 @@ public class MatlabProxyFactoryOptions
      * 
      * @return 
      */
-    ImmutableFactoryOptions getImmutableCopy()
+    synchronized ImmutableFactoryOptions getImmutableCopy()
     {
         return new ImmutableFactoryOptions(_matlabLocation, _hidden);
     }
     
+    /**
+     * An immutable version of the factory options.
+     */
     static class ImmutableFactoryOptions
     {
         private final String _matlabLocation;
