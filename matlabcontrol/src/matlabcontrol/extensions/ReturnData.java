@@ -23,11 +23,120 @@ package matlabcontrol.extensions;
  */
 
 /**
- *
+ * Encapsulates the data returned from MATLAB.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public interface ReturnData
+public class ReturnData
 {
-    public Object get();
+    private final Object _data;
+    
+    ReturnData(Object data)
+    {
+        _data = data;
+    }
+    
+    /**
+     * Returns the data as an {@code Object}.
+     * 
+     * @return 
+     */
+    public Object get()
+    {
+        return _data;
+    }
+    
+    /**
+     * Returns the data as type {@code E}.
+     * 
+     * @param <E>
+     * @param clazz
+     * @return
+     * @throws ClassCastException if the cast cannot be performed
+     */
+    public <E> E getAs(Class<E> clazz) throws ClassCastException
+    {
+        return clazz.cast(_data);
+    }
+    
+    /**
+     * Returns the data as a {@code String}.
+     * 
+     * @return
+     * @throws ClassCastException if the cast cannot be performed
+     */
+    public String getAsString() throws ClassCastException
+    {
+        return this.getAs(String.class);
+    }
+    
+    /**
+     * Returns the data as a {@code double} array.
+     * 
+     * @return
+     * @throws ClassCastException if the cast cannot be performed
+     */
+    public double[] getAsDoubleArray() throws ClassCastException
+    {
+        return this.getAs(double[].class);
+    }
+    
+    /**
+     * Returns the data as an {@code Object} array.
+     * 
+     * @return
+     * @throws ClassCastException if the cast cannot be performed
+     */
+    public Object[] getAsObjectArray() throws ClassCastException
+    {
+        return this.getAs(Object[].class);
+    }
+    
+    /**
+     * Returns the data as type {@code E}. If the cast cannot be performed {@code null} will be returned.
+     * 
+     * @param <E>
+     * @param clazz
+     * @return 
+     */
+    public <E> E getIf(Class<E> clazz)
+    {
+        E convertedData = null;
+        if(clazz.isInstance(_data))
+        {
+            convertedData = clazz.cast(_data);
+        }
+        
+        return convertedData;
+    }
+    
+    /**
+     * Returns the data as a {@code String}. If the cast cannot be performed {@code null} will be returned.
+     * 
+     * @return 
+     */
+    public String getIfString()
+    {
+        return this.getIf(String.class);
+    }
+    
+    /**
+     * Returns the data as a {@code double} array. If the cast cannot be performed {@code null} will be returned.
+     * 
+     * @return 
+     */
+    public double[] getIfDoubleArray()
+    {
+        return this.getIf(double[].class);
+    }
+    
+    /**
+     * Returns the data as an {@code Object} array. If the cast cannot be performed {@code null} will be returned.
+     * 
+     * @return 
+     */
+    public Object[] getIfObjectArray()
+    {
+        return this.getIf(Object[].class);
+    }
 }

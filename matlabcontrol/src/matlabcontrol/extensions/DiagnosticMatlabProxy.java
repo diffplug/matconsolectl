@@ -28,7 +28,7 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
- * 
+ * Wraps around a proxy to provide a log of interactions. The data is not altered.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
@@ -37,17 +37,33 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     private final MatlabProxy<E> _delegateProxy;
     private final PrintStream _printStream;
     
+    /**
+     * Constructs the proxy, printing the interaction to provided {@code printStream}.
+     * 
+     * @param proxy
+     * @param printStream 
+     */
     public DiagnosticMatlabProxy(MatlabProxy<E> proxy, PrintStream printStream)
     {
         _delegateProxy = proxy;
         _printStream = printStream;
     }
     
+    /**
+     * Constructs the proxy, using {@code System.out} as the {@code PrintStream}.
+     * 
+     * @param proxy 
+     */
     public DiagnosticMatlabProxy(MatlabProxy<E> proxy)
     {
         this(proxy, System.out);
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @return 
+     */
     @Override
     public boolean isConnected()
     {
@@ -63,6 +79,11 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         return connected;
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @return 
+     */
     @Override
     public String getIdentifier()
     {
@@ -138,6 +159,11 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         return data;
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void exit() throws MatlabInvocationException
     {
@@ -157,6 +183,12 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param command
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void eval(final String command) throws MatlabInvocationException
     {           
@@ -176,6 +208,14 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param command
+     * @param returnCount
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
     public E returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
@@ -195,6 +235,13 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param functionName
+     * @param args
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
@@ -214,6 +261,14 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param functionName
+     * @param args
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
     public E returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
@@ -233,6 +288,15 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param functionName
+     * @param args
+     * @param returnCount
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
     public E returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
     {
@@ -252,6 +316,13 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param variableName
+     * @param value
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {   
@@ -290,6 +361,12 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param enable
+     * @throws MatlabInvocationException 
+     */
     @Override
     public void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
     {
@@ -307,6 +384,12 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
                 return "setDiagnosticMode(boolean)";
             }
         });
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "[DiagnosticMatlabProxy delegate:" + _delegateProxy + "]";
     }
     
     /**
