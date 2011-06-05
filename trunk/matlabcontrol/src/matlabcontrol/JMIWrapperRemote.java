@@ -37,7 +37,7 @@ import java.rmi.RemoteException;
  * <br><br>
  * For descriptions of what these methods do see the corresponding methods in {@link MatlabProxy}.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 interface JMIWrapperRemote extends Remote
 {

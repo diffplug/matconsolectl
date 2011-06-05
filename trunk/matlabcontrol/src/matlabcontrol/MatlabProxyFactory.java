@@ -26,6 +26,8 @@ package matlabcontrol;
  * Creates instances of {@link MatlabProxy}.
  * <br><br>
  * This class is thread-safe.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabProxyFactory implements ProxyFactory
 {

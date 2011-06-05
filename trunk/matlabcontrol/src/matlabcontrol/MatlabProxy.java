@@ -53,6 +53,8 @@ package matlabcontrol;
  * <li>The Java MATLAB Interface (JMI) becoming out of sync with MATLAB. An example of this is an exception being thrown
  *     when attempting to retrieve or make use of a variable that has already been defined.</li>
  * </ul>
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface MatlabProxy<E>
 {

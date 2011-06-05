@@ -25,7 +25,9 @@ package demo.gui;
 import javax.swing.WindowConstants;
 
 /**
- *
+ * Launches the demo when running outside MATLAB.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class RemoteMain
 {

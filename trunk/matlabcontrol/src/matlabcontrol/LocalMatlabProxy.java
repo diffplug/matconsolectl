@@ -25,7 +25,7 @@ package matlabcontrol;
 /**
  * Allows for calling MATLAB from <b>inside</b> of MATLAB.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 final class LocalMatlabProxy implements MatlabProxy<Object>
 {

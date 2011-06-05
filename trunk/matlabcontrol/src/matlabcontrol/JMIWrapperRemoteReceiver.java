@@ -28,7 +28,7 @@ import java.rmi.RemoteException;
 /**
  * Implement this interface to receive a {@link JMIWrapperRemote}. Necessary to have this interface for RMI.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 interface JMIWrapperRemoteReceiver extends Remote
 {

@@ -27,6 +27,8 @@ import java.util.concurrent.Executors;
 
 /**
  * Creates local instances of {@link MatlabProxy}.
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class LocalMatlabProxyFactory implements ProxyFactory
 {

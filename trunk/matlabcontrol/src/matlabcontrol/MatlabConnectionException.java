@@ -25,7 +25,7 @@ package matlabcontrol;
 /**
  * Represents a failure to connect to MATLAB or disconnect from MATLAB.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabConnectionException extends Exception
 {

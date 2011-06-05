@@ -25,7 +25,7 @@ package demo.gui;
 /**
  * Represents a method in the matlabcontrol API along with information to adjust the GUI.
  * 
- * @author <a href="mailto:jak2@cs.brown.edu">Joshua Kaplan</a>
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MethodDescriptor
 {
