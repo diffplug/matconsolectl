@@ -48,9 +48,9 @@ import matlabcontrol.MatlabConnectionListener;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
-import matlabcontrol.extensions.MatlabCallbackProxy;
-import matlabcontrol.extensions.MatlabCallbackProxy.MatlabCallback;
-import matlabcontrol.extensions.MatlabCallbackProxy.MatlabDataCallback;
+import matlabcontrol.extensions.MatlabCallbackInteractor;
+import matlabcontrol.extensions.MatlabCallbackInteractor.MatlabCallback;
+import matlabcontrol.extensions.MatlabCallbackInteractor.MatlabDataCallback;
 
 /**
  * A GUI example to demonstrate the main functionality of controlling MATLAB with matlabcontrol.
@@ -89,7 +89,7 @@ public class DemoFrame extends JFrame
     private MatlabProxyFactory _factory;
     
     //Proxy to communicate with MATLAB
-    private MatlabCallbackProxy _proxy;
+    private MatlabCallbackInteractor _proxy;
     
     //UI components
     private JButton _invokeButton;
@@ -171,7 +171,7 @@ public class DemoFrame extends JFrame
                 @Override
                 public void connectionEstablished(MatlabProxy proxy)
                 {
-                    _proxy = new MatlabCallbackProxy(proxy);
+                    _proxy = new MatlabCallbackInteractor(proxy);
                     
                     connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED));
                     connectionBar.setValue(100);

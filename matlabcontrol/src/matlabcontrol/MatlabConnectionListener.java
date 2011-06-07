@@ -37,12 +37,12 @@ public interface MatlabConnectionListener
      * 
      * @param proxy the proxy that is now connected
      */
-    public void connectionEstablished(MatlabProxy<Object> proxy);
+    public void connectionEstablished(MatlabProxy proxy);
     
     /**
      * Called when the connection to MATLAB has been lost.
      * 
      * @param proxy the proxy that is no longer connected
      */
-    public void connectionLost(MatlabProxy<Object> proxy);
+    public void connectionLost(MatlabProxy proxy);
 }

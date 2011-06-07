@@ -24,79 +24,40 @@ package matlabcontrol.extensions;
 
 import java.io.PrintStream;
 import java.lang.reflect.Array;
+
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabInteractor;
 
 /**
- * Wraps around a proxy to provide a log of interactions. The data is not altered.
+ * Wraps around an interactor to provide a log of interactions. The data is not altered.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
+public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
 {
-    private final MatlabProxy<E> _delegateProxy;
+    private final MatlabInteractor<E> _delegateInteractor;
     private final PrintStream _printStream;
     
     /**
-     * Constructs the proxy, printing the interaction to provided {@code printStream}.
+     * Constructs the interactor, printing the interaction to provided {@code printStream}.
      * 
-     * @param proxy
+     * @param interactor
      * @param printStream 
      */
-    public DiagnosticMatlabProxy(MatlabProxy<E> proxy, PrintStream printStream)
+    public DiagnosticMatlabInteractor(MatlabInteractor<E> interactor, PrintStream printStream)
     {
-        _delegateProxy = proxy;
+        _delegateInteractor = interactor;
         _printStream = printStream;
     }
     
     /**
-     * Constructs the proxy, using {@code System.out} as the {@code PrintStream}.
+     * Constructs the interactor, using {@code System.out} as the {@code PrintStream}.
      * 
-     * @param proxy 
+     * @param interactor 
      */
-    public DiagnosticMatlabProxy(MatlabProxy<E> proxy)
+    public DiagnosticMatlabInteractor(MatlabInteractor<E> interactor)
     {
-        this(proxy, System.out);
-    }
-
-    /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
-     * 
-     * @return 
-     */
-    @Override
-    public boolean isConnected()
-    {
-        _printStream.println("--------------------------------------------------------------------------------");
-        _printStream.println("Invoking: isConnected()");
-        
-        boolean connected = _delegateProxy.isConnected();
-        
-        _printStream.println("Successfully invoked, returned:");
-        _printStream.println(connected);
-        _printStream.println("--------------------------------------------------------------------------------");
-        
-        return connected;
-    }
-
-    /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
-     * 
-     * @return 
-     */
-    @Override
-    public String getIdentifier()
-    {
-        _printStream.println("--------------------------------------------------------------------------------");
-        _printStream.println("Invoking: getIdentifier()");
-        
-        String id = _delegateProxy.getIdentifier();
-        
-        _printStream.println("Successfully invoked, returned:");
-        _printStream.println(id);
-        _printStream.println("--------------------------------------------------------------------------------");
-        
-        return id;
+        this(interactor, System.out);
     }
     
     private static interface VoidInvocation
@@ -160,7 +121,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @throws MatlabInvocationException 
      */
@@ -172,7 +133,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateProxy.exit();
+                _delegateInteractor.exit();
             }
 
             @Override
@@ -184,7 +145,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param command
      * @throws MatlabInvocationException 
@@ -197,7 +158,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateProxy.eval(command);
+                _delegateInteractor.eval(command);
             }
 
             @Override
@@ -209,7 +170,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param command
      * @param returnCount
@@ -224,7 +185,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public E invoke() throws MatlabInvocationException
             {
-                return _delegateProxy.returningEval(command, returnCount);
+                return _delegateInteractor.returningEval(command, returnCount);
             }
 
             @Override
@@ -236,7 +197,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param functionName
      * @param args
@@ -250,7 +211,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateProxy.feval(functionName, args);
+                _delegateInteractor.feval(functionName, args);
             }
 
             @Override
@@ -262,7 +223,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param functionName
      * @param args
@@ -277,7 +238,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public E invoke() throws MatlabInvocationException
             {
-                return _delegateProxy.returningFeval(functionName, args);
+                return _delegateInteractor.returningFeval(functionName, args);
             }
 
             @Override
@@ -289,7 +250,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param functionName
      * @param args
@@ -305,7 +266,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public E invoke() throws MatlabInvocationException
             {
-                return _delegateProxy.returningFeval(functionName, args, returnCount);
+                return _delegateInteractor.returningFeval(functionName, args, returnCount);
             }
 
             @Override
@@ -317,7 +278,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param variableName
      * @param value
@@ -331,7 +292,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateProxy.setVariable(variableName, value);
+                _delegateInteractor.setVariable(variableName, value);
             }
 
             @Override
@@ -342,6 +303,13 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
         });
     }
 
+    /**
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param variableName
+     * @return
+     * @throws MatlabInvocationException 
+     */
     @Override
     public E getVariable(final String variableName) throws MatlabInvocationException
     {
@@ -350,7 +318,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public E invoke() throws MatlabInvocationException
             {
-                return _delegateProxy.getVariable(variableName);
+                return _delegateInteractor.getVariable(variableName);
             }
 
             @Override
@@ -362,7 +330,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     }
 
     /**
-     * Delegates to the proxy; prints the interaction to the {@code PrintStream}.
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
      * @param enable
      * @throws MatlabInvocationException 
@@ -375,7 +343,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateProxy.setDiagnosticMode(enable);
+                _delegateInteractor.setDiagnosticMode(enable);
             }
 
             @Override
@@ -389,7 +357,7 @@ public class DiagnosticMatlabProxy<E> implements MatlabProxy<E>
     @Override
     public String toString()
     {
-        return "[DiagnosticMatlabProxy delegate:" + _delegateProxy + "]";
+        return "[DiagnosticMatlabInteractor delegate:" + _delegateInteractor + "]";
     }
     
     /**

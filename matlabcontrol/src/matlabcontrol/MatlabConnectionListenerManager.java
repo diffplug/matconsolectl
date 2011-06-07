@@ -54,7 +54,7 @@ class MatlabConnectionListenerManager
     /**
      * Adds a listener to be notified when MATLAB connections are established and lost.
      * <br><br>
-     * This will have no effect if this manager has been shutdown via {@link #shutdown()}.
+     * Listeners will not be notified if the manager has been shutdown via {@link #shutdown()}.
      * 
      * @param listener
      */
@@ -81,7 +81,7 @@ class MatlabConnectionListenerManager
      * 
      * @param proxy
      */
-    void connectionEstablished(final MatlabProxy<Object> proxy)
+    void connectionEstablished(final MatlabProxy proxy)
     {
         _connectionExecutor.submit(new Runnable()
         {
@@ -102,7 +102,7 @@ class MatlabConnectionListenerManager
      * Notify the listeners that the connection has been lost in a separate thread so that it whatever users of this API
      * are doing it does not interfere with checking the proxies.
      */
-    void connectionLost(final MatlabProxy<Object> proxy)
+    void connectionLost(final MatlabProxy proxy)
     {
         _connectionExecutor.submit(new Runnable()
         {
