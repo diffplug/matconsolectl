@@ -26,50 +26,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabInteractor;
 
 /**
- * Wraps around a proxy making the method calls operate with callbacks instead of return values. Due to this difference
- * this class does not implement {@link MatlabProxy}, but it closely matches the methods. For each method that calls
- * MATLAB in {@code MatlabProxy} the same method exists but has one additional parameter that is either
- * {@link MatlabCallbackProxy.MatlabCallback} or {@link MatlabCallbackProxy.MatlabDataCallback}. Because the actual
- * proxy invocation occurs on a separate thread from the one calling the methods in this class, it can be used from
- * within MATLAB on the Event Dispatch Thread (EDT).
+ * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
+ * difference this class does not implement {@link MatlabInteractor}, but it closely matches the methods. For each
+ * method that calls MATLAB in {@code MatlabInteractor} the same method exists but has one additional parameter that is
+ * either {@link MatlabCallbackInteractor.MatlabCallback} or {@link MatlabCallbackInteractor.MatlabDataCallback}.
+ * Because the actual proxy invocation occurs on a separate thread from the one calling the methods in this class, it
+ * can be used from within MATLAB on the Event Dispatch Thread (EDT).
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabCallbackProxy<E>
+public class MatlabCallbackInteractor<E>
 {
     private final ExecutorService _executor = Executors.newSingleThreadExecutor();
-    private MatlabProxy<E> _delegateProxy;
+    private MatlabInteractor<E> _delegateInteractor;
     
-    public MatlabCallbackProxy(MatlabProxy<E> proxy)
+    public MatlabCallbackInteractor(MatlabInteractor<E> interactor)
     {
-        _delegateProxy = proxy;
+        _delegateInteractor = interactor;
     }
 
     /**
-     * Delegates to the proxy without a callback.
-     * 
-     * @return 
-     */
-    public boolean isConnected()
-    {
-        return _delegateProxy.isConnected();
-    }
-
-    /**
-     * Delegates to the proxy without a callback.
-     * 
-     * @return 
-     */
-    public String getIdentifier()
-    {
-        return _delegateProxy.getIdentifier();
-    }
-
-    /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param callback 
      */
@@ -82,7 +62,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _delegateProxy.exit();
+                    _delegateInteractor.exit();
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -98,7 +78,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param command
      * @param callback 
@@ -112,7 +92,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _delegateProxy.eval(command);
+                    _delegateInteractor.eval(command);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -124,7 +104,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param command
      * @param returnCount
@@ -139,7 +119,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _delegateProxy.returningEval(command, returnCount);
+                    E data = _delegateInteractor.returningEval(command, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -151,7 +131,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param functionName
      * @param args
@@ -166,7 +146,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _delegateProxy.feval(functionName, args);
+                    _delegateInteractor.feval(functionName, args);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -178,7 +158,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param functionName
      * @param args
@@ -193,7 +173,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _delegateProxy.returningFeval(functionName, args);
+                    E data = _delegateInteractor.returningFeval(functionName, args);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -205,7 +185,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param functionName
      * @param args
@@ -221,7 +201,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _delegateProxy.returningFeval(functionName, args, returnCount);
+                    E data = _delegateInteractor.returningFeval(functionName, args, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -233,7 +213,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param variableName
      * @param value
@@ -248,7 +228,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _delegateProxy.setVariable(variableName, value);
+                    _delegateInteractor.setVariable(variableName, value);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -260,7 +240,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param variableName
      * @param callback 
@@ -274,7 +254,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    E data = _delegateProxy.getVariable(variableName);
+                    E data = _delegateInteractor.getVariable(variableName);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -286,7 +266,7 @@ public class MatlabCallbackProxy<E>
     }
 
     /**
-     * Delegates to the proxy, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
      * @param enable
      * @param callback 
@@ -300,7 +280,7 @@ public class MatlabCallbackProxy<E>
             {
                 try
                 {
-                    _delegateProxy.setDiagnosticMode(enable);
+                    _delegateInteractor.setDiagnosticMode(enable);
                     callback.invocationSucceeded();
                 }
                 catch(MatlabInvocationException e)
@@ -314,7 +294,7 @@ public class MatlabCallbackProxy<E>
     @Override
     public String toString()
     {
-        return "[MatlabCallbackProxy delegate:" + _delegateProxy + "]";
+        return "[MatlabCallbackInteractor delegate:" + _delegateInteractor + "]";
     }
     
     /**
