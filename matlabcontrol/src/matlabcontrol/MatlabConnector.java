@@ -67,10 +67,9 @@ class MatlabConnector
             _wrapper = new JMIWrapper();
             _proxyID = proxyID;
         }
-        else
-        {
-            throw new MatlabConnectionException("A connection between MATLAB and Java can only be made once");
-        }
+        
+        //Register this session of MATLAB
+        MatlabBroadcaster.broadcast();
         
         //Attempt to connect to external Java program and transmit proxy
         try
@@ -81,7 +80,10 @@ class MatlabConnector
             //Get the receiver from the registry
             JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(receiverID);
             
-            //Create the internal proxy and then pass it over RMI to the Java application in its own JVM
+            //Register the receiver with broadcaster
+            MatlabBroadcaster.addReceiver(receiver); 
+            
+            //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
             receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(_wrapper));
         }
         //If for any reason the attempt fails, throw exception that indicates connection could not be established

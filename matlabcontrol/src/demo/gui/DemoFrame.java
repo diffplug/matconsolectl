@@ -25,6 +25,7 @@ package demo.gui;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
@@ -173,10 +174,17 @@ public class DemoFrame extends JFrame
                 {
                     _proxy = new MatlabCallbackInteractor(proxy);
                     
-                    connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED));
-                    connectionBar.setValue(100);
-                    connectionBar.setIndeterminate(false);
-                    _invokeButton.setEnabled(true);
+                    EventQueue.invokeLater(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED));
+                            connectionBar.setValue(100);
+                            connectionBar.setIndeterminate(false);
+                            _invokeButton.setEnabled(true);
+                        }
+                    });
                 }
     
                 //When the connection is lost, null the proxy, update UI
@@ -185,12 +193,19 @@ public class DemoFrame extends JFrame
                 {
                     _proxy = null;
     
-                    connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_DISCONNECTED));
-                    _returnPane.setBorder(BorderFactory.createTitledBorder(RETURNED_DEFAULT));
-                    _returnArea.setText("");
-                    connectionBar.setValue(0);
-                    connectionButton.setEnabled(true);
-                    _invokeButton.setEnabled(false);
+                    EventQueue.invokeLater(new Runnable()
+                    {
+                        @Override
+                        public void run()
+                        {
+                            connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_DISCONNECTED));
+                            _returnPane.setBorder(BorderFactory.createTitledBorder(RETURNED_DEFAULT));
+                            _returnArea.setText("");
+                            connectionBar.setValue(0);
+                            connectionButton.setEnabled(true);
+                            _invokeButton.setEnabled(false);
+                        }
+                    });
                 }
             });
         }

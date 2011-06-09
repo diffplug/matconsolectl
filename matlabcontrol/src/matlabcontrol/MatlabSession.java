@@ -26,13 +26,28 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Implement this interface to receive a {@link JMIWrapperRemote}. Necessary to have this interface for RMI.
- * 
+ * An implementation of this interface is bound to the RMI registry, representing this session of MATLAB.
+ *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface JMIWrapperRemoteReceiver extends Remote
+interface MatlabSession extends Remote
 {
-    public void registerControl(String proxyID, JMIWrapperRemote internalProxy) throws RemoteException;
+    /**
+     * If a remote proxy is connected to this session of MATLAB.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
+    public boolean isRemoteProxyConnected() throws RemoteException;
     
-    public void checkConnection() throws RemoteException;
+    /**
+     * Causes matlabcontrol to execute the same code that occurs when launching MATLAB with matlabcontrol but instead
+     * initiates it over RMI.
+     * 
+     * @param receiverID
+     * @param proxyID
+     * @throws RemoteException
+     * @throws MatlabConnectionException 
+     */
+    public void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException; 
 }
