@@ -22,17 +22,24 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Implement this interface to receive a {@link JMIWrapperRemote}. Necessary to have this interface for RMI.
+ * Implementation of {@link MatlabSession}. Split into interface and implementation to work properly with RMI.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface JMIWrapperRemoteReceiver extends Remote
-{
-    public void registerControl(String proxyID, JMIWrapperRemote internalProxy) throws RemoteException;
-    
-    public void checkConnection() throws RemoteException;
+class MatlabSessionImpl implements MatlabSession
+{   
+    @Override
+    public boolean isRemoteProxyConnected() throws RemoteException
+    {   
+        return MatlabBroadcaster.areAnyReceiversConnected();
+    }
+
+    @Override
+    public void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException
+    {
+        MatlabConnector.connectFromMatlab(receiverID, proxyID);
+    }
 }

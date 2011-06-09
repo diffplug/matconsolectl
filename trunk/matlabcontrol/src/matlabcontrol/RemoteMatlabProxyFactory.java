@@ -24,6 +24,7 @@ package matlabcontrol;
 
 import java.io.IOException;
 import java.rmi.NoSuchObjectException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -103,7 +104,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * Value used to bind the {@link ProxyReceiver}, as a {@link JMIWrapperRemoteReceiver} so that it can be
      * retrieved from within the MATLAB JVM with this value.
      */
-    private final String _receiverID = getRandomValue();
+    private final String _receiverID = "REMOTE_RECEIVER_" + getRandomValue();
     
     /**
      * Whether this factory has been shutdown via {@link #shutdown()}. Once the factory has been shutdown, all
@@ -184,7 +185,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {
         //If the registry hasn't been created
         if(_registry == null)
-        {
+        {   
             //Create a RMI registry
             try
             {
@@ -203,8 +204,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 }
             }
 
-            //Tell the code base where it is, and just to be safe force it to use it
-            //(This is necessary so that paths with spaces work properly)
+            //Tell the code base where it is and force it to use it exclusively
+            //This is necessary so that paths with spaces work properly
             System.setProperty("java.rmi.server.codebase", Configuration.getCodebaseLocation());
             System.setProperty("java.rmi.server.useCodebaseOnly", "true");
         }
@@ -223,7 +224,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         catch(Exception e)
         {
-            throw new MatlabConnectionException("Could not bind proxy receiever to the RMI registry", e);
+            throw new MatlabConnectionException("Could not bind proxy receiver to the RMI registry", e);
         }
     }
     
@@ -269,6 +270,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Create the timer, if necessary, which checks if proxies are still connected
             RemoteMatlabProxyFactory.this.initConnectionTimer();
         }
+        
+        @Override
+        public void checkConnection() { }
     }
     
     /**
@@ -290,26 +294,41 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         //Unique ID for proxy
-        String proxyID = getRandomValue();
+        String proxyID = "PROXY_" + getRandomValue();
         
-        //Argument that MATLAB will run on start.
-        //Tells MATLAB to add this code to its classpath, then to call a method which
-        //will create a proxy and send it over RMI back to this JVM.
-        String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
-                        MatlabConnector.class.getName() + 
-                        ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "');";
-        List<String> args = new ArrayList<String>(_processArguments);
-        args.add(runArg);
-        
-        //Attempt to run MATLAB
-        try
-        {   
-            ProcessBuilder builder = new ProcessBuilder(args);
-            builder.start();
-        }
-        catch(IOException e)
+        MatlabSession session = getExistingSession();
+        if(session != null)
         {
-            throw new MatlabConnectionException("Could not launch MATLAB. Process arguments: " + args, e);
+            try
+            {
+                session.connectFromRMI(_receiverID, proxyID);
+            }
+            catch(RemoteException e)
+            {
+                throw new MatlabConnectionException("Could not connect to running MATLAB session", e);
+            }
+        }
+        else
+        {
+            //Argument that MATLAB will run on start.
+            //Tells MATLAB to add this code to its classpath, then to call a method which
+            //will create a proxy and send it over RMI back to this JVM.
+            String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
+                            MatlabConnector.class.getName() + 
+                            ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "');";
+            List<String> args = new ArrayList<String>(_processArguments);
+            args.add(runArg);
+
+            //Attempt to run MATLAB
+            try
+            {   
+                ProcessBuilder builder = new ProcessBuilder(args);
+                builder.start();
+            }
+            catch(IOException e)
+            {
+                throw new MatlabConnectionException("Could not launch MATLAB. Process arguments: " + args, e);
+            }
         }
         
         return proxyID;
@@ -352,6 +371,33 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         return _proxies.get(proxyID);
+    }
+    
+    private MatlabSession getExistingSession()
+    {
+        MatlabSession availableSession = null;
+        
+        try
+        {
+            Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);;
+                
+            String[] remoteNames = registry.list();
+            for(String name : remoteNames)
+            {
+                if(name.startsWith(MatlabBroadcaster.MATLAB_SESSION_PREFIX))
+                {
+                    MatlabSession session = (MatlabSession) registry.lookup(name);
+                    if(!session.isRemoteProxyConnected())
+                    {
+                        availableSession = session;
+                        break;
+                    }
+                }
+            }
+        }
+        catch(Exception e) { }
+        
+        return availableSession;
     }
     
     @Override
@@ -416,7 +462,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private void initConnectionTimer()
     {
         //If there is no timer yet and if the factory has not been shutdown
-        if(_connectionTimer == null && _isShutdown)
+        if(_connectionTimer == null && !_isShutdown)
         {
             //Create a timer to monitor the connections
             _connectionTimer = new Timer();
