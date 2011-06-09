@@ -31,7 +31,7 @@ It was created to allow for a grading program written in Java used by teaching a
 
 * When controlling a remote session can I have it control an already open instance of MATLAB? *
 
-No, and there are no plans to add this functionality as it would dramatically increase the complexity of successfully connecting to a remote session. However, the code is open source so feel free to modify it to do so.
+No. This functionality is planned for a future release.
 
 * Can the Java program and MATLAB be on separate computers on the same network? *
 
@@ -39,4 +39,4 @@ No, and there are no plans to add this functionality. However, the code is open 
 
 * Is matlabcontrol thread-safe?* 
 
-No, and there are no immediate plans for it to be thread-safe. If enough interest is expressed in making this API thread-safe then it might happen.
+No. This functionality is planned for a future release.
