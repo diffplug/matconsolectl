@@ -31,15 +31,35 @@ import java.rmi.RemoteException;
  */
 class MatlabSessionImpl implements MatlabSession
 {   
+    private boolean _expectingConnection = false;
+    
     @Override
-    public boolean isRemoteProxyConnected() throws RemoteException
+    public synchronized boolean isAvailableForConnection() throws RemoteException
     {   
-        return MatlabBroadcaster.areAnyReceiversConnected();
+        boolean isAvailable;
+        
+        if(_expectingConnection)
+        {
+            isAvailable = false;
+        }
+        else if(MatlabBroadcaster.areAnyReceiversConnected())
+        {
+            isAvailable = false;
+        }
+        //If there is no current connection, then a request to create a proxy will come next
+        else
+        {
+            isAvailable = true;
+            _expectingConnection = true;
+        }
+        
+        return isAvailable;
     }
 
     @Override
-    public void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException
+    public synchronized void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException
     {
+        _expectingConnection = false;
         MatlabConnector.connectFromMatlab(receiverID, proxyID);
     }
 }

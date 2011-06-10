@@ -33,12 +33,12 @@ import java.rmi.RemoteException;
 interface MatlabSession extends Remote
 {
     /**
-     * If a remote proxy is connected to this session of MATLAB.
+     * If this session is available to receive a connection to create a remote proxy.
      * 
      * @return
      * @throws RemoteException 
      */
-    public boolean isRemoteProxyConnected() throws RemoteException;
+    public boolean isAvailableForConnection() throws RemoteException;
     
     /**
      * Causes matlabcontrol to execute the same code that occurs when launching MATLAB with matlabcontrol but instead
