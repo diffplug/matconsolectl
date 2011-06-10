@@ -25,7 +25,7 @@ package matlabcontrol;
 /**
  * Options that configure how {@link MatlabProxyFactory} operates. Any and all of these properties may be left unset, if
  * so then a default will be used. Whether a given property will be used depends on if the code is running inside MATLAB
- * or outside MATLAB.
+ * or outside MATLAB. Currently all properties are used only when running outside MATLAB.
  * <br><br>
  * This class is thread-safe.
  * 
@@ -35,6 +35,7 @@ public final class MatlabProxyFactoryOptions
 {
     private String _matlabLocation = null;
     private boolean _hidden = false;
+    private boolean _useRunning = true;
     
     /**
      * Sets the location of the MATLAB executable or script that will launch MATLAB. This does not have to be an
@@ -51,7 +52,7 @@ public final class MatlabProxyFactoryOptions
      *     {@code HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths}</li>
      * </ul>
      * By default on Windows, MATLAB places an App Path entry in the registry so that {@code matlab} can be used to
-     * launch MATLAB.
+     * launch MATLAB. If this property is not set, this App Path entry will be used.
      * <br><br>
      * <strong>OS X</strong><br>
      * Locations relative to the following will be understood:
@@ -59,7 +60,8 @@ public final class MatlabProxyFactoryOptions
      * <li>The current working directory</li>
      * <li>Directories listed in the {@code PATH} environment variable</li>
      * </ul>
-     * On OS X, MATLAB is installed in {@code /Applications/} as an application bundle.
+     * On OS X, MATLAB is installed in {@code /Applications/} as an application bundle. If this property is not set,
+     * the executable inside of the application bundle will be used.
      * <br><br>
      * <strong>Linux</strong><br>
      * Locations relative to the following will be understood:
@@ -68,7 +70,7 @@ public final class MatlabProxyFactoryOptions
      * <li>Directories listed in the {@code PATH} environment variable</li>
      * </ul>
      * During the installation process on Linux, MATLAB can create a symbolic link named {@code matlab} that can be used
-     * to launch MATLAB.
+     * to launch MATLAB. If this property is not set, this symbolic link will be used.
      * 
      * @param matlabLocation
      */
@@ -78,7 +80,8 @@ public final class MatlabProxyFactoryOptions
     }
     
     /**
-     * Sets whether MATLAB should appear hidden. If set to {@code true} then the splash screen will not be shown and:
+     * Sets whether MATLAB should appear hidden. By default this property is set to {@code false}. If set to
+     * {@code true} then the splash screen will not be shown and:
      * <br><br>
      * <strong>Windows</strong><br>
      * The MATLAB Command Window will appear fully minimized.
@@ -97,13 +100,29 @@ public final class MatlabProxyFactoryOptions
     }
     
     /**
+     * Sets whether the factory should attempt to create a proxy that is connected to a running session of MATLAB. By
+     * default this property is set to {@code true}.
+     * <br><br>
+     * In order for the factory to connect to the session of MATLAB, it must know about the session. This will be the
+     * case if any factory launched the session of MATLAB or {@link MatlabBroadcaster#broadcast()} was called from
+     * inside a session of MATLAB. The factory will only connect to a session that does not currently have a proxy
+     * controlling it from outside of MATLAB.
+     * 
+     * @param useRunning 
+     */
+    public synchronized void setUseRunningSession(boolean useRunning)
+    {
+        _useRunning = useRunning;
+    }
+    
+    /**
      * Constructs an immutable copy of the options.
      * 
      * @return 
      */
     synchronized ImmutableFactoryOptions getImmutableCopy()
     {
-        return new ImmutableFactoryOptions(_matlabLocation, _hidden);
+        return new ImmutableFactoryOptions(_matlabLocation, _hidden, _useRunning);
     }
     
     /**
@@ -113,11 +132,13 @@ public final class MatlabProxyFactoryOptions
     {
         private final String _matlabLocation;
         private final boolean _hidden;
+        private final boolean _useRunning;
         
-        private ImmutableFactoryOptions(String matlabLocation, boolean hidden)
+        private ImmutableFactoryOptions(String matlabLocation, boolean hidden, boolean useRunning)
         {
             _matlabLocation = matlabLocation;
             _hidden = hidden;
+            _useRunning = useRunning;
         }
         
         public String getMatlabLocation()
@@ -128,6 +149,11 @@ public final class MatlabProxyFactoryOptions
         public boolean getHidden()
         {
             return _hidden;
+        }
+        
+        public boolean getUseRunningSession()
+        {
+            return _useRunning;
         }
     }
 }

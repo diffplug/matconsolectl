@@ -48,6 +48,11 @@ import java.util.concurrent.ConcurrentMap;
 class RemoteMatlabProxyFactory implements ProxyFactory
 {
     /**
+     * The options that configure this instance of the factory.
+     */
+    private final MatlabProxyFactoryOptions.ImmutableFactoryOptions _options;
+    
+    /**
      * A timer that periodically checks if the proxies are still connected.
      */
     private Timer _connectionTimer;
@@ -114,8 +119,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     
     public RemoteMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options) throws MatlabConnectionException
     {
+        _options = options;
+        
         //Build arguments that will launch MATLAB
-        _processArguments = this.getProcessArguments(options); 
+        _processArguments = this.getProcessArguments(); 
         
         //Location of where this code is
         _supportCodeLocation = Configuration.getSupportCodeLocation();
@@ -134,14 +141,14 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * @return
      * @throws MatlabConnectionException 
      */
-    private List<String> getProcessArguments(MatlabProxyFactoryOptions.ImmutableFactoryOptions options) throws MatlabConnectionException
+    private List<String> getProcessArguments() throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
         
         //Location of MATLAB
-        if(options.getMatlabLocation() != null)
+        if(_options.getMatlabLocation() != null)
         {
-            processArguments.add(options.getMatlabLocation());
+            processArguments.add(_options.getMatlabLocation());
         }
         else
         {
@@ -149,7 +156,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         //MATLAB flags
-        if(options.getHidden())
+        if(_options.getHidden())
         {
             if(Configuration.isWindows())
             {
@@ -236,14 +243,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
-        /**
-         * This method is to be called by {@link MatlabConnector} running inside of the MATLAB JVM.
-         * 
-         * @param proxyID the identifier for this proxy
-         * @param internalProxy the proxy used internally
-         */
         @Override
-        public void registerControl(String proxyID, JMIWrapperRemote internalProxy)
+        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper)
         {   
             //Wait for 2 seconds so that MATLAB can properly initialize.
             //Attempts to determine exactly when MATLAB is properly initialized have failed. This solution, while less
@@ -255,7 +256,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             catch(InterruptedException e) { }
             
             //Create proxy, store it
-            RemoteMatlabProxy proxy = new RemoteMatlabProxy(internalProxy, proxyID);
+            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, proxyID);
             _proxies.put(proxyID, proxy);
             
             //If there is a thread waiting for the proxy, wake it up
@@ -270,9 +271,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Create the timer, if necessary, which checks if proxies are still connected
             RemoteMatlabProxyFactory.this.initConnectionTimer();
         }
-        
+
         @Override
-        public void checkConnection() { }
+        public void checkConnection() throws RemoteException { }
     }
     
     /**
@@ -285,18 +286,35 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         return UUID.randomUUID().toString();
     }
     
+    private static String getRandomProxyID()
+    {
+        return "PROXY_" + getRandomValue();
+    }
+    
     @Override
     public String requestProxy() throws MatlabConnectionException
+    {
+        String proxyID = getRandomProxyID();
+        this.requestProxy(proxyID);
+        
+        return proxyID;
+    }
+    
+    private void requestProxy(String proxyID) throws MatlabConnectionException
     {
         if(_isShutdown)
         {
             throw new MatlabConnectionException("This factory has been shutdown");
         }
         
-        //Unique ID for proxy
-        String proxyID = "PROXY_" + getRandomValue();
+        //Attempt to locate a running session that can be connected to, if options permit doing so
+        MatlabSession session = null;
+        if(_options.getUseRunningSession())
+        {
+            session = getExistingSession();
+        }
         
-        MatlabSession session = getExistingSession();
+        //If there is a running session available for connection
         if(session != null)
         {
             try
@@ -308,6 +326,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 throw new MatlabConnectionException("Could not connect to running MATLAB session", e);
             }
         }
+        //Launch a new session of MATLAB
         else
         {
             //Argument that MATLAB will run on start.
@@ -330,8 +349,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 throw new MatlabConnectionException("Could not launch MATLAB. Process arguments: " + args, e);
             }
         }
-        
-        return proxyID;
     }
     
     @Override
@@ -342,12 +359,15 @@ class RemoteMatlabProxyFactory implements ProxyFactory
 
     @Override
     public RemoteMatlabProxy getProxy(long timeout) throws MatlabConnectionException
-    {
-        String proxyID = this.requestProxy();
+    {        
+        String proxyID = getRandomProxyID();
         
         //Associate the calling thread with the proxy to be created so that the thread can be woken up when the
         //proxy is received
         _identifierToThread.put(proxyID, Thread.currentThread());
+        
+        //Request proxy
+        this.requestProxy(proxyID);
         
         //Wait until the controller is received or until timeout
         try
@@ -373,6 +393,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         return _proxies.get(proxyID);
     }
     
+    /**
+     * Returns a session that is available for connection. If no session is available, {@code null} will be returned.
+     * 
+     * @return 
+     */
     private MatlabSession getExistingSession()
     {
         MatlabSession availableSession = null;
@@ -387,7 +412,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 if(name.startsWith(MatlabBroadcaster.MATLAB_SESSION_PREFIX))
                 {
                     MatlabSession session = (MatlabSession) registry.lookup(name);
-                    if(!session.isRemoteProxyConnected())
+                    if(session.isAvailableForConnection())
                     {
                         availableSession = session;
                         break;
