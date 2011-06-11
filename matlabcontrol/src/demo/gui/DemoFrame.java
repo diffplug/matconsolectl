@@ -68,7 +68,8 @@ public class DemoFrame extends JFrame
     //Status messages
     private static final String STATUS_DISCONNECTED = "Connection Status: Disconnected",
                                 STATUS_CONNECTING = "Connection Status: Connecting",
-                                STATUS_CONNECTED = "Connection Status: Connected";
+                                STATUS_CONNECTED_EXISTING = "Connection Status: Connected (Existing)",
+                                STATUS_CONNECTED_LAUNCHED = "Connection Status: Connected (Launched)";
     
     //Return messages
     private static final String RETURNED_DEFAULT = "Returned Object / Java Exception",
@@ -170,7 +171,7 @@ public class DemoFrame extends JFrame
             {
                 //When the connection is established, wrap the proxy in a callback proxy and store it, update UI
                 @Override
-                public void connectionEstablished(MatlabProxy proxy)
+                public void connectionEstablished(final MatlabProxy proxy)
                 {
                     _proxy = new MatlabCallbackInteractor(proxy);
                     
@@ -179,7 +180,14 @@ public class DemoFrame extends JFrame
                         @Override
                         public void run()
                         {
-                            connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED));
+                            if(proxy.isExistingSession())
+                            {
+                                connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED_EXISTING));
+                            }
+                            else
+                            {
+                                connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED_LAUNCHED));
+                            }
                             connectionBar.setValue(100);
                             connectionBar.setIndeterminate(false);
                             _invokeButton.setEnabled(true);

@@ -43,15 +43,21 @@ final class RemoteMatlabProxy implements MatlabProxy
     private final String _id;
     
     /**
+     * Whether the session of MATLAB this proxy is connected to is an existing session.
+     */
+    private final boolean _existingSession;
+    
+    /**
      * The proxy is never to be created outside of this package, it is to be constructed after a
      * {@link JMIWrapperRemote} has been received via RMI.
      * 
      * @param internalProxy
      */
-    RemoteMatlabProxy(JMIWrapperRemote internalProxy, String id)
+    RemoteMatlabProxy(JMIWrapperRemote internalProxy, String id, boolean existingSession)
     {
         _internalProxy = internalProxy;
         _id = id;
+        _existingSession = existingSession;
     }
     
     @Override
@@ -75,6 +81,12 @@ final class RemoteMatlabProxy implements MatlabProxy
         }
         
         return connected;
+    }
+    
+    @Override
+    public boolean isExistingSession()
+    {
+        return _existingSession;
     }
     
     private static interface RemoteVoidInvocation
