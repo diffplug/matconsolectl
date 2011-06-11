@@ -40,9 +40,10 @@ interface JMIWrapperRemoteReceiver extends Remote
      * 
      * @param proxyID
      * @param jmiWrapper
+     * @param existingSession if the session sending the jmiWrapper was running prior to the request to create the proxy
      * @throws RemoteException 
      */
-    public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper) throws RemoteException;
+    public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession) throws RemoteException;
     
     /**
      * The identifier of the receiver.

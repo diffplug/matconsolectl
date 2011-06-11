@@ -59,7 +59,7 @@ class MatlabConnector
      * 
      * @throws MatlabConnectionException
      */
-    public static void connectFromMatlab(String receiverID, String proxyID) throws MatlabConnectionException
+    public static void connectFromMatlab(String receiverID, String proxyID, boolean existingSession) throws MatlabConnectionException
     {   
         //Register this session of MATLAB
         MatlabBroadcaster.broadcast();
@@ -77,7 +77,7 @@ class MatlabConnector
             MatlabBroadcaster.addReceiver(receiver); 
             
             //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
-            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()));
+            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()), existingSession);
         }
         //If for any reason the attempt fails, throw exception that indicates connection could not be established
         catch(Exception e)

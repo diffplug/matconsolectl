@@ -76,4 +76,11 @@ public interface MatlabProxy extends MatlabInteractor<Object>
      * @return identifier
      */
     public String getIdentifier();
+    
+    /**
+     * Whether this proxy is connected to a session of MATLAB that was running previous to the proxy being created.
+     * 
+     * @return 
+     */
+    public boolean isExistingSession();
 }

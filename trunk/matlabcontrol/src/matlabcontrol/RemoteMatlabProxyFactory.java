@@ -244,7 +244,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
         @Override
-        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper)
+        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
         {   
             //Wait for 2 seconds so that MATLAB can properly initialize.
             //Attempts to determine exactly when MATLAB is properly initialized have failed. This solution, while less
@@ -256,7 +256,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             catch(InterruptedException e) { }
             
             //Create proxy, store it
-            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, proxyID);
+            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, proxyID, existingSession);
             _proxies.put(proxyID, proxy);
             
             //If there is a thread waiting for the proxy, wake it up
@@ -337,7 +337,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //will create a proxy and send it over RMI back to this JVM.
             String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
                             MatlabConnector.class.getName() + 
-                            ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "');";
+                            ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "', false);";
             List<String> args = new ArrayList<String>(_processArguments);
             args.add(runArg);
 

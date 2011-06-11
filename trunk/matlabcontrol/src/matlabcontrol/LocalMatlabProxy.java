@@ -181,6 +181,12 @@ final class LocalMatlabProxy implements MatlabProxy
     }
     
     @Override
+    public boolean isExistingSession()
+    {
+        return true;
+    }
+    
+    @Override
     public String toString()
     {
         return "[LocalMatlabProxy identifier:" + _id + "]";
