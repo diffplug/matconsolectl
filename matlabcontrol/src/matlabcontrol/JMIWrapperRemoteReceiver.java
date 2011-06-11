@@ -45,9 +45,10 @@ interface JMIWrapperRemoteReceiver extends Remote
     public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper) throws RemoteException;
     
     /**
-     * Does nothing, called to determine if the receiver is still connected.
+     * The identifier of the receiver.
      * 
+     * @return
      * @throws RemoteException 
      */
-    public void checkConnection() throws RemoteException;
+    public String getReceiverID() throws RemoteException;
 }

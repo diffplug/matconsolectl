@@ -34,7 +34,6 @@ import java.rmi.registry.Registry;
 class MatlabConnector
 {
     private static JMIWrapper _wrapper = null;
-    private static String _proxyID = null;
     
     /**
      * Private constructor so this class cannot be constructed.
@@ -43,12 +42,12 @@ class MatlabConnector
     
     static JMIWrapper getJMIWrapper()
     {
+        if(_wrapper == null)
+        {
+            _wrapper = new JMIWrapper();
+        }
+        
         return _wrapper;
-    }
-    
-    static String getProxyID()
-    {
-        return _proxyID;
     }
     
     /**
@@ -62,12 +61,6 @@ class MatlabConnector
      */
     public static void connectFromMatlab(String receiverID, String proxyID) throws MatlabConnectionException
     {   
-        if(_wrapper == null)
-        {
-            _wrapper = new JMIWrapper();
-            _proxyID = proxyID;
-        }
-        
         //Register this session of MATLAB
         MatlabBroadcaster.broadcast();
         
@@ -84,7 +77,7 @@ class MatlabConnector
             MatlabBroadcaster.addReceiver(receiver); 
             
             //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
-            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(_wrapper));
+            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()));
         }
         //If for any reason the attempt fails, throw exception that indicates connection could not be established
         catch(Exception e)
