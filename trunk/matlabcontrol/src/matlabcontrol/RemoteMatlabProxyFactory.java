@@ -273,7 +273,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
 
         @Override
-        public void checkConnection() throws RemoteException { }
+        public String getReceiverID() throws RemoteException
+        {
+            return _receiverID;
+        }
     }
     
     /**
@@ -405,7 +408,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         try
         {
             Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);;
-                
+            
             String[] remoteNames = registry.list();
             for(String name : remoteNames)
             {

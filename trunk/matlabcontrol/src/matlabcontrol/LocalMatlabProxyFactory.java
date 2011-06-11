@@ -34,26 +34,17 @@ class LocalMatlabProxyFactory implements ProxyFactory
 {
     private boolean _isShutdown = false;
     
+    private static volatile int _proxyCreationCount = 0;
+    
     private final LocalMatlabProxy _proxy;
     private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
     private final ExecutorService _requestExecutor = Executors.newSingleThreadExecutor();
     
     public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
     {
-        JMIWrapper wrapper = MatlabConnector.getJMIWrapper();
-        String proxyID = MatlabConnector.getProxyID();
-
-        if(wrapper == null)
-        {
-            wrapper = new JMIWrapper();
-            proxyID = "local";
-        }
-        else
-        {
-            proxyID = "local-" + proxyID;
-        }
-
-        _proxy = new LocalMatlabProxy(wrapper, proxyID, this);
+        _proxyCreationCount++;
+        String proxyID = "PROXY_LOCAL_" + _proxyCreationCount;
+        _proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID, this);
     }
     
     @Override

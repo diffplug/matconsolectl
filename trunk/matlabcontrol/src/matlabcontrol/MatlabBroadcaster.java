@@ -52,14 +52,35 @@ public class MatlabBroadcaster
      */
     static final String MATLAB_SESSION_PREFIX = "MATLAB_SESSION_";
     
+    /**
+     * A reference to the RMI registry which holds {@code MatlabSession}s.
+     */
     private static Registry _registry = null;
     
+    /**
+     * Receivers that have been retrieved from Java programs running outside of MATLB>
+     */
     private static final List<JMIWrapperRemoteReceiver> _receivers = new ArrayList<JMIWrapperRemoteReceiver>();
     
+    /**
+     * The bound name in the RMI registry for the instance of {@code MatlabSession} that represents this session of
+     * MATLAB.
+     */
     private static final String _sessionID = MATLAB_SESSION_PREFIX + UUID.randomUUID().toString();
+    
+    /**
+     * Represents this session of MATLAB.
+     */
     private static final MatlabSession _session = new MatlabSessionImpl();
     
+    /**
+     * The frequency (in milliseconds) with which to check if the connection to the registry still exists.
+     */
     private static final int BROADCAST_CHECK_PERIOD = 1000;
+    
+    /**
+     * The timer used to check if still connected to the registry.
+     */
     private static Timer _broadcastTimer;
     
     /**
@@ -180,7 +201,7 @@ public class MatlabBroadcaster
         {
             try
             {
-                receiver.checkConnection();
+                receiver.getReceiverID();
             }
             catch(RemoteException e)
             {
