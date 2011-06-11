@@ -35,9 +35,8 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 /**
- * Enables MATLAB to be seen by matlabcontrol. This class may only be used from inside MATLAB.
+ * Enables a session of MATLAB not launched by matlabcontrol to be connected to by matlabcontrol running outside MATLAB.
  * 
- * @see #broadcast()
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabBroadcaster
@@ -90,11 +89,13 @@ public class MatlabBroadcaster
     
     /**
      * Makes this session of MATLAB visible to matlabcontrol. Once broadcasting, matlabcontrol running outside MATLAB
-     * will be able to connect to this session of MATLAB.
+     * will be able to connect to this session of MATLAB. <strong>This method may only be called from inside of MATLAB.
+     * </strong>
      * <br><br>
-     * When a session of MATLAB is launched by matlabcontrol it is automatically configured to broadcast.
+     * When a session of MATLAB is launched by matlabcontrol it is automatically configured to broadcast. In that
+     * situation calling this method will have no effect
      * 
-     * @throws MatlabConnectionException 
+     * @throws MatlabConnectionException thrown if not running inside MATLAB or unable to broadcast
      */
     public synchronized static void broadcast() throws MatlabConnectionException
     {   
