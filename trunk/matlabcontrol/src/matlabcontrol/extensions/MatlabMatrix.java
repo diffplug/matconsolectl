@@ -362,55 +362,34 @@ public class MatlabMatrix
         return linearIndex;
     }
     
-    /*
-    private static <T> T multidimensionalize(double[] linearArray, Class<T> outputArrayType, int[] lengths,
-            boolean validate) throws MatlabProcessingException
-    {
-        //Validate if requested
-        if(validate)
-        {
-            int _numDimensions = getNumberOfDimensions(outputArrayType);
-            //Check the outputArrayType is actually a type of array
-            if(_numDimensions == 0)
-            {
-                throw new MatlabProcessingException(outputArrayType + " is not an array type");
-            }
-            //Check the number of dimensions of the array matches the number of lengths provided
-            else if(_numDimensions != lengths.length)
-            {
-                throw new MatlabProcessingException("array dimensions [" + _numDimensions + "] do not match number of provided "
-                        + "lengths [" + lengths.length + "]");
-            }
-            //Check the outputArrayType will hold doubles
-            else if(!isDoubleArrayType(outputArrayType))
-            {
-                throw new MatlabProcessingException(outputArrayType + " is not a double array");
-            }
-            
-            //Check the size of the linear array and the size of the output array will match
-            int outputArraySize = 1;
-            for(int length : lengths)
-            {
-                outputArraySize *= length;
-            }
-            
-            if(outputArraySize != linearArray.length)
-            {
-                throw new MatlabProcessingException("linear array size [" + linearArray.length + "] does not match "
-                        + "size computed from lengths [" + outputArraySize + "]");
-            }
-        }
-        
-        return multidimensionalize_internal(linearArray, outputArrayType, lengths, 0, new int[0]);
-    }
-    */
-    
+    /**
+     * Creates a {@code double} array of type {@code T} with the length of each dimension specified by {@code lengths}.
+     * As the array is created it is populated with the values of {@code linearArray}.
+     * 
+     * @param <T>
+     * @param linearArray
+     * @param outputArrayType
+     * @param lengths
+     * @return 
+     */
     private static <T> T multidimensionalize(double[] linearArray, Class<T> outputArrayType, int[] lengths)
     {
         return multidimensionalize_internal(linearArray, outputArrayType, lengths, 0, new int[0]);
     }
 
-    
+    /**
+     * The real logic of the {@link #multidimensionalize(double[], java.lang.Class, int[])} method. This method
+     * recurs on itself, hence the need for the extra parameters. This method does not store state in any external
+     * variables.
+     * 
+     * @param <T>
+     * @param linearArray
+     * @param outputArrayType
+     * @param lengths
+     * @param indexIntoLengths should be {@code 0} initially
+     * @param currIndices should be an empty integer array initially
+     * @return 
+     */
     private static <T> T multidimensionalize_internal(double[] linearArray, Class<T> outputArrayType, int[] lengths,
             int indexIntoLengths, int[] currIndices)
     {
@@ -483,7 +462,6 @@ public class MatlabMatrix
         }
     }
     
-    
     /**
      * An array type of any dimension that holds {@code double}s. Instances for dimensions 2 through 9 are available as
      * public static fields.
@@ -506,13 +484,11 @@ public class MatlabMatrix
          * Representation of {@code double[][][][]} class.
          */
         public static final DoubleArrayType<double[][][][]> DIM_4 = get(double[][][][].class);
-        
                 
         /**
          * Representation of {@code double[][][][][]} class.
          */
         public static final DoubleArrayType<double[][][][][]> DIM_5 = get(double[][][][][].class);
-        
                 
         /**
          * Representation of {@code double[][][][][][]} class.
