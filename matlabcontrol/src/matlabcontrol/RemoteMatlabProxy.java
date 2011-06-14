@@ -30,7 +30,7 @@ import java.rmi.UnmarshalException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-final class RemoteMatlabProxy implements MatlabProxy
+final class RemoteMatlabProxy extends MatlabProxy
 {
     /**
      * The underlying proxy which is a remote object connected over RMI.
