@@ -1,4 +1,4 @@
-package matlabcontrol;
+package matlabcontrol.extensions;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -22,30 +22,21 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import matlabcontrol.MatlabInvocationException;
+
 /**
- * Represents a failure to invoke a method on the MATLAB session. This will most likely occur if the MATLAB session
- * being controlled is no longer open or MATLAB experiences an internal error.
- * 
+ * Represents an issue with processing data returned from MATLAB.
+ *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabInvocationException extends Exception
-{    
-    private static final long serialVersionUID = -1567632755416541619L;
-    
-    //Messages
-    static final String INTERRUPTED_MSG = "Method could not be completed because the thread was interrupted before MATLAB returned",
-                        PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
-                        UNKNOWN_REMOTE_REASON_MSG = "Method could not be invoked for an unknown reason",
-                        UNMARSHALLING_MSG = "Object attempting to be returned cannot be sent across Java Virtual Machines",
-                        INTERNAL_EXCEPTION_MSG = "Method could not return a value because of an internal MATLAB exception",
-                        EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread";
-                 
-    public MatlabInvocationException(String msg)
+public class MatlabProcessingException extends MatlabInvocationException
+{
+    public MatlabProcessingException(String msg)
     {
         super(msg);
     }
     
-    public MatlabInvocationException(String msg, Throwable cause)
+    public MatlabProcessingException(String msg, Throwable cause)
     {
         super(msg, cause);
     }
