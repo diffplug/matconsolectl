@@ -57,18 +57,13 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabProxy implements MatlabInteractor<Object>
+public abstract class MatlabProxy implements MatlabInteractor<Object>
 {
     /* Internal implementation notes:
      * 
-     * This class could really be designed as an interface, or even an abstract class. It has intentionally not been.
-     * It is not an interface to prevent users of the matlabcontrol API from making their own proxies, as being able to
-     * know for sure what the MatlabProxy actually is, is a useful guarantee. To prevent this, this class could instead
-     * be an abstract class with a package private constructor. This was not done to conceptually simplify the API. By
-     * making this class appear to be THE proxy it effectively hides the complexity that comes from even thinking about
-     * the difference between running inside MATLAB or outside MATLAB. Making this a concrete class is similar to how
-     * MatlabProxyFactory is really just a wrapper around the two real factories. While this class is not a wrapper, the
-     * end result is extremely similar.
+     * This class could really be designed as an interface. It has intentionally not been. It is not an interface to
+     * prevent users of the matlabcontrol API from making their own proxies, as being able to know for sure what the
+     * MatlabProxy actually is, is a useful guarantee.
      */
     
     /**
@@ -82,12 +77,9 @@ public class MatlabProxy implements MatlabInteractor<Object>
      * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or the factory that
      * created this proxy has been shutdown.
      * 
-     * @return 
+     * @return if connected
      */
-    public boolean isConnected()
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract boolean isConnected();
     
     /**
      * Returns the unique identifier for this proxy.
@@ -97,75 +89,42 @@ public class MatlabProxy implements MatlabInteractor<Object>
      * 
      * @return identifier
      */
-    public String getIdentifier()
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract String getIdentifier();
     
     /**
      * Whether this proxy is connected to a session of MATLAB that was running previous to the request to create this
      * proxy.
      * 
-     * @return 
+     * @return if existing session
      */
-    public boolean isExistingSession()
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract boolean isExistingSession();
    
     //The following methods are overridden so that they appear in the javadocs
 
     @Override
-    public void eval(String command) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract void eval(String command) throws MatlabInvocationException;
 
     @Override
-    public void exit() throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract void exit() throws MatlabInvocationException;
 
     @Override
-    public void feval(String functionName, Object[] args) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract void feval(String functionName, Object[] args) throws MatlabInvocationException;
 
     @Override
-    public Object getVariable(String variableName) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract Object getVariable(String variableName) throws MatlabInvocationException;
 
     @Override
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract Object returningEval(String command, int returnCount) throws MatlabInvocationException;
 
     @Override
-    public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
 
     @Override
-    public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
 
     @Override
-    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract void setDiagnosticMode(boolean enable) throws MatlabInvocationException;
 
     @Override
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
-    {
-        throw new UnsupportedOperationException("Must be implemented in subclass");
-    }
+    public abstract void setVariable(String variableName, Object value) throws MatlabInvocationException;
 }
