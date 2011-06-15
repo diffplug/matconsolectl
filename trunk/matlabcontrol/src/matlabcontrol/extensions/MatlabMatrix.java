@@ -27,8 +27,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A matrix of doubles from MATLAB. Supports both the real and imaginary components of the matrix.
- * <br><br>
+ * Acts as a MATLAB matrix of doubles. Supports both the real and imaginary components of the matrix.
+ * <br><br> 
  * Each instance knows the number of dimensions it represents and can create the corresponding multidimensional Java
  * array. In order to do this in a type safe manner the methods
  * {@link #getRealArray(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType) getRealArray(...)} and
@@ -54,13 +54,12 @@ import java.util.Map;
  * When a matrix is retrieved from MATLAB the resulting Java array is never jagged. When a {@code MatlabMatrix} is
  * constructed from Java arrays, the arrays provided may be jagged; see
  * {@link #MatlabMatrix(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType, java.lang.Object, java.lang.Object) the
- * constructor} for
- * details.
+ * constructor} for details.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabMatrix
-{  
+{   
     /**
      * Linear array of real values.
      */
@@ -77,22 +76,154 @@ public class MatlabMatrix
     private final int[] _lengths;
     
     /**
-     * The type of array.
+     * The type of double array.
      */
     private final DoubleArrayType<?> _arrayType;
     
+    /**
+     * If the matrix was retrieved from MATLAB.
+     */
+    private final boolean _retrievedFromMatlab;
+    
+    /**
+     * Constructs a matrix from data retrieved from MATLAB.
+     * 
+     * @param real
+     * @param imaginary
+     * @param lengths 
+     */
     MatlabMatrix(double[] real, double[] imaginary, int[] lengths)
     {   
+        _retrievedFromMatlab = true;
+        
         _realValues = real;
         _imaginaryValues = imaginary;
         _lengths = lengths;
         _arrayType = DoubleArrayType.get(lengths.length);
     }
-       
-    //Constructing from a multidimensional array
+    
+    /**
+     * Constructs a matrix from Java arrays that can be transferred to MATLAB. Either the {@code real} or
+     * {@code imaginary} array may be {@code null}, but not both. References to the arrays passed in are not kept, and
+     * modifying the array data after the matrix has been constructed will have no effect. If the data is modified
+     * concurrently with this class's construction, problems may arise.
+     * <br><br>
+     * The arrays may be jagged; however, MATLAB does not support jagged arrays and there data will be treated as if
+     * they had uniform length for each dimension. For each dimension the maximum length is determined. If both the
+     * {@code real} and {@code imaginary} arrays are provided then the maximum length per dimension is determined across
+     * both arrays. For parts of the array that have a length less than the maximum length, {@code 0} will be used.
+     * 
+     * @param <T>
+     * @param type
+     * @param real
+     * @param imaginary 
+     */
     public <T> MatlabMatrix(DoubleArrayType<T> type, T real, T imaginary)
     {
-        throw new RuntimeException("Not yet implemented");
+        if(real == null && imaginary == null)
+        {
+            throw new IllegalArgumentException("the real and imaginary arrays cannot both be null");
+        }
+        
+        _retrievedFromMatlab = false;
+        
+        _arrayType = type;
+        
+        //Determine lengths
+        _lengths = new int[type.getDimensions()];
+        if(real != null)
+        {
+            int[] realLengths = computeBoundingLengths(real);
+            for(int i = 0; i < realLengths.length; i++)
+            {
+                _lengths[i] = Math.max(_lengths[i], realLengths[i]);
+            }
+        }
+        if(imaginary != null)
+        {
+            int[] imaginaryLengths = computeBoundingLengths(imaginary);
+            for(int i = 0; i < imaginaryLengths.length; i++)
+            {
+                _lengths[i] = Math.max(_lengths[i], imaginaryLengths[i]);
+            }
+        }
+        
+        //Linearize arrays
+        if(real != null)
+        {
+            _realValues = linearize(real, _lengths);
+        }
+        else
+        {
+            _realValues = new double[getTotalSize(_lengths)];
+        }
+        
+        if(imaginary != null)
+        {
+            _imaginaryValues = linearize(imaginary, _lengths);
+        }
+        else
+        {   
+            _imaginaryValues = new double[getTotalSize(_lengths)];
+        }
+    }
+    
+    /**
+     * Convenience constructor, equivalent to {@code new MatlabMatrix(DoubleArrayType.DIM_2, real, imaginary)}.
+     * 
+     * @param real
+     * @param imaginary 
+     */
+    public MatlabMatrix(double[][] real, double[][] imaginary)
+    {
+        this(DoubleArrayType.DIM_2, real, imaginary);
+    }
+    
+    /**
+     * Convenience constructor, equivalent to {@code new MatlabMatrix(DoubleArrayType.DIM_3, real, imaginary)}.
+     * 
+     * @param real
+     * @param imaginary 
+     */
+    public MatlabMatrix(double[][][] real, double[][][] imaginary)
+    {
+        this(DoubleArrayType.DIM_3, real, imaginary);
+    }
+    
+    /**
+     * Convenience constructor, equivalent to {@code new MatlabMatrix(DoubleArrayType.DIM_4, real, imaginary)}.
+     * 
+     * @param real
+     * @param imaginary 
+     */
+    public MatlabMatrix(double[][][][] real, double[][][][] imaginary)
+    {
+        this(DoubleArrayType.DIM_4, real, imaginary);
+    }
+    
+    /**
+     * Computes the total size of an array with lengths specified by {@code lengths}.
+     * 
+     * @param lengths
+     * @return 
+     */
+    private static int getTotalSize(int[] lengths)
+    {
+        int size = 0;
+        
+        for(int length : lengths)
+        {
+            if(size == 0)
+            {
+                size = length;
+            }
+            else if(length != 0)
+            {
+                size *= length;
+            }
+        }
+        
+        return size;
     }
     
     /**
@@ -139,6 +270,7 @@ public class MatlabMatrix
      * @param indices
      * @return imaginary value at {@code indices}
      * @throws MatrixDimensionException if number of indices is not {@code 1} or the number of dimensions
+     * @throws ArrayIndexOutOfBoundsException if the indices are out of bound
      */
     public double getImaginaryValue(int... indices) throws MatrixDimensionException
     {
@@ -150,6 +282,17 @@ public class MatlabMatrix
         double value;
         if(indices.length == this.getDimensions())
         {
+            //Check the indices are in bounds
+            for(int i = 0; i < indices.length; i++)
+            {
+                if(indices[i] >= _lengths[i])
+                {
+                    throw new ArrayIndexOutOfBoundsException("[" + indices[i] + "] is out of bounds for dimension " +
+                            i + " where the length is " + _lengths[i]);
+                }
+            }
+            
+            
             value = values[multidimensionalIndicesToLinearIndex(_lengths, indices)];
         }
         else
@@ -164,7 +307,7 @@ public class MatlabMatrix
     /**
      * The number of dimensions this matrix has.
      * 
-     * @return 
+     * @return number of dimensions
      */
     public int getDimensions()
     {
@@ -177,7 +320,7 @@ public class MatlabMatrix
      * beyond are pages. The length of the returned array will be the number of dimensions returned by
      * {@link #getDimensions()}.
      * 
-     * @return 
+     * @return lengths
      */
     public int[] getLengths()
     {
@@ -185,6 +328,16 @@ public class MatlabMatrix
         System.arraycopy(_lengths, 0, lengthsCopy, 0, _lengths.length);
         
         return lengthsCopy;
+    }
+    
+    /**
+     * The length of the underlying linear array.
+     * 
+     * @return length
+     */
+    public int getLength()
+    {
+        return _realValues.length;
     }
     
     private <T> T getAsJavaArray(DoubleArrayType<T> type, double[] values) throws MatrixDimensionException
@@ -299,6 +452,26 @@ public class MatlabMatrix
     }
     
     /**
+     * Returns the underlying linear array of real values. Returns the actual array, not a copy.
+     * 
+     * @return 
+     */
+    double[] getRealLinearArray()
+    {
+        return _realValues;
+    }
+    
+    /**
+     * Returns the underlying linear array of imaginary values. Returns the actual array, not a copy.
+     * 
+     * @return 
+     */
+    double[] getImaginaryLinearArray()
+    {
+        return _imaginaryValues;
+    }
+    
+    /**
      * Linear index to multidimensional indices. Similar to MATLAB's (@code ind2sub} function.
      * 
      * @param lengths the lengths of the array in each dimension
@@ -347,7 +520,8 @@ public class MatlabMatrix
     {
         if(lengths.length != indices.length)
         {
-            throw new IllegalArgumentException("There must be an equal number of lengths and indices");
+            throw new IllegalArgumentException("There must be an equal number of lengths [" + lengths.length + "] "
+                    + "and indices [" + indices.length + "]");
         }
         
         int linearIndex = 0;
@@ -452,6 +626,106 @@ public class MatlabMatrix
     }
     
     /**
+     * Determines the maximum length for each dimension of the array.
+     * 
+     * @param array
+     * @return 
+     */
+    private static int[] computeBoundingLengths(Object array)
+    {   
+        DoubleArrayType<?> type = DoubleArrayType.get(array.getClass());
+        int[] maxLengths = new int[type.getDimensions()];
+
+        //The length of this array
+        int arrayLength = Array.getLength(array);
+        maxLengths[0] = arrayLength;
+
+        //If the array holds arrays as its entries
+        if(!array.getClass().getComponentType().equals(double.class))
+        {
+            //For each entry in the array
+            for(int i = 0; i < arrayLength; i++)
+            {   
+                //childLengths' information will be one index ahead of maxLengths
+                int[] childLengths = computeBoundingLengths(Array.get(array, i));
+                for(int j = 0; j < childLengths.length; j++)
+                {
+                    maxLengths[j + 1] = Math.max(maxLengths[j + 1], childLengths[j]);
+                }
+            }
+        }
+        
+        return maxLengths;
+    }
+    
+    /**
+     * Creates a linearized version of the {@code array} with maximum length in each dimension specified by
+     * {@code lengths}. No verification is performed that the dimensions of the array match the length of the lengths
+     * array.
+     * 
+     * @param array
+     * @param lengths
+     * @return 
+     */
+    private static double[] linearize(Object array, int[] lengths)
+    {
+        //Create linear array with equal size of the array
+        double[] linearArray = new double[getTotalSize(lengths)];
+        
+        //Fill linearArray with values from array
+        linearize_internal(linearArray, array, lengths, new int[0]);
+        
+        return linearArray;
+    }
+    
+    /**
+     * Performs the linearization using recursion.
+     * 
+     * @param linearArray array to be filled
+     * @param array source array
+     * @param lengths the lengths of the array for the initial array supplied before any recursion
+     * @param currIndices must initially be an empty integer array
+     */
+    private static void linearize_internal(double[] linearArray, Object array, int[] lengths, int[] currIndices)
+    {
+        //Base case
+        if(array.getClass().equals(double[].class))
+        {
+            int[] doubleArrayIndices = new int[currIndices.length + 1];
+            System.arraycopy(currIndices, 0, doubleArrayIndices, 0, currIndices.length);
+            
+            //Fill linear array with contents of the double[] array
+            double[] doubleArray = (double[]) array;
+            for(int i = 0; i < doubleArray.length; i++)
+            {
+                doubleArrayIndices[doubleArrayIndices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, doubleArrayIndices);
+                linearArray[linearIndex] = doubleArray[i];
+            }
+        }
+        else
+        {
+            int arrayLength = Array.getLength(array);
+            for(int i = 0; i < arrayLength; i++)
+            {
+                int[] nextIndices = new int[currIndices.length + 1];
+                System.arraycopy(currIndices, 0, nextIndices, 0, currIndices.length);
+                nextIndices[nextIndices.length - 1] = i;
+                
+                linearize_internal(linearArray, Array.get(array, i), lengths, nextIndices);
+            }
+        }
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "[MatlabMatrix fromMATLAB=" + _retrievedFromMatlab +
+                ", linearLength=" + getLength() +
+                ", type=" + _arrayType + "]";
+    }
+    
+    /**
      * Represents attempting to retrieve or manipulate a MATLAB matrix as the wrong dimension.
      */
     public static class MatrixDimensionException extends RuntimeException
@@ -470,6 +744,11 @@ public class MatlabMatrix
      */
     public static final class DoubleArrayType<T>
     {
+        /**
+         * Caches loaded {@code DoubleArrayType}s.
+         */
+        private static final Map<Class, DoubleArrayType> CLASS_TO_ARRAY_TYPE = new HashMap<Class, DoubleArrayType>();
+        
         /**
          * Representation of {@code double[][]} class.
          */
@@ -509,11 +788,6 @@ public class MatlabMatrix
          * Representation of {@code double[][][][][][][][][]} class.
          */
         public static final DoubleArrayType<double[][][][][][][][][]> DIM_9 = get(double[][][][][][][][][].class);
-        
-        /**
-         * Caches loaded {@code DoubleArrayType}s.
-         */
-        private static final Map<Class, DoubleArrayType> CLASS_TO_ARRAY_TYPE = new HashMap<Class, DoubleArrayType>();
         
         /**
          * The array class represented.
@@ -649,6 +923,12 @@ public class MatlabMatrix
             }
 
             return numDim;
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "[DoubleArrayType class=" + _arrayClass + ", dimensions=" + _numDimensions + "]";
         }
     }
 }
