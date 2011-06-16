@@ -127,4 +127,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
 
     @Override
     public abstract void setVariable(String variableName, Object value) throws MatlabInvocationException;
+    
+    @Override
+    public abstract String storeObject(Object obj, boolean storePermanently) throws MatlabInvocationException;
 }

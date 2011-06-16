@@ -168,4 +168,32 @@ public interface MatlabInteractor<E>
      * @throws MatlabInvocationException 
      */
     public void setDiagnosticMode(boolean enable) throws MatlabInvocationException;
+            
+    /**
+     * Stores an object that can be accessed from MATLAB, but is not stored as a MATLAB variable. The {@code String}
+     * returned from this method will retrieve the object into the MATLAB environment. This string is intended to be
+     * used as if were the name of a MATLAB variable. This allows for passing objects to MATLAB and then using them
+     * in an {@code eval} statement without having to expose the object as a MATLAB variable.
+     * <br><br>
+     * Simple example usage:<br>
+     * <pre>
+     * {@code
+     * String varName = proxy.storeObject(42, false);
+     * proxy.eval("newSum = currSum + " varName + ";");
+     * }
+     * </pre>
+     * The returned string should be considered an internal implementation detail. It should only be used in its
+     * entirety, not a substring of it. The format of the string is not guaranteed to remain the same in future
+     * versions.
+     * 
+     * @param obj object to be stored
+     * @param storePermanently if {@code false} then the object will no longer be referenced or retrievable by
+     * matlabcontrol after the first time it is retrieved, if {@code true} it will remain referenced and retrievable
+     * during the entire time MATLAB is running
+     * 
+     * @return
+     * 
+     * @throws MatlabInvocationException 
+     */
+    public String storeObject(Object obj, boolean storePermanently) throws MatlabInvocationException;
 }

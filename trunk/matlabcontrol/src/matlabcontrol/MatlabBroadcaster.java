@@ -35,11 +35,11 @@ import java.util.TimerTask;
 import java.util.UUID;
 
 /**
- * Enables a session of MATLAB not launched by matlabcontrol to be connected to by matlabcontrol running outside MATLAB.
+ * Enables a session of MATLAB to be connected to by matlabcontrol running outside MATLAB.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabBroadcaster
+class MatlabBroadcaster
 {
     /**
      * The port used by RMI to store information about MATLAB sessions.
@@ -93,11 +93,11 @@ public class MatlabBroadcaster
      * </strong>
      * <br><br>
      * When a session of MATLAB is launched by matlabcontrol it is automatically configured to broadcast. In that
-     * situation calling this method will have no effect
+     * situation calling this method will have no effect.
      * 
      * @throws MatlabConnectionException thrown if not running inside MATLAB or unable to broadcast
      */
-    public synchronized static void broadcast() throws MatlabConnectionException
+    synchronized static void broadcast() throws MatlabConnectionException
     {   
         //Only allow this class to be used from with MATLAB
         if(!Configuration.isRunningInsideMatlab())
@@ -109,7 +109,7 @@ public class MatlabBroadcaster
         if(_registry == null)
         {   
             //Configure class loading as necessary to work properly with RMI
-            MatlabClassLoaderHelper.configureClassLoading();
+            //MatlabClassLoaderHelper.configureClassLoading();
             
             //Create or retrieve an RMI registry
             setupRegistry();

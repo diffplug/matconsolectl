@@ -336,6 +336,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Tells MATLAB to add this code to its classpath, then to call a method which
             //will create a proxy and send it over RMI back to this JVM.
             String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
+                            MatlabClassLoaderHelper.class.getName() + ".configureClassLoading;" + 
                             MatlabConnector.class.getName() + 
                             ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "', false);";
             List<String> args = new ArrayList<String>(_processArguments);

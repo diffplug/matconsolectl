@@ -153,7 +153,21 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
     {
-        this.setDiagnosticMode(enable);
+        _delegateInteractor.setDiagnosticMode(enable);
+    }
+    
+    /**
+     * Delegates to the interactor.
+     * 
+     * @param obj
+     * @param storePermanently
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public String storeObject(Object obj, boolean storePermanently) throws MatlabInvocationException
+    {
+        return _delegateInteractor.storeObject(obj, storePermanently);
     }
     
     @Override

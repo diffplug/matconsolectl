@@ -95,9 +95,15 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     }
 
     @Override
-    public void setDiagnosticMode(final boolean enable) throws RemoteException, MatlabInvocationException
+    public void setDiagnosticMode(boolean enable) throws RemoteException, MatlabInvocationException
     {
         _wrapper.setDiagnosticMode(enable);
+    }
+    
+    @Override
+    public String storeObject(Object obj, boolean keepPermanently) throws RemoteException
+    {
+        return _wrapper.storeObject(obj, keepPermanently);
     }
     
     @Override

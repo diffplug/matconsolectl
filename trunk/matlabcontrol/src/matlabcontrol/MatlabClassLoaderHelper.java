@@ -22,16 +22,9 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
-import java.util.Enumeration;
-import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 
 /**
  * Configures class loading inside of MATLAB such that it will work properly with RMI.
@@ -45,7 +38,7 @@ import java.util.jar.JarFile;
  * function will be loaded by {@code CustomURLClassLoader}.
  * <br><br>
  * When matlabcontrol is started outside MATLAB and launches a session of MATLAB it adds itself to MATLAB's dynamic
- * classpath. This is allows matlabcontrol's code to run inside of MATLAB without needing to find and then modify the
+ * classpath. This allows matlabcontrol's code to run inside of MATLAB without needing to find and then modify the
  * classpath.txt file (which also very well might not be desired by the user). When matlabcontrol is started inside
  * MATLAB the user may have placed it on either the static or dynamic class path (the user could do both, but the
  * static class path would be used and the dynamic would be ignored). matlabcontrol cannot initially control which
@@ -54,129 +47,38 @@ import java.util.jar.JarFile;
  * The reason all of this matters is because of how RMI loads classes. When RMI attempts to load a class it starts by
  * asking the current thread for its class loader (@code Thread#getContextClassLoader}. (If that does not work it can
  * then attempt to load the class from a remote location, but this feature is not used by matlabcontrol and so this
- * step does not occur.) The class loader that is returned by the thread RMI is running on will be the system class
- * loader. As such, RMI will not operate properly if matlabcontrol was added to the dynamic class path.
+ * step does not occur.) The class loader that is returned by the thread RMI is running on will not be MATLAB's
+ * {@code CustomURLClassLoader}. As such, RMI will not operate properly if matlabcontrol was added to the dynamic class
+ * path.
  * <br><br>
- * Therefore, in order to have RMI operate properly matlabcontrol will need to let the system class loader know about
- * itself. This can be done via reflection (see {@link #addMatlabControlToSystemClassLoader()}. Once the system class
- * loader knows about the classes in matlabcontrol it will load the classes. If classes have been loaded by the
- * {@code CustomURLClassLoader} then problems can arise. The classes loaded by the system class loader and those loaded
- * by {@code CustomURLClassLoader} will exist in separate <strong>runtime</strong> packages, meaning they can only
- * access public classes, methods, and fields.
+ * When a class loader is attempting to load a class, it starts with its parent class loader and so on up the chain. By
+ * informing the system class loader of the location of matlabcontrol, then RMI's class loader will be able to find the
+ * matlabcontrol classes. This can be done via reflection (see {@link #addMatlabControlToSystemClassLoader()}. Once the
+ * system class  loader knows about the classes in matlabcontrol it will load the classes. If classes have been loaded
+ * by the {@code CustomURLClassLoader} then problems can arise. The classes loaded by the system class loader and those
+ * loaded by {@code CustomURLClassLoader} will exist in separate <strong>runtime</strong> packages, meaning they can
+ * only access public classes, methods, and fields of one another.
  * <br><br>
  * {@code MatlabClassLoaderHelper} manipulates class loading. If the system class loader knows about matlabcontrol
- * then no action is taken. Otherwise, all classes in matlabcontrol are loaded on the current class loader, which
- * will in all likelihood be {@code CustomURLClassLoader}. This prevents classes in the matlabcontrol package from
- * being loaded with two different class loaders. Then the system class loader is told about matlabcontrol.
+ * then no action is taken. Otherwise, the system class loader is told about matlabcontrol. When matlabcontrol launches
+ * a session of MATLAB this class is called before any other class is loaded, and this class is never used again. As
+ * such, if this class is loaded by the {@code CustomURLClassLoader}, it will not be a problem.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabClassLoaderHelper
-{
-    private static final String PACKAGE_NAME = MatlabClassLoaderHelper.class.getPackage().getName();
-    
+{   
     /**
      * Configures class loading to work properly with RMI inside MATLAB. See the class description for more detail.
      * 
      * @throws MatlabConnectionException 
      */
-    static void configureClassLoading() throws MatlabConnectionException
+    public static void configureClassLoading() throws MatlabConnectionException
     {
         if(!isMatlabControlOnSystemClassLoader())
-        {
-            //Load all of the classes in the matlabcontrol package
-            loadMatlabControlClasses();
-            
-            //Have the system class loader know about matlabcontrol
+        {   
             addMatlabControlToSystemClassLoader();
         }
-    }
-    
-    /**
-     * Loads all of the matlabcontrol classes using the class loader that created this class.
-     * 
-     * @throws MatlabConnectionException 
-     */
-    private static void loadMatlabControlClasses() throws MatlabConnectionException
-    {
-        List<String> classNames = getAllMatlabControlClasses();
-        ClassLoader loader = MatlabClassLoaderHelper.class.getClassLoader();
-        
-        for(String className : classNames)
-        {
-            try
-            {
-                Class.forName(className, false, loader);
-            }
-            catch(ClassNotFoundException e)
-            {
-                throw new MatlabConnectionException("Unable to load class: " + className, e);
-            }
-        }
-    }
-    
-    /**
-     * Returns a list of the names of all .class files in the matlabcontrol package.
-     * 
-     * @return
-     * @throws MatlabConnectionException 
-     */
-    private static List<String> getAllMatlabControlClasses() throws MatlabConnectionException
-    {
-        List<String> classNames = new ArrayList<String>();
-        
-        String path = Configuration.getSupportCodeLocation();
-        if(path.endsWith(".jar"))
-        {
-            try
-            {
-                JarFile jar = new JarFile(path);
-
-                Enumeration<JarEntry> entries = jar.entries();
-                while(entries.hasMoreElements())
-                {
-                    JarEntry entry = entries.nextElement();
-                    
-                    String name = entry.getName();
-                    
-                    //If a class, in the matlabcontrol root package
-                    if(name.endsWith(".class") && name.startsWith(PACKAGE_NAME + "/") &&
-                       (name.indexOf("/") == name.lastIndexOf("/")))
-                    {   
-                        String className = name.replace("/", ".");
-                        className = className.substring(0, className.length() - 6); //Trim off .class ending
-                        classNames.add(className);
-                    }
-                }
-            }
-            catch(IOException e)
-            {
-                throw new MatlabConnectionException("Unable to read the contents of the matlabcontrol jar", e);
-            }
-        }
-        else
-        {
-            File matlabcontrolDir = new File(path, PACKAGE_NAME);
-            
-            if(!matlabcontrolDir.exists())
-            {
-                throw new MatlabConnectionException("Unable to find the matlabcontrol directory, expected to be "
-                        + "located at: " + matlabcontrolDir.getAbsolutePath());
-            }
-            
-            String[] entries = matlabcontrolDir.list();
-            for(String entry : entries)
-            {   
-                if(entry.endsWith(".class"))
-                {
-                    String className = PACKAGE_NAME + "." + entry;
-                    className = className.substring(0, className.length() - 6); //Trim off .class ending
-                    classNames.add(className);
-                }
-            }
-        }
-        
-        return classNames;
     }
     
     /**

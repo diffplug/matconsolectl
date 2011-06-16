@@ -24,6 +24,7 @@ package matlabcontrol.extensions;
 
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
@@ -78,6 +79,33 @@ public class MatrixProcessor
         int[] lengths = this.getMatrixLengths(matrixName);
         
         return new MatlabMatrix(realValues, imaginaryValues, lengths);
+    }
+    
+    /**
+     * Stores the {@code matrix} in MATLAB with the variable name {@code matrixName}.
+     * 
+     * @param matrixName the variable name
+     * @param matrix
+     * @throws MatlabInvocationException
+     */
+    public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
+    {
+        //Store real and imaginary arrays in the MATLAB environment
+        String realArray = _interactor.storeObject(matrix.getRealLinearArray(), false);
+        String imaginaryArray = _interactor.storeObject(matrix.getImaginaryLinearArray(), false);
+        
+        //Combine the real and imaginary arrays, set the proper dimension length metadata, and then store as matrixName
+        String evalStatement = matrixName + " = reshape(" + realArray + " + " + imaginaryArray + " * i";
+        int[] lengths = matrix.getLengths();
+        for(int length : lengths)
+        {
+            evalStatement += ", " + length;
+        }
+        evalStatement += ");";
+        
+        System.out.println(evalStatement);
+        
+        _interactor.eval(evalStatement);
     }
     
     /**
