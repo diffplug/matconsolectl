@@ -210,11 +210,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                     throw new MatlabConnectionException("Could not create or connect to the RMI registry", ex);
                 }
             }
-
-            //Tell the code base where it is and force it to use it exclusively
-            //This is necessary so that paths with spaces work properly
-            System.setProperty("java.rmi.server.codebase", Configuration.getCodebaseLocation());
-            System.setProperty("java.rmi.server.useCodebaseOnly", "true");
         }
     }
     

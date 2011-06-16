@@ -57,7 +57,7 @@ class MatlabBroadcaster
     private static Registry _registry = null;
     
     /**
-     * Receivers that have been retrieved from Java programs running outside of MATLB>
+     * Receivers that have been retrieved from Java programs running outside of MATLAB.
      */
     private static final List<JMIWrapperRemoteReceiver> _receivers = new ArrayList<JMIWrapperRemoteReceiver>();
     
@@ -113,11 +113,6 @@ class MatlabBroadcaster
             
             //Create or retrieve an RMI registry
             setupRegistry();
-
-            //Tell the code base where it is and force it to use it exclusively
-            //This is necessary so that paths with spaces work properly
-            System.setProperty("java.rmi.server.codebase", Configuration.getCodebaseLocation());
-            System.setProperty("java.rmi.server.useCodebaseOnly", "true");
             
             //Register this session so that it can be reconnected to
             bindSession();
