@@ -56,6 +56,8 @@ import java.util.Map;
  * {@link #MatlabMatrix(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType, java.lang.Object, java.lang.Object) the
  * constructor} for details.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabMatrix

@@ -29,6 +29,8 @@ import matlabcontrol.MatlabProxy;
 /**
  * Handles retrieving and sending MATLAB matrices.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatrixProcessor
@@ -102,8 +104,6 @@ public class MatrixProcessor
             evalStatement += ", " + length;
         }
         evalStatement += ");";
-        
-        System.out.println(evalStatement);
         
         _interactor.eval(evalStatement);
     }

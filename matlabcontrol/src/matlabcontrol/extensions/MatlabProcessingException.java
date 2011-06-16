@@ -27,6 +27,8 @@ import matlabcontrol.MatlabInvocationException;
 /**
  * Represents an issue with processing data returned from MATLAB.
  *
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabProcessingException extends MatlabInvocationException

@@ -28,6 +28,8 @@ import com.mathworks.jmi.MatlabException;
  * A wrapper around {@code com.mathworks.jmi.MatlabException} so that the exception can be sent over RMI without needing
  * the {@code jmi.jar} to be included by the developer, but still prints identically.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabExceptionWrapper extends Exception

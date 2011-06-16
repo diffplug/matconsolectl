@@ -40,6 +40,8 @@ import com.mathworks.jmi.NativeMatlab;
  * <br><br>
  * Only this class and {@link MatlabExceptionWrapper} directly interact with {@code jmi.jar}.
  *
+ * @since 3.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class JMIWrapper

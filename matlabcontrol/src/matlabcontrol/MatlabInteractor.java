@@ -26,6 +26,8 @@ package matlabcontrol;
  * A {@code MatlabInteractor} interacts with a session of MATLAB. The intended use of this interface is to create a
  * wrapper around another {@code MatlabInteractor} such as {@link MatlabProxy} to process the data returned by MATLAB.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface MatlabInteractor<E>

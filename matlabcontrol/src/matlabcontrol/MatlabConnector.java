@@ -28,6 +28,11 @@ import java.rmi.registry.Registry;
 /**
  * This class is used only from inside of the MATLAB JVM. It is responsible for creating proxies and sending them to
  * the receiver over RMI.
+ * <br><br>
+ * While this class is package private, it can be seen by MATLAB, which does not respect the package privateness of the
+ * class. The public methods in this class can be accessed from inside the MATLAB environment.
+ * 
+ * @since 3.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */

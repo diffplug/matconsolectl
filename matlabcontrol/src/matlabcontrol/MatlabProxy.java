@@ -55,6 +55,8 @@ package matlabcontrol;
  *     when attempting to retrieve or make use of a variable that has already been defined.</li>
  * </ul>
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public abstract class MatlabProxy implements MatlabInteractor<Object>

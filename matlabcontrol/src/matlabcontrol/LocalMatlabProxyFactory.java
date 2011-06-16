@@ -29,6 +29,8 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * Creates local instances of {@link MatlabProxy}.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class LocalMatlabProxyFactory implements ProxyFactory

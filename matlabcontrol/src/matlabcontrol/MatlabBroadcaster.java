@@ -37,6 +37,8 @@ import java.util.UUID;
 /**
  * Enables a session of MATLAB to be connected to by matlabcontrol running outside MATLAB.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabBroadcaster

@@ -28,6 +28,8 @@ package matlabcontrol;
  * @see MatlabProxyFactory#addConnectionListener(MatlabConnectionListener)
  * @see MatlabProxyFactory#removeConnectionListener(MatlabConnectionListener)
  * 
+ * @since 2.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface MatlabConnectionListener
