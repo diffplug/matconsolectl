@@ -36,6 +36,8 @@ import matlabcontrol.MatlabInteractor;
  * Because the actual proxy invocation occurs on a separate thread from the one calling the methods in this class, it
  * can be used from within MATLAB on the Event Dispatch Thread (EDT).
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabCallbackInteractor<E>

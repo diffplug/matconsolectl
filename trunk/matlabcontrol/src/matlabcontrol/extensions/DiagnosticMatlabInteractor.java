@@ -31,6 +31,8 @@ import matlabcontrol.MatlabInteractor;
 /**
  * Wraps around an interactor to provide a log of interactions. The data is not altered.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>

@@ -28,6 +28,8 @@ import java.rmi.RemoteException;
 /**
  * An implementation of this interface is bound to the RMI registry, representing this session of MATLAB.
  *
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 interface MatlabSession extends Remote

@@ -25,6 +25,8 @@ package matlabcontrol;
 /**
  * A factory which creates instances of {@link MatlabProxy}.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 interface ProxyFactory

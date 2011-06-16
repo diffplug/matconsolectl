@@ -25,6 +25,8 @@ package matlabcontrol.extensions;
 /**
  * Encapsulates the data returned from MATLAB.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class ReturnData

@@ -33,6 +33,8 @@ import java.rmi.server.UnicastRemoteObject;
  * <br><br>
  * These methods are documented in {@link JMIWrapper}.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemote

@@ -31,6 +31,8 @@ import java.net.URL;
 /**
  * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
  * 
+ * @since 3.1.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class Configuration

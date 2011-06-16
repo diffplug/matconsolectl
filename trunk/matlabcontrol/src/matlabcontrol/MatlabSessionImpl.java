@@ -27,6 +27,8 @@ import java.rmi.RemoteException;
 /**
  * Implementation of {@link MatlabSession}. Split into interface and implementation to work properly with RMI.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabSessionImpl implements MatlabSession

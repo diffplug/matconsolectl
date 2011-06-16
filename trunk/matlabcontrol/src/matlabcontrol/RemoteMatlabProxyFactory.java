@@ -43,6 +43,8 @@ import java.util.concurrent.ConcurrentMap;
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will launch MATLAB. Each proxy created will control
  * the session launched. This factory can be used to create any number of proxies.
  * 
+ * @since 3.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class RemoteMatlabProxyFactory implements ProxyFactory

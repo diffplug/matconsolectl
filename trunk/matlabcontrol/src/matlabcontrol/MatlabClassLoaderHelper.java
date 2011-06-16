@@ -64,6 +64,8 @@ import java.net.URLClassLoader;
  * a session of MATLAB this class is called before any other class is loaded, and this class is never used again. As
  * such, if this class is loaded by the {@code CustomURLClassLoader}, it will not be a problem.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabClassLoaderHelper

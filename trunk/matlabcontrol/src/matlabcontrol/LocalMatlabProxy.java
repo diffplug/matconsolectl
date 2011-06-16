@@ -25,6 +25,8 @@ package matlabcontrol;
 /**
  * Allows for calling MATLAB from <b>inside</b> of MATLAB.
  * 
+ * @since 3.1.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 final class LocalMatlabProxy extends MatlabProxy
@@ -195,6 +197,6 @@ final class LocalMatlabProxy extends MatlabProxy
     @Override
     public String toString()
     {
-        return "[LocalMatlabProxy identifier:" + _id + "]";
+        return "[LocalMatlabProxy identifier=" + _id + "]";
     }
 }

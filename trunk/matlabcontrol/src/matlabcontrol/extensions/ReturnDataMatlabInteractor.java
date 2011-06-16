@@ -28,6 +28,8 @@ import matlabcontrol.MatlabInteractor;
 /**
  * Wraps around an interactor to conveniently handle casts of the data returned from MATLAB.
  * 
+ * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
@@ -173,6 +175,6 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public String toString()
     {
-        return "[ReturnDataMatlabInteractor delegate:" + _delegateInteractor + "]";
+        return "[ReturnDataMatlabInteractor delegate=" + _delegateInteractor + "]";
     }
 }

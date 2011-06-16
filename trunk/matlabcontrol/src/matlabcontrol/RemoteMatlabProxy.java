@@ -28,6 +28,8 @@ import java.rmi.UnmarshalException;
 /**
  * Allows for calling MATLAB from <strong>outside</strong> of MATLAB.
  * 
+ * @since 3.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 final class RemoteMatlabProxy extends MatlabProxy
@@ -274,6 +276,6 @@ final class RemoteMatlabProxy extends MatlabProxy
     @Override
     public String toString()
     {
-        return "[RemoteMatlabProxy identifier:" + _id + "]";
+        return "[RemoteMatlabProxy identifier=" + _id + "]";
     }
 }
