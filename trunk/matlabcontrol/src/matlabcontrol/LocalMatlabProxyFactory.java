@@ -24,6 +24,7 @@ package matlabcontrol;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Creates local instances of {@link MatlabProxy}.
@@ -34,7 +35,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
 {
     private boolean _isShutdown = false;
     
-    private static volatile int _proxyCreationCount = 0;
+    private static final AtomicLong PROXY_CREATION_COUNT = new AtomicLong();
     
     private final LocalMatlabProxy _proxy;
     private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
@@ -42,8 +43,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     
     public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
     {
-        _proxyCreationCount++;
-        String proxyID = "PROXY_LOCAL_" + _proxyCreationCount;
+        String proxyID = "PROXY_LOCAL_" + PROXY_CREATION_COUNT.getAndIncrement();
         _proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID, this);
     }
     
