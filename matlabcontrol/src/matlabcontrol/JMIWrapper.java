@@ -29,6 +29,7 @@ import java.util.Map;
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.MatlabException;
 import com.mathworks.jmi.NativeMatlab;
+import java.util.UUID;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -65,6 +66,8 @@ class JMIWrapper
      */
     private static final Map<String, Object> VARIABLES = new HashMap<String, Object>();
     
+    private static final Map<String, StoredObject> STORED_OBJECTS = new HashMap<String, StoredObject>();
+    
     /**
      * The name of this class and package.
      */
@@ -83,6 +86,47 @@ class JMIWrapper
         VARIABLES.remove(variableName);
         
         return result;
+    }
+    
+    public static Object retrieveStoredObject(String id)
+    {
+        Object obj = null;
+        
+        StoredObject stored = STORED_OBJECTS.get(id);
+        if(stored != null)
+        {
+            obj = stored.object;
+            
+            if(!stored.storePermanently)
+            {
+                STORED_OBJECTS.remove(id);
+            }
+        }
+                
+        return obj;
+    }
+    
+    synchronized String storeObject(Object obj, boolean storePermanently)
+    {
+        StoredObject stored = new StoredObject(obj, storePermanently);
+        STORED_OBJECTS.put(stored.id, stored);
+        String retrievalString = this.getClass().getName() + ".retrieveStoredObject('" + stored.id + "')";
+        
+        return retrievalString;
+    }
+    
+    private static class StoredObject
+    {
+        private final Object object;
+        private final boolean storePermanently;
+        private final String id;
+        
+        private StoredObject(Object object, boolean storePermanently)
+        {
+            this.object = object;
+            this.storePermanently = storePermanently;
+            this.id = "STORED_OBJECT_" + UUID.randomUUID().toString();
+        }
     }
     
     /**

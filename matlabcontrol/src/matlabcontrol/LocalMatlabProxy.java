@@ -187,6 +187,12 @@ final class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
+    public String storeObject(Object obj, boolean keepPermanently)
+    {
+        return _wrapper.storeObject(obj, keepPermanently);
+    }
+    
+    @Override
     public String toString()
     {
         return "[LocalMatlabProxy identifier:" + _id + "]";

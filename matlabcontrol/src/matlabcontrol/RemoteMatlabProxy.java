@@ -259,6 +259,19 @@ final class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
+    public String storeObject(final Object obj, final boolean keepPermanently) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<String>()
+        {
+            @Override
+            public String invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _internalProxy.storeObject(obj, keepPermanently);
+            }
+        });
+    }
+    
+    @Override
     public String toString()
     {
         return "[RemoteMatlabProxy identifier:" + _id + "]";

@@ -57,7 +57,9 @@ interface JMIWrapperRemote extends Remote
     
     public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
 
-    public void setDiagnosticMode(final boolean enable) throws RemoteException, MatlabInvocationException;
+    public void setDiagnosticMode(boolean enable) throws RemoteException, MatlabInvocationException;
+    
+    public String storeObject(Object obj, boolean keepPermanently) throws RemoteException;
     
     /**
      * This method does nothing. It is used internally to check if a connection is still active.

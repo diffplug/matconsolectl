@@ -355,6 +355,25 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
     }
     
     @Override
+    public String storeObject(final Object obj, final boolean storePermanently) throws MatlabInvocationException
+    {
+        return this.invoke(new ReturningInvocation<String>() {
+
+            @Override
+            public String invoke() throws MatlabInvocationException
+            {
+                return _delegateInteractor.storeObject(obj, storePermanently);
+            }
+
+            @Override
+            public String getName()
+            {
+                return "storeObject(Object, boolean)";
+            }
+        });
+    }
+    
+    @Override
     public String toString()
     {
         return "[DiagnosticMatlabInteractor delegate:" + _delegateInteractor + "]";
