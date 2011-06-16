@@ -25,11 +25,11 @@ package matlabcontrol;
 import java.awt.EventQueue;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.MatlabException;
 import com.mathworks.jmi.NativeMatlab;
-import java.util.UUID;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -43,29 +43,15 @@ import java.util.UUID;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class JMIWrapper
-{
-    /**
-     * The return value from blocking methods.
-     */
-    private Object _returnValue;
-    
-    /**
-     * A MatlabException that may be thrown during execution of {@link #returningEval(String, int)},
-     * {@link #returningFeval(String, Object[])}, or {@link #returningFeval(String, Object[], int)}. The exception must
-     * be stored as the direction cannot be thrown directly because it is inside of a {@link Runnable}.
-     */
-    private MatlabException _thrownException = null;
-
-    /**
-     * The default value that {@link JMIWrapper#_returnVal} is set to before an actual return value is returned.
-     */
-    private static final String BEFORE_RETURN_VALUE = "noReturnValYet";
-    
+{   
     /**
      * Map of variables used by {@link #getVariableValue(String)}, and {@link #setVariable(String, Object)}.
      */
     private static final Map<String, Object> VARIABLES = new HashMap<String, Object>();
     
+    /**
+     * Map of unique identifier to stored object.
+     */
     private static final Map<String, StoredObject> STORED_OBJECTS = new HashMap<String, StoredObject>();
     
     /**
@@ -74,7 +60,8 @@ class JMIWrapper
     private static final String CLASS_NAME = JMIWrapper.class.getName();
     
     /**
-     * Gets the variable value stored by {@link #setVariable(String, Object)}.
+     * Gets the variable value stored by {@link #setVariable(String, Object)}. Removes the reference; it cannot be
+     * retrieved again.
      * 
      * @param variableName
      * 
@@ -88,6 +75,12 @@ class JMIWrapper
         return result;
     }
     
+    /**
+     * Retrieves the stored object. If it is not to be kept permanently then the reference will no longer be kept.
+     * 
+     * @param id
+     * @return 
+     */
     public static Object retrieveStoredObject(String id)
     {
         Object obj = null;
@@ -106,15 +99,21 @@ class JMIWrapper
         return obj;
     }
     
+    /**
+     * @see MatlabInteractor#storeObject(java.lang.Object, boolean) 
+     */
     synchronized String storeObject(Object obj, boolean storePermanently)
     {
         StoredObject stored = new StoredObject(obj, storePermanently);
         STORED_OBJECTS.put(stored.id, stored);
-        String retrievalString = this.getClass().getName() + ".retrieveStoredObject('" + stored.id + "')";
+        String retrievalString = CLASS_NAME + ".retrieveStoredObject('" + stored.id + "')";
         
         return retrievalString;
     }
     
+    /**
+     * An object stored by matlabcontrol that can be accessed via {@link #retrieveStoredObject(java.lang.String)}.
+     */
     private static class StoredObject
     {
         private final Object object;
@@ -157,7 +156,7 @@ class JMIWrapper
     }
     
     /**
-     * @see MatlabProxy#exit()
+     * @see MatlabInteractor#exit()
      */
     synchronized void exit() throws MatlabInvocationException
     {
@@ -183,7 +182,7 @@ class JMIWrapper
     }
     
     /**
-     * @see MatlabProxy#eval(java.lang.String)
+     * @see MatlabInteractor#eval(java.lang.String)
      */
     synchronized void eval(final String command) throws MatlabInvocationException
     {   
@@ -191,7 +190,7 @@ class JMIWrapper
     }
     
     /**
-     * @see MatlabProxy#returningEval(java.lang.String, int)
+     * @see MatlabInteractor#returningEval(java.lang.String, int)
      */
     synchronized Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
@@ -199,7 +198,7 @@ class JMIWrapper
     }
 
     /**
-     * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[])
+     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
      */
     synchronized void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
@@ -207,15 +206,16 @@ class JMIWrapper
     }
 
     /**
-     * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[], int)
+     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[], int)
      */
-    synchronized Object returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
+    synchronized Object returningFeval(final String functionName, final Object[] args,
+            final int returnCount) throws MatlabInvocationException
     {   
         if(EventQueue.isDispatchThread())
         {
             throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
         }
-        else if(isMatlabThread())
+        else if(NativeMatlab.nativeIsMatlabThread())
         {
             try
             {
@@ -228,8 +228,7 @@ class JMIWrapper
         }
         else
         {
-            _returnValue = BEFORE_RETURN_VALUE;
-            _thrownException = null;
+            final MatlabReturn matlabReturn = new MatlabReturn();
             
             Matlab.whenMatlabReady(new Runnable()
             {
@@ -238,26 +237,48 @@ class JMIWrapper
                 {
                     try
                     {
-                        JMIWrapper.this.setReturnValue(Matlab.mtFevalConsoleOutput(functionName, args, returnCount));
+                        matlabReturn.returnValue = Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
                     }
                     catch(MatlabException e)
                     {
-                        _thrownException = e;
-                        JMIWrapper.this.setReturnValue(null);
+                        matlabReturn.thrownException = e;
                     }
                     catch(Exception e)
                     {
-                        JMIWrapper.this.setReturnValue(null);
+                        matlabReturn.returnValue = null;
                     }
+                    
+                    matlabReturn.returnOccurred = true;
                 }    
             });
             
-            return this.getReturnValue();
+            //Wait for MATLAB's main thread to finish computation
+            while(!matlabReturn.returnOccurred);
+            
+            if(matlabReturn.thrownException != null)
+            {
+                Exception cause = new MatlabExceptionWrapper(matlabReturn.thrownException);
+                throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+            }
+            else
+            {
+                return matlabReturn.returnValue;
+            }
         }
     }
     
     /**
-     * @see MatlabProxy#returningFeval(java.lang.String, java.lang.Object[])
+     * Data returned from MATLAB.
+     */
+    private static class MatlabReturn
+    {
+        public volatile Object returnValue;
+        public volatile MatlabException thrownException;
+        public volatile boolean returnOccurred = false;
+    }
+    
+    /**
+     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
      */
     synchronized Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
@@ -281,7 +302,7 @@ class JMIWrapper
     }
 
     /**
-     * @see MatlabProxy#setDiagnosticMode(boolean)
+     * @see MatlabInteractor#setDiagnosticMode(boolean)
      */
     synchronized void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
     {
@@ -289,7 +310,7 @@ class JMIWrapper
         {
             throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
         }
-        else if(isMatlabThread())
+        else if(NativeMatlab.nativeIsMatlabThread())
         {
             Matlab.setEchoEval(enable);
         }
@@ -304,73 +325,5 @@ class JMIWrapper
                 }
             });
         }
-    }
-    
-    /**
-     * Returns the value returned by MATLAB to {@link #returningFeval(String, Object[], int)}. Throws a
-     * {@link MatlabInvocationException} if the JMI call threw an exception.
-     * <br><br>
-     * This method operates by pausing the thread until MATLAB returns a value.
-     * 
-     * @return result of MATLAB call
-     * 
-     * @throws MatlabInvocationException
-     * 
-     * @see #setReturnValue(Object)
-     */
-    private Object getReturnValue() throws MatlabInvocationException
-    {
-        //If _returnVal has not been changed yet (in all likelihood it has not)
-        //then wait, it will be resumed when the call to MATLAB returns
-        if(_returnValue == BEFORE_RETURN_VALUE)
-        {
-            synchronized(_returnValue)
-            {
-                try
-                {
-                    _returnValue.wait();
-                }
-                catch (InterruptedException e)
-                {
-                    throw new MatlabInvocationException(MatlabInvocationException.INTERRUPTED_MSG, e); 
-                }
-            }
-        }
-        
-        if(_thrownException != null)
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, new MatlabExceptionWrapper(_thrownException));
-        }
-
-        return _returnValue;
-    }
-
-    /**
-     * Sets the return value from any of the eval or feval commands. In the case of the non-returning value {@code null}
-     * is passed in, but it still provides the functionality of waking up the thread so that {@link #getReturnValue()}
-     * will be able to return.
-     * 
-     * @param val
-     * 
-     * @see #getReturnValue()
-     */
-    private void setReturnValue(Object val)
-    {
-        synchronized(_returnValue)
-        {      
-            Object oldVal = _returnValue;
-            _returnValue = val;
-            oldVal.notifyAll();
-        }
-    }
-    
-    /**
-     * Returns whether or not the calling thread is the main MATLAB thread.
-     * 
-     * @return if main MATLAB thread
-     */
-    private static boolean isMatlabThread()
-    {
-        return NativeMatlab.nativeIsMatlabThread();
     }
 }
