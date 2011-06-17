@@ -42,7 +42,7 @@ public class MatrixProcessor
      * the processor to operate properly it expects that the method calls and their return value occur as they would
      * ordinarily.
      * 
-     * @param interactor 
+     * @param interactor
      */
     public MatrixProcessor(MatlabInteractor<Object> interactor)
     {
@@ -56,7 +56,7 @@ public class MatrixProcessor
      * modified in between the function calls, then issues may arise.
      * 
      * @param matrixName
-     * @return
+     * @return the retrieved matrix
      * @throws MatlabInvocationException 
      */
     public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException

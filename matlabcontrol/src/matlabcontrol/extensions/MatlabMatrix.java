@@ -28,18 +28,6 @@ import java.util.Map;
 
 /**
  * Acts as a MATLAB matrix of doubles. Supports both the real and imaginary components of the matrix.
- * <br><br> 
- * Each instance knows the number of dimensions it represents and can create the corresponding multidimensional Java
- * array. In order to do this in a type safe manner the methods
- * {@link #getRealArray(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType) getRealArray(...)} and
- * {@link #getImaginaryArray(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType) getImaginaryArray(...)} exist. There
- * are static instances of {@link DoubleArrayType} for dimensions 2 through 9, and one may be created for a
- * {@code double} array of any dimension. For additional convenience, you can use methods {@link #getRealArray2D()},
- * {@link #getRealArray3D()}, and {@link #getRealArray4D()} (and their corresponding imaginary counterparts). All of
- * these methods will throw a {@link MatrixDimensionException} if the matrix is not actually of that dimension. While
- * these arrays will match dimension and lengths, please note that MATLAB matrices are 1-indexed while Java arrays are
- * 0-indexed. For instance in MATLAB indexing into {@code matrix} would be {@code matrix(3,4,7,2)} while in Java it
- * would be {@code matrix[2][3][6][1]}.
  * <br><br>
  * Matrices in MATLAB are stored in a linear manner. The number and lengths of the dimensions are stored separately from
  * the real and imaginary value entries. Each dimension has a fixed length. (MATLAB's array implementation is known as
@@ -55,6 +43,24 @@ import java.util.Map;
  * constructed from Java arrays, the arrays provided may be jagged; see
  * {@link #MatlabMatrix(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType, java.lang.Object, java.lang.Object) the
  * constructor} for details.
+ * <br><br> 
+ * Each instance knows the number of dimensions it represents and can create the corresponding multidimensional Java
+ * array. In order to do this in a type safe manner the methods
+ * {@link #getRealArray(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType) getRealArray(...)} and
+ * {@link #getImaginaryArray(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType) getImaginaryArray(...)} exist. There
+ * are static instances of {@link DoubleArrayType} for dimensions 2 through 9, and one may be created for a
+ * {@code double} array of any dimension. For additional convenience, you can use methods {@link #getRealArray2D()},
+ * {@link #getRealArray3D()}, and {@link #getRealArray4D()} (and their corresponding imaginary counterparts). All of
+ * these methods will throw a {@link MatrixDimensionException} if the matrix is not actually of that dimension. It is
+ * also possible to retrieve values from the matrix without converting it to the corresponding multidimensional Java
+ * array. This can be done either by using the index into the underlying linear MATLAB array, or by using the
+ * multidimensional indices. Retrieving values in this manner does not require the computation necessary to create the
+ * multidimensional Java array. If the MATLAB matrix is quite large and only a few values from it are needed, this
+ * approach will be more efficient.
+ * <br><br>
+ * While this class mimics the dimension and lengths of the MATLAB matrix, it uses Java's 0-index convention instead of
+ * MATLAB's 1-index. For instance in MATLAB indexing into {@code matrix} would be {@code matrix(3,4,7,2)} while in Java
+ * it would be {@code matrix[2][3][6][1]}.
  * 
  * @since 4.0.0
  * 
@@ -73,7 +79,7 @@ public class MatlabMatrix
     private final double[] _imaginaryValues;
     
     /**
-     * The lengths in each dimension of the array.
+     * The lengths for each dimension of the array.
      */
     private final int[] _lengths;
     
@@ -124,7 +130,7 @@ public class MatlabMatrix
     {
         if(real == null && imaginary == null)
         {
-            throw new IllegalArgumentException("the real and imaginary arrays cannot both be null");
+            throw new IllegalArgumentException("The real and imaginary arrays cannot both be null.");
         }
         
         _retrievedFromMatlab = false;
@@ -233,9 +239,10 @@ public class MatlabMatrix
      * is equivalent to indexing into a MATLAB matrix with just one subscript.
      * 
      * @param linearIndex
-     * @return 
+     * @return real value at {@code linearIndex}
+     * @throws ArrayIndexOutOfBoundsException
      */
-    public double getRealValue(int linearIndex)
+    public double getRealValue(int linearIndex) throws ArrayIndexOutOfBoundsException
     {
         return _realValues[linearIndex];
     }
@@ -245,9 +252,10 @@ public class MatlabMatrix
      * This is equivalent to indexing into a MATLAB matrix with just one subscript.
      * 
      * @param linearIndex
-     * @return 
+     * @return imaginary value at {@code linearIndex}
+     * @throws ArrayIndexOutOfBoundsException
      */
-    public double getImaginaryValue(int linearIndex)
+    public double getImaginaryValue(int linearIndex) throws ArrayIndexOutOfBoundsException
     {
         return _imaginaryValues[linearIndex];
     }
@@ -499,11 +507,11 @@ public class MatlabMatrix
             indices[1] = indexInPage / lengths[0];
 
             //3rd dimension and above
-            int pageArea = 1; //Need better variable name
+            int accumSize = 1;
             for(int dim = 2; dim < lengths.length; dim++)
             {
-                indices[dim] = (pageNumber / pageArea) % lengths[dim];
-                pageArea *= lengths[dim];
+                indices[dim] = (pageNumber / accumSize) % lengths[dim];
+                accumSize *= lengths[dim];
             }
         }
         

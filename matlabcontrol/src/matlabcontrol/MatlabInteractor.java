@@ -23,8 +23,8 @@ package matlabcontrol;
  */
 
 /**
- * A {@code MatlabInteractor} interacts with a session of MATLAB. The intended use of this interface is to create a
- * wrapper around another {@code MatlabInteractor} such as {@link MatlabProxy} to process the data returned by MATLAB.
+ * Interacts with a session of MATLAB. The intended use of this interface is to create a wrapper around another
+ * {@code MatlabInteractor} such as {@link MatlabProxy}.
  * 
  * @since 4.0.0
  * 
@@ -175,13 +175,14 @@ public interface MatlabInteractor<E>
      * Stores an object that can be accessed from MATLAB, but is not stored as a MATLAB variable. The {@code String}
      * returned from this method will retrieve the object into the MATLAB environment. This string is intended to be
      * used as if were the name of a MATLAB variable. This allows for passing objects to MATLAB and then using them
-     * in an {@code eval} statement without having to expose the object as a MATLAB variable.
+     * in an {@code eval} statement without having to expose the object as a MATLAB variable. It acts as a "read-only"
+     * variable because it cannot be assigned to.
      * <br><br>
      * Simple example usage:<br>
      * <pre>
      * {@code
      * String varName = proxy.storeObject(42, false);
-     * proxy.eval("newSum = currSum + " varName + ";");
+     * proxy.eval("newSum = currSum + " varName;
      * }
      * </pre>
      * The returned string should be considered an internal implementation detail. It should only be used in its
@@ -193,7 +194,7 @@ public interface MatlabInteractor<E>
      * matlabcontrol after the first time it is retrieved, if {@code true} it will remain referenced and retrievable
      * during the entire time MATLAB is running
      * 
-     * @return
+     * @return string to retrieve stored object
      * 
      * @throws MatlabInvocationException 
      */

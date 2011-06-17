@@ -40,11 +40,15 @@ public final class MatlabProxyFactoryOptions
     private boolean _useRunning = true;
     
     /**
-     * Sets the location of the MATLAB executable or script that will launch MATLAB. This does not have to be an
-     * absolute path so long as the operating system can resolve the path.
+     * Sets the location of the MATLAB executable or script that will launch MATLAB.
+     * <br><br>
+     * The absolute path to the MATLAB executable can be determined by running MATLAB. On OS X or Linux, evaluate
+     * {@code [matlabroot '/bin/matlab']} in the Command Window. On Windows, evaluate
+     * {@code [matlabroot '/bin/matlab.exe']} in the Command Window.
      * <br><br>
      * <strong>Windows</strong><br>
-     * Locations relative to the following will be understood:
+     * The location does not have to be an absolute path so long as the operating system can resolve the path. Locations
+     * relative to the following will be understood:
      * <ul>
      * <li>The current working directory</li>
      * <li>The {@code Windows} directory only (no subdirectories are searched)</li>
