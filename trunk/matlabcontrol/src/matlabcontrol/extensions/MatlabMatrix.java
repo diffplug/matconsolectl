@@ -33,10 +33,10 @@ import java.util.Map;
  * the real and imaginary value entries. Each dimension has a fixed length. (MATLAB's array implementation is known as
  * a dope vector.)
  * <br><br>
- * Java has no built-in matrix data type, but supports arrays of {@code double}s. To support multiple dimensions,
- * Java allows for creating arrays of any data type, including arrays. (Java's array implementation is known as an
- * Iliffe vector.) A two dimensional array of {@code double}s, {@code double[][]}, is just an array of {@code double[]}.
- * A result of this is that each {@code double[]} can have a different length. When not all inner arrays for a given
+ * Java has no built-in matrix data type, but supports arrays of {@code double}s. To support multiple dimensions, Java
+ * allows for creating arrays of any data type, including arrays. (Java's array implementation is known as an Iliffe
+ * vector.) A two dimensional array of {@code double}s, {@code double[][]}, is just an array of {@code double[]}. A
+ * result of this is that each {@code double[]} can have a different length. When not all inner arrays for a given
  * dimension have the same length, then the array is known as as a jagged array (also known as a ragged array).
  * <br><br>
  * When a matrix is retrieved from MATLAB the resulting Java array is never jagged. When a {@code MatlabMatrix} is
@@ -122,19 +122,23 @@ public class MatlabMatrix
      * both arrays. For parts of the array that have a length less than the maximum length, {@code 0} will be used.
      * 
      * @param <T>
-     * @param type
-     * @param real
-     * @param imaginary 
+     * @param type may not be {@code null}
+     * @param real may be {@code null}
+     * @param imaginary may be {@code null}
+     * 
+     * @throws NullPointerException
      */
     public <T> MatlabMatrix(DoubleArrayType<T> type, T real, T imaginary)
     {
-        if(real == null && imaginary == null)
-        {
-            throw new IllegalArgumentException("The real and imaginary arrays cannot both be null.");
-        }
-        
         _retrievedFromMatlab = false;
         
+        //Validate input
+        if(type == null)
+        {
+            throw new NullPointerException("The type of the arrays may not be null.");
+        }
+        
+        //Store type
         _arrayType = type;
         
         //Determine lengths
@@ -181,6 +185,7 @@ public class MatlabMatrix
      * 
      * @param real
      * @param imaginary 
+     * @throws NullPointerException
      */
     public MatlabMatrix(double[][] real, double[][] imaginary)
     {
@@ -192,6 +197,7 @@ public class MatlabMatrix
      * 
      * @param real
      * @param imaginary 
+     * @throws NullPointerException
      */
     public MatlabMatrix(double[][][] real, double[][][] imaginary)
     {
@@ -203,6 +209,7 @@ public class MatlabMatrix
      * 
      * @param real
      * @param imaginary 
+     * @throws NullPointerException
      */
     public MatlabMatrix(double[][][][] real, double[][][][] imaginary)
     {
@@ -242,7 +249,7 @@ public class MatlabMatrix
      * @return real value at {@code linearIndex}
      * @throws ArrayIndexOutOfBoundsException
      */
-    public double getRealValue(int linearIndex) throws ArrayIndexOutOfBoundsException
+    public double getRealValue(int linearIndex)
     {
         return _realValues[linearIndex];
     }
@@ -255,7 +262,7 @@ public class MatlabMatrix
      * @return imaginary value at {@code linearIndex}
      * @throws ArrayIndexOutOfBoundsException
      */
-    public double getImaginaryValue(int linearIndex) throws ArrayIndexOutOfBoundsException
+    public double getImaginaryValue(int linearIndex)
     {
         return _imaginaryValues[linearIndex];
     }
@@ -266,9 +273,10 @@ public class MatlabMatrix
      * 
      * @param indices
      * @return real value at {@code indices}
-     * @throws MatrixDimensionException if number of indices is not {@code 1} or the number of dimensions
+     * @throws MatrixDimensionException if number of indices is not the number of dimensions
+     * @throws IndexOutOfBoundsException if the indices are out of bound
      */
-    public double getRealValue(int... indices) throws MatrixDimensionException
+    public double getRealValue(int... indices)
     {
         return this.getValue(_realValues, indices);
     }
@@ -279,15 +287,15 @@ public class MatlabMatrix
      * 
      * @param indices
      * @return imaginary value at {@code indices}
-     * @throws MatrixDimensionException if number of indices is not {@code 1} or the number of dimensions
-     * @throws ArrayIndexOutOfBoundsException if the indices are out of bound
+     * @throws MatrixDimensionException if number of indices is not the number of dimensions
+     * @throws IndexOutOfBoundsException if the indices are out of bound
      */
-    public double getImaginaryValue(int... indices) throws MatrixDimensionException
+    public double getImaginaryValue(int... indices)
     {
         return this.getValue(_imaginaryValues, indices);
     }
     
-    private double getValue(double[] values, int... indices) throws MatrixDimensionException
+    private double getValue(double[] values, int... indices) throws MatrixDimensionException, ArrayIndexOutOfBoundsException
     {
         double value;
         if(indices.length == this.getDimensions())
@@ -297,7 +305,7 @@ public class MatlabMatrix
             {
                 if(indices[i] >= _lengths[i])
                 {
-                    throw new ArrayIndexOutOfBoundsException("[" + indices[i] + "] is out of bounds for dimension " +
+                    throw new IndexOutOfBoundsException("[" + indices[i] + "] is out of bounds for dimension " +
                             i + " where the length is " + _lengths[i]);
                 }
             }
@@ -307,8 +315,7 @@ public class MatlabMatrix
         }
         else
         {
-            throw new MatrixDimensionException("number of indices provided [" + indices.length + "] does not match "
-                    + " the number of dimensions [" + this.getDimensions() + "]");
+            throw new MatrixDimensionException(this, _arrayType.getDimensions(), indices.length);
         }
         
         return value;
@@ -352,10 +359,9 @@ public class MatlabMatrix
     
     private <T> T getAsJavaArray(DoubleArrayType<T> type, double[] values) throws MatrixDimensionException
     {
-        if(type._numDimensions != _arrayType._numDimensions)
+        if(type.getDimensions() != _arrayType.getDimensions())
         {
-            throw new MatrixDimensionException("matrix has " + _arrayType._numDimensions + " dimensions, it cannot be "
-                    + "retrieved as a " + type._numDimensions + " dimensional Java array");
+            throw new MatrixDimensionException(this, _arrayType.getDimensions(), type.getDimensions());
         }
         
         return multidimensionalize(values, type._arrayClass, _lengths);
@@ -524,9 +530,9 @@ public class MatlabMatrix
      * @param lengths the lengths of the array in each dimension
      * @param indices
      * @return
-     * @throws IllegalArgumentException 
+     * @throws IllegalArgumentException thrown if the length of {@code lengths} and {@code indices} are not the same
      */
-    private static int multidimensionalIndicesToLinearIndex(int[] lengths, int[] indices) throws IllegalArgumentException
+    private static int multidimensionalIndicesToLinearIndex(int[] lengths, int[] indices)
     {
         if(lengths.length != indices.length)
         {
@@ -740,9 +746,48 @@ public class MatlabMatrix
      */
     public static class MatrixDimensionException extends RuntimeException
     {
-        MatrixDimensionException(String msg)
+        private final MatlabMatrix _matrix;
+        private final int _actualNumberOfDimensions;
+        private final int _usedAsNumberOfDimensions; 
+        
+        MatrixDimensionException(MatlabMatrix matrix, int actualNumDim, int usedAsNumDim)
         {
-            super(msg);
+            super("Matrix has " + actualNumDim + " dimension(s), it cannot be used as if it had " + usedAsNumDim +
+                    " dimension(s).");
+            
+            _matrix = matrix;
+            _actualNumberOfDimensions = actualNumDim;
+            _usedAsNumberOfDimensions = usedAsNumDim;
+        }
+        
+        /**
+         * The matrix that was incorrectly accessed.
+         * 
+         * @return 
+         */
+        public MatlabMatrix getMatrix()
+        {
+            return _matrix;
+        }
+        
+        /**
+         * The actual number of dimensions the matrix has.
+         * 
+         * @return 
+         */
+        public int getActualNumberOfDimensions()
+        {
+            return _actualNumberOfDimensions;
+        }
+        
+        /**
+         * The number of dimensions that were used when interacting with the matrix.
+         * 
+         * @return 
+         */
+        public int getUsedNumberOfDimensions()
+        {
+            return _usedAsNumberOfDimensions;
         }
     }
     
@@ -809,7 +854,14 @@ public class MatlabMatrix
          */
         private final int _numDimensions;
         
-        private DoubleArrayType(Class<T> arrayClass) throws IllegalArgumentException
+        
+        /**
+         * Constructs a representation of a multidimensional array of {@code double}s.
+         * 
+         * @param arrayClass
+         * @throws IllegalArgumentException if the type is not an array holding {@code double}s
+         */
+        private DoubleArrayType(Class<T> arrayClass)
         {
             if(!isDoubleArrayType(arrayClass))
             {
@@ -830,10 +882,12 @@ public class MatlabMatrix
          * 
          * @param <T>
          * @param arrayType
+         * 
          * @return
+         * 
          * @throws IllegalArgumentException if the type is not an array holding {@code double}s
          */
-        public static <T> DoubleArrayType<T> get(Class<T> arrayType) throws IllegalArgumentException
+        public static <T> DoubleArrayType<T> get(Class<T> arrayType)
         {
             if(!CLASS_TO_ARRAY_TYPE.containsKey(arrayType))
             {
@@ -917,8 +971,8 @@ public class MatlabMatrix
         }
         
         /**
-         * Returns the number of dimensions the array type has. If {@code type} is not a type of array then {@code 0} will
-         * be returned.
+         * Returns the number of dimensions the array type has. If {@code type} is not a type of array then {@code 0}
+         * will be returned.
          * 
          * @param type
          * @return 
