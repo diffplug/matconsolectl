@@ -36,7 +36,7 @@ package matlabcontrol;
  * <ul>
  * <li>an internal MATLAB exception occurs*</li>
  * <li>communication between this JVM and the one MATLAB is running in is disrupted (likely due to closing MATLAB)</li>
- * <li>the class of the object to be returned is not {@code java.io.Serializable}</li>
+ * <li>the class of the object to be returned is not {@link java.io.Serializable}</li>
  * <li>the class of the object to be sent or returned is not defined in the JVM receiving the object</li>
  * </ul>
  * <strong>Running inside MATLAB</strong><br>
