@@ -39,41 +39,21 @@ interface ProxyFactory
      * The proxy will be returned nearly instantly.
      * <br><br>
      * <strong>Running outside MATLAB</strong><br>
-     * This method will launch a new session of MATLAB. If a connection cannot be established within 60 seconds then
-     * this method will end execution and an exception will be thrown.
+     * This method will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
+     * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
+     * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
+     * <br><br>
+     * If a connection cannot be established before the timeout then this method will end execution and an exception
+     * will be thrown. A timeout can be specified with the factory options provided to this factory. If no timeout was
+     * specified, then a default of 90 seconds will be used.
      * 
      * @see #requestProxy()
-     * @see #getProxy(long)
      * 
      * @throws MatlabConnectionException
      * 
      * @return proxy
      */
     public MatlabProxy getProxy() throws MatlabConnectionException;
-    
-    /**
-     * Returns a {@link MatlabProxy}. Connection listeners will be notified upon successful creation. An exception will
-     * be thrown if the factory has been shutdown.
-     * <br><br>
-     * <strong>Running inside MATLAB</strong><br>
-     * The proxy will be returned nearly instantly. The {@code timeout} parameter is ignored; this method call is
-     * identical to {@link #getProxy()}.
-     * <br><br>
-     * <strong>Running outside MATLAB</strong><br>
-     * This method will launch a new session of MATLAB. If a connection cannot be established within the specified
-     * number of milliseconds specified by {@code timeout} then this method will end execution and an exception will be
-     * thrown.
-     * 
-     * @see #requestProxy()
-     * @see #getProxy()
-     * 
-     * @throws MatlabConnectionException
-     * 
-     * @param timeout time to wait in milliseconds for a proxy to be created
-     * 
-     * @return proxy
-     */
-    public MatlabProxy getProxy(long timeout) throws MatlabConnectionException;
     
     /**
      * Requests a {@link MatlabProxy}. Connection listeners will be notified upon successful creation. An exception will
@@ -86,12 +66,15 @@ interface ProxyFactory
      * The proxy will be provided to the connection listeners shortly after this method returns.
      * <br><br>
      * <strong>Running outside MATLAB</strong><br>
-     * This method will launch a new session of MATLAB. There is no timeout.
+     * This method will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
+     * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
+     * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
+     * <br><br>
+     * There is no timeout.
      * 
      * @see #addConnectionListener(MatlabConnectionListener)
      * @see MatlabProxy#getIdentifier()
      * @see #getProxy()
-     * @see #getProxy(long)
      * 
      * @throws MatlabConnectionException
      * 
@@ -118,8 +101,6 @@ interface ProxyFactory
      * called, all calls to create proxies will fail. If the factory is being shutdown while a proxy is being created
      * it may still be created; however, listeners may not be notified. All proxies previously created by this factory
      * will become disconnected. Once a factory has been shutdown it cannot be turned back on.
-     * <br><br>
-     * This method may be safely called any number of times.
      * 
      * @throws MatlabConnectionException 
      */
