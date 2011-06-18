@@ -35,7 +35,8 @@ public class MatlabInvocationException extends Exception
     private static final long serialVersionUID = -1567632755416541619L;
     
     //Messages
-    static final String PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
+    static final String INTERRUPTED_MSG = "Method could not be completed because the thread was interrupted before MATLAB returned",
+                        PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
                         UNKNOWN_REMOTE_REASON_MSG = "Method could not be invoked for an unknown reason",
                         UNMARSHALLING_MSG = "Object attempting to be returned cannot be sent across Java Virtual Machines",
                         INTERNAL_EXCEPTION_MSG = "Method did not return properly because of an internal MATLAB exception",
