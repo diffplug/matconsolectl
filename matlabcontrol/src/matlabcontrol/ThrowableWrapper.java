@@ -22,17 +22,15 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import com.mathworks.jmi.MatlabException;
-
 /**
- * A wrapper around {@code com.mathworks.jmi.MatlabException} so that the exception can be sent over RMI without needing
- * the {@code jmi.jar} to be included by the developer, but still prints identically.
+ * A wrapper around any {@link Throwable} so that it  can be sent over RMI without needing the class to be defined in
+ * the receiving JVM. The stack trace will print as if it were the original exception.
  * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabExceptionWrapper extends Exception
+class ThrowableWrapper extends Throwable
 {    
     private static final long serialVersionUID = 1L;
     
@@ -43,18 +41,24 @@ class MatlabExceptionWrapper extends Exception
     private final String _toString;
 
     /**
-     * Creates a wrapper around {@code innerException} so that when the stack trace is printed it is the same to the
+     * Creates a wrapper around {@code innerThrowable} so that when the stack trace is printed it is the same to the
      * developer, but can be easily sent over RMI.
      * 
      * @param innerException
      */
-    MatlabExceptionWrapper(MatlabException innerException)
+    ThrowableWrapper(Throwable innerThrowable)
     {
-        //Store innerException's toString() value
-        _toString = innerException.toString();
+        //Store innerThrowable's toString() value
+        _toString = innerThrowable.toString();
         
-        //Set this stack trace to that of the innerException
-        this.setStackTrace(innerException.getStackTrace());
+        //Set this stack trace to that of the innerThrowable
+        this.setStackTrace(innerThrowable.getStackTrace());
+        
+        //Store the cause, wrapping it
+        if(innerThrowable.getCause() != null)
+        {
+            this.initCause(new ThrowableWrapper(innerThrowable.getCause()));
+        }
     }
     
     @Override

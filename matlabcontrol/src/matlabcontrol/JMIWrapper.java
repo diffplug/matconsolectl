@@ -26,9 +26,9 @@ import java.awt.EventQueue;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ArrayBlockingQueue;
 
 import com.mathworks.jmi.Matlab;
-import com.mathworks.jmi.MatlabException;
 import com.mathworks.jmi.NativeMatlab;
 
 /**
@@ -38,7 +38,7 @@ import com.mathworks.jmi.NativeMatlab;
  * This class runs inside of the MATLAB Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
  * with MATLAB in order to send commands to MATLAB and receive results.
  * <br><br>
- * Only this class and {@link MatlabExceptionWrapper} directly interact with {@code jmi.jar}.
+ * Only this class directly interacts with {@code jmi.jar}.
  *
  * @since 3.0.0
  * 
@@ -213,6 +213,8 @@ class JMIWrapper
     synchronized Object returningFeval(final String functionName, final Object[] args,
             final int returnCount) throws MatlabInvocationException
     {   
+        Object result;
+        
         if(EventQueue.isDispatchThread())
         {
             throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
@@ -221,7 +223,7 @@ class JMIWrapper
         {
             try
             {
-                return Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
+                result = Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
             }
             catch(Exception e)
             {
@@ -230,7 +232,7 @@ class JMIWrapper
         }
         else
         {
-            final MatlabReturn matlabReturn = new MatlabReturn();
+            final ArrayBlockingQueue<MatlabReturn> returnQueue = new ArrayBlockingQueue<MatlabReturn>(1); 
             
             Matlab.whenMatlabReady(new Runnable()
             {
@@ -239,34 +241,39 @@ class JMIWrapper
                 {
                     try
                     {
-                        matlabReturn.returnValue = Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
-                    }
-                    catch(MatlabException e)
-                    {
-                        matlabReturn.thrownException = e;
+                        returnQueue.add(new MatlabReturn(Matlab.mtFevalConsoleOutput(functionName, args, returnCount)));
                     }
                     catch(Exception e)
                     {
-                        matlabReturn.returnValue = null;
+                        returnQueue.add(new MatlabReturn(e));
                     }
-                    
-                    matlabReturn.returnOccurred = true;
                 }    
             });
             
-            //Wait for MATLAB's main thread to finish computation
-            while(!matlabReturn.returnOccurred);
-            
-            if(matlabReturn.thrownException != null)
+            try
             {
-                Exception cause = new MatlabExceptionWrapper(matlabReturn.thrownException);
-                throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                //Wait for MATLAB's main thread to finish computation
+                MatlabReturn matlabReturn = returnQueue.take();
+                
+                //If exception was thrown, rethrow it
+                if(matlabReturn.exceptionThrown)
+                {
+                    Throwable cause = new ThrowableWrapper(matlabReturn.exception);
+                    throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                }
+                //Return value computed by MATLAB
+                else
+                {
+                    result = matlabReturn.value;
+                }
             }
-            else
+            catch(InterruptedException e)
             {
-                return matlabReturn.returnValue;
+                throw new MatlabInvocationException(MatlabInvocationException.INTERRUPTED_MSG, e);
             }
         }
+        
+        return result;
     }
     
     /**
@@ -274,9 +281,25 @@ class JMIWrapper
      */
     private static class MatlabReturn
     {
-        public volatile Object returnValue;
-        public volatile MatlabException thrownException;
-        public volatile boolean returnOccurred = false;
+        final boolean exceptionThrown;
+        final Object value;
+        final Exception exception;
+        
+        MatlabReturn(Object value)
+        {
+            this.exceptionThrown = false;
+            
+            this.value = value;
+            this.exception = null;
+        }
+        
+        MatlabReturn(Exception exception)
+        {
+            this.exceptionThrown = true;
+            
+            this.value = null;
+            this.exception = exception;
+        }
     }
     
     /**
