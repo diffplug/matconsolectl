@@ -76,12 +76,6 @@ public class MatlabProxyFactory implements ProxyFactory
     }
 
     @Override
-    public MatlabProxy getProxy(long timeout) throws MatlabConnectionException
-    {
-        return _delegateFactory.getProxy(timeout);
-    }
-
-    @Override
     public String requestProxy() throws MatlabConnectionException
     {
         return _delegateFactory.requestProxy();

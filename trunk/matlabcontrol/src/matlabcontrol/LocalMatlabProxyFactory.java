@@ -63,12 +63,6 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public LocalMatlabProxy getProxy(long timeout) throws MatlabConnectionException
-    {
-        return this.getProxy();
-    }
-    
-    @Override
     public String requestProxy() throws MatlabConnectionException
     {        
         if(_isShutdown)

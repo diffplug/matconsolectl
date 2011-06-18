@@ -24,6 +24,8 @@ package matlabcontrol;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * This class is used only from inside of the MATLAB JVM. It is responsible for creating proxies and sending them to
@@ -39,6 +41,11 @@ import java.rmi.registry.Registry;
 class MatlabConnector
 {
     private static JMIWrapper _wrapper = null;
+    
+    /**
+     * Used to establish connections on a separate thread.
+     */
+    private static final ExecutorService _establishConnectionExecutor = Executors.newSingleThreadExecutor();
     
     /**
      * Private constructor so this class cannot be constructed.
@@ -64,30 +71,63 @@ class MatlabConnector
      * 
      * @throws MatlabConnectionException
      */
-    public static void connectFromMatlab(String receiverID, String proxyID, boolean existingSession) throws MatlabConnectionException
+    public static void connectFromMatlab(String receiverID, String proxyID, 
+            boolean existingSession) throws MatlabConnectionException
     {   
-        //Register this session of MATLAB
-        MatlabBroadcaster.broadcast();
+        //Establish the connection on a separate thread to allow MATLAB to continue to initialize
+        _establishConnectionExecutor.submit(new EstablishConnectionRunnable(receiverID, proxyID, existingSession));
+    }
+    
+    /**
+     * A runnable which sets up matlabcontrol inside MATLAB and sends over the proxy.
+     */
+    private static class EstablishConnectionRunnable implements Runnable
+    {
+        private final String _receiverID;
+        private final String _proxyID;
+        private final boolean _existingSession;
         
-        //Attempt to connect to external Java program and transmit proxy
-        try
-        {                
-            //Get registry
-            Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
-            
-            //Get the receiver from the registry
-            JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(receiverID);
-            
-            //Register the receiver with broadcaster
-            MatlabBroadcaster.addReceiver(receiver); 
-            
-            //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
-            receiver.registerControl(proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()), existingSession);
-        }
-        //If for any reason the attempt fails, throw exception that indicates connection could not be established
-        catch(Exception e)
+        private EstablishConnectionRunnable(String receiverID, String proxyID, boolean existingSession)
         {
-            throw new MatlabConnectionException("Connection to Java application could not be established", e);
+            _receiverID = receiverID;
+            _proxyID = proxyID;
+            _existingSession = existingSession;
+        }
+
+        @Override
+        public void run()
+        {
+            try
+            {      
+                //Make this session of MATLAB of visible over RMI
+                MatlabBroadcaster.broadcast();
+                
+                //Get registry
+                Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+
+                //Get the receiver from the registry
+                JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(_receiverID);
+
+                //Register the receiver with the broadcaster
+                MatlabBroadcaster.addReceiver(receiver); 
+
+                //If MATLAB was just launched, wait for it to initialize before sending the proxy
+                if(!_existingSession)
+                {
+                    Thread.sleep(5000L);
+                }
+                            
+                //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
+                receiver.registerControl(_proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()), _existingSession);
+                      
+            }
+            //If for any reason the attempt fails, throw exception that indicates connection could not be established
+            catch(Exception e)
+            {
+                //Print exception to MATLAB Command Window
+                new MatlabConnectionException("Connection to Java application could not be established",
+                        e).printStackTrace();
+            }
         }
     }
 }

@@ -38,6 +38,7 @@ public final class MatlabProxyFactoryOptions
     private String _matlabLocation = null;
     private boolean _hidden = false;
     private boolean _useRunning = true;
+    private long _proxyTimeout = 90000L;
     
     /**
      * Sets the location of the MATLAB executable or script that will launch MATLAB.
@@ -122,13 +123,31 @@ public final class MatlabProxyFactoryOptions
     }
     
     /**
+     * The amount of time in milliseconds to wait for a proxy to be created when requested via the blocking method
+     * {@link MatlabProxyFactory#getProxy()}.
+     * 
+     * @param timeout
+     * 
+     * @throw IllegalArgumentException if timeout is negative
+     */
+    public synchronized void setProxyTimeout(long timeout)
+    {
+        if(timeout < 0L)
+        {
+            throw new IllegalArgumentException("timeout may not be negative");
+        }
+        
+        _proxyTimeout = timeout;
+    }
+    
+    /**
      * Constructs an immutable copy of the options.
      * 
      * @return 
      */
     synchronized ImmutableFactoryOptions getImmutableCopy()
     {
-        return new ImmutableFactoryOptions(_matlabLocation, _hidden, _useRunning);
+        return new ImmutableFactoryOptions(this);
     }
     
     /**
@@ -139,12 +158,14 @@ public final class MatlabProxyFactoryOptions
         private final String _matlabLocation;
         private final boolean _hidden;
         private final boolean _useRunning;
+        private final long _proxyTimeout;
         
-        private ImmutableFactoryOptions(String matlabLocation, boolean hidden, boolean useRunning)
+        private ImmutableFactoryOptions(MatlabProxyFactoryOptions options)
         {
-            _matlabLocation = matlabLocation;
-            _hidden = hidden;
-            _useRunning = useRunning;
+            _matlabLocation = options._matlabLocation;
+            _hidden = options._hidden;
+            _useRunning = options._useRunning;
+            _proxyTimeout = options._proxyTimeout;
         }
         
         public String getMatlabLocation()
@@ -160,6 +181,11 @@ public final class MatlabProxyFactoryOptions
         public boolean getUseRunningSession()
         {
             return _useRunning;
+        }
+        
+        public long getProxyTimeout()
+        {
+            return _proxyTimeout;
         }
     }
 }

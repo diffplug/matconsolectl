@@ -76,11 +76,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final String _supportCodeLocation;
     
     /**
-     * Default number of milliseconds to wait for a {@link JMIWrapperRemote} to be received.
-     */
-    private static final int DEFAULT_TIMEOUT = 60000;
-    
-    /**
      * The duration (in milliseconds) between checks to determine if the proxies are still connected.
      */
     private static final int CONNECTION_CHECK_PERIOD = 1000;
@@ -351,15 +346,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             }
         }
     }
-    
-    @Override
-    public RemoteMatlabProxy getProxy() throws MatlabConnectionException
-    {
-        return this.getProxy(DEFAULT_TIMEOUT);
-    }
 
     @Override
-    public RemoteMatlabProxy getProxy(long timeout) throws MatlabConnectionException
+    public RemoteMatlabProxy getProxy() throws MatlabConnectionException
     {        
         String proxyID = getRandomProxyID();
         
@@ -373,7 +362,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         //Wait until the controller is received or until timeout
         try
         {
-            Thread.sleep(timeout);
+            Thread.sleep(_options.getProxyTimeout());
         }
         catch(InterruptedException e)
         {
@@ -387,8 +376,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         //If the proxy has not be received before the timeout
         if(!_proxies.containsKey(proxyID))
         {
-            throw new MatlabConnectionException("MATLAB proxy could not be created in the specified amount of time: " +
-                    timeout + " milliseconds");
+            throw new MatlabConnectionException("MATLAB proxy could not be created in " + _options.getProxyTimeout() +
+                    " milliseconds");
         }
         
         return _proxies.get(proxyID);
