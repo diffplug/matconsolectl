@@ -36,21 +36,15 @@ import com.mathworks.jmi.NativeMatlab;
  * <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">MatlabControl</a>.
  * <br><br>
  * This class runs inside of the MATLAB Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
- * with MATLAB in order to send commands to MATLAB and receive results.
- * <br><br>
- * Only this class directly interacts with {@code jmi.jar}.
+ * with MATLAB in order to send commands to MATLAB and receive results. Only this class directly interacts with
+ * {@code jmi.jar}.
  *
  * @since 3.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class JMIWrapper
-{   
-    /**
-     * Map of variables used by {@link #getVariableValue(String)}, and {@link #setVariable(String, Object)}.
-     */
-    private static final Map<String, Object> VARIABLES = new HashMap<String, Object>();
-    
+{
     /**
      * Map of unique identifier to stored object.
      */
@@ -60,22 +54,6 @@ class JMIWrapper
      * The name of this class and package.
      */
     private static final String CLASS_NAME = JMIWrapper.class.getName();
-    
-    /**
-     * Gets the variable value stored by {@link #setVariable(String, Object)}. Removes the reference; it cannot be
-     * retrieved again.
-     * 
-     * @param variableName
-     * 
-     * @return variable value
-     */
-    public static Object retrieveVariableValue(String variableName)
-    {
-        Object result = VARIABLES.get(variableName);
-        VARIABLES.remove(variableName);
-        
-        return result;
-    }
     
     /**
      * Retrieves the stored object. If it is not to be kept permanently then the reference will no longer be kept.
@@ -131,26 +109,16 @@ class JMIWrapper
     }
     
     /**
-     * Sets the variable to the given value. This is done by storing the variable in Java and then retrieving it in
-     * MATLAB by calling a Java method that will return it.
-     * 
-     * @param variableName
-     * @param value
-     * 
-     * @throws MatlabInvocationException
+     * @see MatlabInteractor#setVariable(java.lang.String, java.lang.Object) 
      */
     synchronized void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        VARIABLES.put(variableName, value);
-        this.eval(variableName + " = " + CLASS_NAME + ".retrieveVariableValue('" + variableName + "');");
+        String retrievalStr = storeObject(value, false);
+        this.eval(variableName + " = " + retrievalStr + ";");
     }
     
     /**
-     * Convenience method to retrieve a variable's value from MATLAB.
-     * 
-     * @param variableName
-     * 
-     * @throws MatlabInvocationException
+     * @see MatlabInteractor#getVariable(java.lang.String) 
      */
     synchronized Object getVariable(String variableName) throws MatlabInvocationException
     {
