@@ -23,9 +23,10 @@ package matlabcontrol;
  */
 
 /**
- * Creates instances of {@link MatlabProxy}.
+ * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with the factory.
  * <br><br>
- * This class is thread-safe.
+ * This class is thread-safe. Proxies may be created simultaneously. While {@link #getProxy()} blocks the calling thread
+ * until a proxy is created, any number of threads may call {@code getProxy()} at the same time.
  * 
  * @since 4.0.0
  * 
