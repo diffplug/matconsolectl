@@ -40,8 +40,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * Creates remote instances of {@link MatlabProxy}. Creating a proxy will launch MATLAB. Each proxy created will control
- * the session launched. This factory can be used to create any number of proxies.
+ * Creates remote instances of {@link MatlabProxy}. Creating a proxy will either connect to an existing session of
+ * MATLAB or launch a new session of MATLAB. This factory can be used to create any number of proxies.
  * 
  * @since 3.0.0
  * 

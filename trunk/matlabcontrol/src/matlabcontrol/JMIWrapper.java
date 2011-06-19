@@ -35,9 +35,9 @@ import com.mathworks.jmi.NativeMatlab;
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
  * <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">MatlabControl</a>.
  * <br><br>
- * This class runs inside of the MATLAB Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
- * with MATLAB in order to send commands to MATLAB and receive results. Only this class directly interacts with
- * {@code jmi.jar}.
+ * This class runs inside of MATLAB's Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
+ * with MATLAB in order to send commands to MATLAB and receive results. This is the only class in matlabcontrol which
+ * directly interacts with any code in {@code jmi.jar}.
  *
  * @since 3.0.0
  * 
@@ -51,7 +51,7 @@ class JMIWrapper
     private static final Map<String, StoredObject> STORED_OBJECTS = new HashMap<String, StoredObject>();
     
     /**
-     * The name of this class and package.
+     * The fully qualified name of this class.
      */
     private static final String CLASS_NAME = JMIWrapper.class.getName();
     
