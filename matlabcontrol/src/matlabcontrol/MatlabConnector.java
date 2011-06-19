@@ -22,6 +22,8 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.rmi.NotBoundException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.concurrent.ExecutorService;
@@ -68,18 +70,21 @@ class MatlabConnector
      * 
      * @param receiverID the key that binds the receiver in the registry
      * @param proxyID the unique identifier of the proxy being created
-     * 
-     * @throws MatlabConnectionException
      */
-    public static void connectFromMatlab(String receiverID, String proxyID, 
-            boolean existingSession) throws MatlabConnectionException
-    {   
+    public static void connectFromMatlab(String receiverID, String proxyID)
+    {
+        connect(receiverID, proxyID, false);
+    }
+    
+    static void connect(String receiverID, String proxyID, boolean existingSession)
+    {
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
+        //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
         _establishConnectionExecutor.submit(new EstablishConnectionRunnable(receiverID, proxyID, existingSession));
     }
     
     /**
-     * A runnable which sets up matlabcontrol inside MATLAB and sends over the proxy.
+     * A runnable which sets up matlabcontrol inside MATLAB and sends over the remote JMI wrapper.
      */
     private static class EstablishConnectionRunnable implements Runnable
     {
@@ -96,37 +101,57 @@ class MatlabConnector
 
         @Override
         public void run()
-        {
+        {    
+            //If MATLAB was just launched, wait for it to initialize and make it available for reconnection
+            if(!_existingSession)
+            {
+                //Attempt to wait for MATLAB to initialize, if not still proceed
+                try
+                {
+                    Thread.sleep(5000L);
+                }
+                catch(InterruptedException ex)
+                {
+                    System.err.println("Unable to wait for MATLAB to initialize, problems may occur");
+                    ex.printStackTrace();
+                }
+
+                //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
+                try
+                {
+                    MatlabBroadcaster.broadcast();
+                }
+                catch(MatlabConnectionException ex)
+                {
+                    System.err.println("Reconnecting to this session of MATLAB will not be possible");
+                    ex.printStackTrace();
+                }
+            }
+
+            //Send the remote JMI wrapper
             try
-            {      
-                //Make this session of MATLAB of visible over RMI
-                MatlabBroadcaster.broadcast();
-                
+            {
                 //Get registry
                 Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
 
                 //Get the receiver from the registry
                 JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(_receiverID);
 
-                //Register the receiver with the broadcaster
-                MatlabBroadcaster.addReceiver(receiver); 
+                 //Register the receiver with the broadcaster
+                MatlabBroadcaster.addReceiver(receiver);
 
-                //If MATLAB was just launched, wait for it to initialize before sending the proxy
-                if(!_existingSession)
-                {
-                    Thread.sleep(5000L);
-                }
-                            
                 //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
                 receiver.registerControl(_proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()), _existingSession);
-                      
             }
-            //If for any reason the attempt fails, throw exception that indicates connection could not be established
-            catch(Exception e)
+            catch(RemoteException ex)
             {
-                //Print exception to MATLAB Command Window
-                new MatlabConnectionException("Connection to Java application could not be established",
-                        e).printStackTrace();
+                System.err.println("Connection to Java application could not be established");
+                ex.printStackTrace();
+            }
+            catch(NotBoundException ex)
+            {
+                System.err.println("Connection to Java application could not be established");
+                ex.printStackTrace();
             }
         }
     }

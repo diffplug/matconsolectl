@@ -53,7 +53,7 @@ import java.net.URLClassLoader;
  * <br><br>
  * When a class loader is attempting to load a class, it starts with its parent class loader and so on up the chain. By
  * informing the system class loader of the location of matlabcontrol, then RMI's class loader will be able to find the
- * matlabcontrol classes. This can be done via reflection (see {@link #addMatlabControlToSystemClassLoader()}. Once the
+ * matlabcontrol classes. This can be done via reflection (see {@link #addToSystemClassLoader()}. Once the
  * system class  loader knows about the classes in matlabcontrol it will load the classes. If classes have been loaded
  * by the {@code CustomURLClassLoader} then problems can arise. The classes loaded by the system class loader and those
  * loaded by {@code CustomURLClassLoader} will exist in separate <strong>runtime</strong> packages, meaning they can
@@ -72,14 +72,15 @@ class MatlabClassLoaderHelper
 {   
     /**
      * Configures class loading to work properly with RMI inside MATLAB. See the class description for more detail.
+     * Called from within MATLAB when {@link RemoteMatlabProxyFactory} launches a session of MATLAB.
      * 
      * @throws MatlabConnectionException 
      */
     public static void configureClassLoading() throws MatlabConnectionException
     {
-        if(!isMatlabControlOnSystemClassLoader())
+        if(!isOnSystemClassLoader())
         {   
-            addMatlabControlToSystemClassLoader();
+            addToSystemClassLoader();
         }
     }
     
@@ -89,7 +90,7 @@ class MatlabClassLoaderHelper
      * @return
      * @throws MatlabConnectionException 
      */
-    private static boolean isMatlabControlOnSystemClassLoader() throws MatlabConnectionException
+    private static boolean isOnSystemClassLoader() throws MatlabConnectionException
     {   
         URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
         
@@ -112,8 +113,8 @@ class MatlabClassLoaderHelper
         }
         catch(ClassCastException e)
         {
-            throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class loader's "
-                    + "classpath", e);
+            throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class " +
+                    "loader's classpath", e);
         }
     }
     
@@ -122,12 +123,12 @@ class MatlabClassLoaderHelper
      * 
      * @throws MatlabConnectionException 
      */
-    private static void addMatlabControlToSystemClassLoader() throws MatlabConnectionException
+    private static void addToSystemClassLoader() throws MatlabConnectionException
     {   
+        URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
+        
         try
         {
-            URL matlabcontrolLocation = new URL(Configuration.getCodebaseLocation());
-            
             URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader(); 
             Class<URLClassLoader> classLoaderClass = URLClassLoader.class; 
 

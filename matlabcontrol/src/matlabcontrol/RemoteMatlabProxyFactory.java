@@ -39,6 +39,8 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import matlabcontrol.MatlabProxyFactoryOptions.ImmutableFactoryOptions;
+
 /**
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will either connect to an existing session of
  * MATLAB or launch a new session of MATLAB. This factory can be used to create any number of proxies.
@@ -52,7 +54,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * The options that configure this instance of the factory.
      */
-    private final MatlabProxyFactoryOptions.ImmutableFactoryOptions _options;
+    private final ImmutableFactoryOptions _options;
     
     /**
      * A timer that periodically checks if the proxies are still connected.
@@ -114,7 +116,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private boolean _isShutdown = false;
     
-    public RemoteMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options) throws MatlabConnectionException
+    public RemoteMatlabProxyFactory(ImmutableFactoryOptions options) throws MatlabConnectionException
     {
         _options = options;
         
@@ -228,25 +230,16 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Receives the inner proxy from MATLAB. This inner class exists to hide the
-     * {@link JMIWrapperRemoteReceiver#registerControl(String, JMIWrapperRemote)} method which must be public
+     * Receives the wrapper around JMI from MATLAB. This inner class exists to hide the
+     * {@link JMIWrapperRemoteReceiver#registerControl(String, JMIWrapperRemote, boolean)} method which must be public
      * because it is implementing an interface; however, this method should not be visible to users of the API so
-     * instead it is hidden inside of this private class.
+     * instead it is hidden inside of this private inner class.
      */
     private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
         @Override
         public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
         {   
-            //Wait for 2 seconds so that MATLAB can properly initialize.
-            //Attempts to determine exactly when MATLAB is properly initialized have failed. This solution, while less
-            //than ideal, appears to work in practice.
-            try
-            {
-                Thread.sleep(2000);
-            }
-            catch(InterruptedException e) { }
-            
             //Create proxy, store it
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, proxyID, existingSession);
             _proxies.put(proxyID, proxy);
@@ -258,6 +251,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 _identifierToThread.remove(proxyID);
                 thread.interrupt();
             }
+            
+            //Notify listeners the connection has been established
             _listenerManager.connectionEstablished(proxy);
             
             //Create the timer, if necessary, which checks if proxies are still connected
@@ -324,13 +319,17 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         //Launch a new session of MATLAB
         else
         {
-            //Argument that MATLAB will run on start.
-            //Tells MATLAB to add this code to its classpath, then to call a method which
-            //will create a proxy and send it over RMI back to this JVM.
-            String runArg = "javaaddpath '" + _supportCodeLocation + "'; " +
-                            MatlabClassLoaderHelper.class.getName() + ".configureClassLoading;" + 
-                            MatlabConnector.class.getName() + 
-                            ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "', false);";
+            //Argument that MATLAB will run on start. Tells MATLAB to:
+            // - Adds matlabcontrol to MATLAB's dynamic class path
+            // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
+            // - Removes matlabcontrol from MATLAB's dynamic class path
+            // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
+            String runArg = "javaaddpath '" + _supportCodeLocation + "'; " + 
+                    MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
+                    "javarmpath '" + _supportCodeLocation + "'; " +
+                    MatlabConnector.class.getName() + ".connectFromMatlab('" + _receiverID + "', '" + proxyID + "');";
+            
+            //Build complete arguments to run MATLAB
             List<String> args = new ArrayList<String>(_processArguments);
             args.add(runArg);
 
@@ -394,7 +393,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         try
         {
-            Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);;
+            Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);
             
             String[] remoteNames = registry.list();
             for(String name : remoteNames)
