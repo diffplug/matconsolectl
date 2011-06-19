@@ -49,7 +49,6 @@ interface MatlabSession extends Remote
      * @param receiverID
      * @param proxyID
      * @throws RemoteException
-     * @throws MatlabConnectionException 
      */
-    public void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException; 
+    public void connectFromRMI(String receiverID, String proxyID) throws RemoteException;
 }

@@ -59,9 +59,9 @@ class MatlabSessionImpl implements MatlabSession
     }
 
     @Override
-    public synchronized void connectFromRMI(String receiverID, String proxyID) throws RemoteException, MatlabConnectionException
+    public synchronized void connectFromRMI(String receiverID, String proxyID) throws RemoteException
     {
         _expectingConnection = false;
-        MatlabConnector.connectFromMatlab(receiverID, proxyID, true);
+        MatlabConnector.connect(receiverID, proxyID, true);
     }
 }
