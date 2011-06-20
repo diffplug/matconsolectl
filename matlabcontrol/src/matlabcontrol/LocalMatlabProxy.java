@@ -1,5 +1,7 @@
 package matlabcontrol;
 
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -29,7 +31,7 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-final class LocalMatlabProxy extends MatlabProxy
+class LocalMatlabProxy extends MatlabProxy
 {
     /**
      * The underlying wrapper to JMI.
@@ -42,15 +44,36 @@ final class LocalMatlabProxy extends MatlabProxy
     private final String _id;
     
     /**
-     * The factory that created this proxy.
+     * Listeners for disconnection.
      */
-    private final LocalMatlabProxyFactory _factory;
+    private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
+    
+    /**
+     * If connected to MATLAB.
+     * 
+     * This notion of connection exists to make it consistent with {@link RemoteMatlabProxy}, but is not actually
+     * necessary. Unless a user calls {@link #disconnect()} this proxy cannot become disconnected.
+     */
+    private volatile boolean _isConnected = true;
 
-    LocalMatlabProxy(JMIWrapper wrapper, String id, LocalMatlabProxyFactory factory)
+    LocalMatlabProxy(JMIWrapper wrapper, String id)
     {
         _wrapper = wrapper;
         _id = id;
-        _factory = factory;
+        
+        _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
+    }
+    
+    @Override
+    public void addDisconnectionListener(DisconnectionListener listener)
+    {
+        _listeners.add(listener);
+    }
+
+    @Override
+    public void removeDisconnectionListener(DisconnectionListener listener)
+    {
+        _listeners.remove(listener);
     }
 
     @Override
@@ -179,7 +202,7 @@ final class LocalMatlabProxy extends MatlabProxy
     @Override
     public boolean isConnected()
     {
-        return !_factory.isShutdown();
+        return _isConnected;
     }
     
     @Override
@@ -195,8 +218,20 @@ final class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
+    public void disconnect()
+    {
+        _isConnected = false;
+        
+        //Notify listeners
+        for(DisconnectionListener listener : _listeners)
+        {
+            listener.proxyDisconnected(this);
+        }
+    }
+    
+    @Override
     public String toString()
     {
-        return "[LocalMatlabProxy identifier=" + _id + "]";
+        return "[" + this.getClass().getName() + " identifier=" + _id + "]";
     }
 }

@@ -72,7 +72,7 @@ class MatlabBroadcaster
     /**
      * Represents this session of MATLAB.
      */
-    private static final MatlabSession _session = new MatlabSessionImpl();
+    private static final MatlabSessionImpl _session = new MatlabSessionImpl();
     
     /**
      * The frequency (in milliseconds) with which to check if the connection to the registry still exists.
@@ -122,6 +122,15 @@ class MatlabBroadcaster
             //If the registry becomes disconnected, either create a new one or locate a new one
             maintainRegistryConnection();
         }
+    }
+    
+    /**
+     * Called to notify the broadcaster that an attempt to establish a connection has been completed. Does not
+     * communicate if a connection was established successfully, only that the attempt is now done.
+     */
+    synchronized static void connectionAttempted()
+    {
+        _session.connectionAttempted();
     }
     
     /**

@@ -37,21 +37,43 @@ import java.net.URL;
  */
 class Configuration
 {
+    
+    /**
+     * 
+     * @return 
+     * @throws MatlabConnectionException
+     */
     static boolean isOSX() throws MatlabConnectionException
     {
         return getOperatingSystem().startsWith("Mac OS X");
     }
     
+    /**
+     * 
+     * @return 
+     * @throws MatlabConnectionException
+     */
     static boolean isWindows() throws MatlabConnectionException
     {
         return getOperatingSystem().startsWith("Windows");
     }
     
+    /**
+     * 
+     * @return 
+     * @throws MatlabConnectionException
+     */
     static boolean isLinux() throws MatlabConnectionException
     {
         return getOperatingSystem().toLowerCase().startsWith("linux");
     }
     
+    /**
+     * 
+     * 
+     * @return 
+     * @throws MatlabConnectionException
+     */
     private static String getOperatingSystem() throws MatlabConnectionException
     {
         try
@@ -64,6 +86,8 @@ class Configuration
         }
     }
 
+    private static String _matlabLocation = null;
+    
     /**
      * Returns the location or alias of MATLAB on an operating system specific basis.
      * <br><br>
@@ -73,31 +97,37 @@ class Configuration
      * @return MATLAB's location or alias
      * 
      * @throws MatlabConnectionException thrown if the location of MATLAB cannot be determined on OS X, or the alias
-     *                                   cannot be determined because the operating system is not Windows or Linux
+     *                                       cannot be determined because the operating system is not Windows or Linux
      */
     static String getMatlabLocation() throws MatlabConnectionException
     {
-        //Determine the location of MATLAB
-        String matlabLoc;
+        if(_matlabLocation == null)
+        {
+            //Determine the location of MATLAB
+            String matlabLoc;
 
-        //OS X
-        if(isOSX())
-        {
-            matlabLoc = getOSXMatlabLocation();
-        }
-        //Windows or Linux
-        else if(isWindows() || isLinux())
-        {
-            matlabLoc = "matlab";
-        }
-        //Other unsupported operating system
-        else
-        {
-            throw new MatlabConnectionException("MATLAB's location or alias can only be determined for OS X, Windows, & Linux. " +
-                                                "For this operating system the location or alias must be specified explicitly.");
+            //OS X
+            if(isOSX())
+            {
+                matlabLoc = getOSXMatlabLocation();
+            }
+            //Windows or Linux
+            else if(isWindows() || isLinux())
+            {
+                matlabLoc = "matlab";
+            }
+            //Other unsupported operating system
+            else
+            {
+                throw new MatlabConnectionException("MATLAB's location or alias can only be determined for OS X, " +
+                        "Windows, & Linux. For this operating system the location or alias must be specified " +
+                        "explicitly.");
+            }
+        
+            _matlabLocation = matlabLoc;
         }
         
-        return matlabLoc;
+        return _matlabLocation;
     }
     
     /**
@@ -132,12 +162,14 @@ class Configuration
         //Check the path actually exists
         if(!new File(matlabLocation).exists())
         {
-            throw new MatlabConnectionException("An installation of MATLAB on OS X was found but the main executable " +
-                                                "file was not found in the anticipated location: " + matlabLocation);
+            throw new MatlabConnectionException("An installation of MATLAB on OS X was found but the main " +
+                    "executable file was not found in the anticipated location: " + matlabLocation);
         }
         
         return matlabLocation;
     }
+    
+    private static String _codebaseLocation = null;
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. The
@@ -149,12 +181,19 @@ class Configuration
      */
     static String getCodebaseLocation() throws MatlabConnectionException
     {
-        String codebase = getSupportCodeLocation();
-        codebase = codebase.replace(" ", "%20");
-        codebase = "file://" + codebase;
+        if(_codebaseLocation == null)
+        {
+            String codebase = getSupportCodeLocation();
+            codebase = codebase.replace(" ", "%20");
+            codebase = "file://" + codebase;
         
-        return codebase;
+            _codebaseLocation = codebase;
+        }
+        
+        return _codebaseLocation;
     }
+    
+    private static String _supportCodeLocation = null;
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
@@ -167,54 +206,59 @@ class Configuration
      */
     static String getSupportCodeLocation() throws MatlabConnectionException
     {
-        URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
-        String protocol = location.getProtocol();
-        String path;
-        
-        if(protocol.equals("jar"))
+        if(_supportCodeLocation == null)
         {
-            try
+            URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
+            String protocol = location.getProtocol();
+            String path;
+
+            if(protocol.equals("jar"))
             {
-                JarURLConnection connection = (JarURLConnection) location.openConnection();
-                path = connection.getJarFileURL().getPath();
+                try
+                {
+                    JarURLConnection connection = (JarURLConnection) location.openConnection();
+                    path = connection.getJarFileURL().getPath();
+                }
+                catch(ClassCastException e)
+                {
+                    throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
+                            "however, the connection returned was not for a jar", e);
+                }
+                catch(IOException e)
+                {
+                    throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
+                            "however, a connection to the jar cannot be established", e);
+                }
             }
-            catch(ClassCastException e)
+            else if(protocol.equals("file"))
             {
-                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                                                    "however, the connection returned was not for a jar", e);
+                path = location.getPath();
+                path = path.replace("%20", " ");
+
+                //If under Windows, convert to a Windows path
+                if(isWindows())
+                {
+                    path = path.replaceFirst("/", "");
+                    path = path.replace("/", "\\");
+                }
             }
-            catch(IOException e)
+            else
             {
-                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                                                    "however, a connection to the jar cannot be established", e);
+                throw new MatlabConnectionException("Support code location is specified by an unknown protocol: " +
+                        protocol);
             }
-        }
-        else if(protocol.equals("file"))
-        {
-            path = location.getPath();
-            path = path.replace("%20", " ");
+
+            //Confirm if the file exists
+            if(!new File(path).exists())
+            {
+                throw new MatlabConnectionException("Support code location was determined improperly;  location does " +
+                        "not actually exist. Location determined as: " + path);
+            }
             
-            //If under Windows, convert to a Windows path
-            if(isWindows())
-            {
-                path = path.replaceFirst("/", "");
-                path = path.replace("/", "\\");
-            }
-        }
-        else
-        {
-            throw new MatlabConnectionException("Support code location is specified by an unknown protocol: " + protocol);
-        }
-        
-        //Confirm if the file exists
-        if(!new File(path).exists())
-        {
-            throw new MatlabConnectionException("Support code location was determined improperly; " + 
-                                                "location does not actually exist. Location determined as: " + 
-                                                path);
+            _supportCodeLocation = path;
         }
 
-        return path;
+        return _supportCodeLocation;
     }
     
     /**

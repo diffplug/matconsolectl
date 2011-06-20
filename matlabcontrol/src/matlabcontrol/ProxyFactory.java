@@ -1,5 +1,7 @@
 package matlabcontrol;
 
+import matlabcontrol.MatlabProxyFactory.RequestCallback;
+
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -32,14 +34,13 @@ package matlabcontrol;
 interface ProxyFactory
 {
     /**
-     * Returns a {@link MatlabProxy}. Connection listeners will be notified upon successful creation. An exception will
-     * be thrown if the factory has been shutdown.
+     * Returns a {@link MatlabProxy}.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
      * The proxy will be returned nearly instantly.
      * <br><br>
      * <strong>Running outside MATLAB</strong><br>
-     * This method will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
+     * This proxy will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
      * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
      * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
      * <br><br>
@@ -48,68 +49,32 @@ interface ProxyFactory
      * specified, then a default of 90 seconds will be used.
      * 
      * @see #requestProxy()
-     * 
      * @throws MatlabConnectionException
-     * 
      * @return proxy
      */
     public MatlabProxy getProxy() throws MatlabConnectionException;
     
     /**
-     * Requests a {@link MatlabProxy}. Connection listeners will be notified upon successful creation. An exception will
-     * be thrown if the factory has been shutdown.
+     * Requests a {@link MatlabProxy}. When the proxy has been created it will be provided to the {@code callback}. The
+     * proxy may be provided to the callback before this method returns.
      * <br><br>
      * The identifier of the proxy that will be created is returned. A proxy's identifier can be accessed by calling
      * {@link MatlabProxy#getIdentifier()}.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
-     * The proxy will be provided to the connection listeners shortly after this method returns.
+     * The proxy will be provided to the callback very quickly.
      * <br><br>
      * <strong>Running outside MATLAB</strong><br>
-     * This method will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
+     * The proxy will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
      * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
      * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
      * <br><br>
      * There is no timeout.
      * 
-     * @see #addConnectionListener(MatlabConnectionListener)
      * @see MatlabProxy#getIdentifier()
      * @see #getProxy()
-     * 
      * @throws MatlabConnectionException
-     * 
      * @return proxy's unique identifier
      */
-    public String requestProxy() throws MatlabConnectionException;
-    
-    /**
-     * Adds the {@code listener}. It will be notified when MATLAB connections are established and lost.
-     * 
-     * @param listener
-     */
-    public void addConnectionListener(MatlabConnectionListener listener);
-    
-    /**
-     * Removes the {@code listener}. It will no longer be notified.
-     * 
-     * @param listener
-     */
-    public void removeConnectionListener(MatlabConnectionListener listener);
-    
-    /**
-     * Cleanly shuts down the factory, allowing for the program to terminate properly. After this method has been
-     * called, all calls to create proxies will fail. If the factory is being shutdown while a proxy is being created
-     * it may still be created; however, listeners may not be notified. All proxies previously created by this factory
-     * will become disconnected. Once a factory has been shutdown it cannot be turned back on.
-     * 
-     * @throws MatlabConnectionException 
-     */
-    public void shutdown() throws MatlabConnectionException;
-    
-    /**
-     * Whether the factory has been shutdown.
-     * 
-     * @return if shutdown
-     */
-    public boolean isShutdown();
+    public String requestProxy(RequestCallback callback) throws MatlabConnectionException;
 }

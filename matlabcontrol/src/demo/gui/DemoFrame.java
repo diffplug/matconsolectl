@@ -45,7 +45,6 @@ import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
 import matlabcontrol.MatlabConnectionException;
-import matlabcontrol.MatlabConnectionListener;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
@@ -91,7 +90,7 @@ public class DemoFrame extends JFrame
     private MatlabProxyFactory _factory;
     
     //Proxy to communicate with MATLAB
-    private MatlabCallbackInteractor _proxy;
+    private MatlabCallbackInteractor _interactor;
     
     //UI components
     private JButton _invokeButton;
@@ -152,71 +151,8 @@ public class DemoFrame extends JFrame
         
         this.pack();
         
-        //Attempt to create proxy factory
-        try
-        {    
-            _factory = new MatlabProxyFactory();
-        }
-        catch(MatlabConnectionException e)
-        {
-            displayException(e);
-            
-            _invokeButton.setEnabled(false);
-            connectionButton.setEnabled(false);
-        }
-        //If the factory was created, add a connection listener for when a proxy is received
-        if(_factory != null)
-        {
-            _factory.addConnectionListener(new MatlabConnectionListener()
-            {
-                //When the connection is established, wrap the proxy in a callback proxy and store it, update UI
-                @Override
-                public void connectionEstablished(final MatlabProxy proxy)
-                {
-                    _proxy = new MatlabCallbackInteractor(proxy);
-                    
-                    EventQueue.invokeLater(new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            if(proxy.isExistingSession())
-                            {
-                                connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED_EXISTING));
-                            }
-                            else
-                            {
-                                connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTED_LAUNCHED));
-                            }
-                            connectionBar.setValue(100);
-                            connectionBar.setIndeterminate(false);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
-                }
-    
-                //When the connection is lost, null the proxy, update UI
-                @Override
-                public void connectionLost(MatlabProxy proxy)
-                {
-                    _proxy = null;
-    
-                    EventQueue.invokeLater(new Runnable()
-                    {
-                        @Override
-                        public void run()
-                        {
-                            connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_DISCONNECTED));
-                            _returnPane.setBorder(BorderFactory.createTitledBorder(RETURNED_DEFAULT));
-                            _returnArea.setText("");
-                            connectionBar.setValue(0);
-                            connectionButton.setEnabled(true);
-                            _invokeButton.setEnabled(false);
-                        }
-                    });
-                }
-            });
-        }
+        //Create proxy factory
+        _factory = new MatlabProxyFactory();
 
         //Connect to MATLAB when the Connect button is pressed
         connectionButton.addActionListener(new ActionListener()
@@ -226,8 +162,62 @@ public class DemoFrame extends JFrame
             {
                 try
                 {
-                    //Request a proxy, to be received by MatlabConnectionListener
-                    _factory.requestProxy();
+                    //Request a proxy
+                    _factory.requestProxy(new MatlabProxyFactory.RequestCallback()
+                    {
+                        @Override
+                        public void proxyCreated(final MatlabProxy proxy)
+                        {
+                            _interactor = new MatlabCallbackInteractor(proxy);
+                        
+                            proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener()
+                            {
+                                @Override
+                                public void proxyDisconnected(MatlabProxy proxy)
+                                {
+                                    _interactor = null;
+    
+                                    EventQueue.invokeLater(new Runnable()
+                                    {
+                                        @Override
+                                        public void run()
+                                        {
+                                            connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_DISCONNECTED));
+                                            _returnPane.setBorder(BorderFactory.createTitledBorder(RETURNED_DEFAULT));
+                                            _returnArea.setText("");
+                                            connectionBar.setValue(0);
+                                            connectionButton.setEnabled(true);
+                                            _invokeButton.setEnabled(false);
+                                        }
+                                    });
+                                }
+                            });
+                    
+                            //Visual update
+                            EventQueue.invokeLater(new Runnable()
+                            {
+                                @Override
+                                public void run()
+                                {
+                                    String status;
+                                    if(proxy.isExistingSession())
+                                    {
+                                        status = STATUS_CONNECTED_EXISTING;
+                                    }
+                                    else
+                                    {
+                                        status = STATUS_CONNECTED_LAUNCHED;
+                                        
+                                    }
+                                    connectionPanel.setBorder(BorderFactory.createTitledBorder(status));
+                                    
+                                    connectionBar.setValue(100);
+                                    connectionBar.setIndeterminate(false);
+                                    _invokeButton.setEnabled(true);
+                                }
+                            });
+                        }
+                    });
                     
                     //Update GUI
                     connectionPanel.setBorder(BorderFactory.createTitledBorder(STATUS_CONNECTING));
@@ -379,7 +369,7 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _proxy.eval(field.getText(), new MatlabCallback()
+                    _interactor.eval(field.getText(), new MatlabCallback()
                     {
                         @Override
                         public void invocationSucceeded()
@@ -408,7 +398,7 @@ public class DemoFrame extends JFrame
                     }
                     catch(Exception ex) { }
                     
-                    _proxy.returningEval(field.getText(), returnCount, new MatlabDataCallback()
+                    _interactor.returningEval(field.getText(), returnCount, new MatlabDataCallback()
                     {
                         @Override
                         public void invocationSucceeded(Object data)
@@ -430,7 +420,7 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _proxy.feval(field.getText(), arrayPanel.getArray(), new MatlabCallback()
+                    _interactor.feval(field.getText(), arrayPanel.getArray(), new MatlabCallback()
                     {
                         @Override
                         public void invocationSucceeded()
@@ -452,7 +442,7 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                             
-                    _proxy.returningFeval(field.getText(), arrayPanel.getArray(), new MatlabDataCallback()
+                    _interactor.returningFeval(field.getText(), arrayPanel.getArray(), new MatlabDataCallback()
                     {
                         @Override
                         public void invocationSucceeded(Object data)
@@ -481,7 +471,7 @@ public class DemoFrame extends JFrame
                     }
                     catch(Exception ex) { }
                             
-                    _proxy.returningFeval(field.getText(), arrayPanel.getArray(), returnCount, new MatlabDataCallback()
+                    _interactor.returningFeval(field.getText(), arrayPanel.getArray(), returnCount, new MatlabDataCallback()
                     {
                         @Override
                         public void invocationSucceeded(Object data)
@@ -503,7 +493,7 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _proxy.setVariable(field.getText(), arrayPanel.getFirstEntry(), new MatlabCallback()
+                    _interactor.setVariable(field.getText(), arrayPanel.getFirstEntry(), new MatlabCallback()
                     {
                         @Override
                         public void invocationSucceeded()
@@ -525,7 +515,7 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                             
-                    _proxy.getVariable(field.getText(), new MatlabDataCallback()
+                    _interactor.getVariable(field.getText(), new MatlabDataCallback()
                     {
                         @Override
                         public void invocationSucceeded(Object data)

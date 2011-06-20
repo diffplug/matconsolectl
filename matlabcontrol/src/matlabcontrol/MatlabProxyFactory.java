@@ -26,7 +26,8 @@ package matlabcontrol;
  * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with the factory.
  * <br><br>
  * This class is thread-safe. Proxies may be created simultaneously. While {@link #getProxy()} blocks the calling thread
- * until a proxy is created, any number of threads may call {@code getProxy()} at the same time.
+ * until a proxy is created (or the timeout is reached), any number of threads may call {@code getProxy()} at the same
+ * time.
  * 
  * @since 4.0.0
  * 
@@ -41,7 +42,7 @@ public class MatlabProxyFactory implements ProxyFactory
      * 
      * @throws MatlabConnectionException 
      */
-    public MatlabProxyFactory() throws MatlabConnectionException
+    public MatlabProxyFactory()
     {        
         this(new MatlabProxyFactoryOptions());
     }
@@ -54,9 +55,8 @@ public class MatlabProxyFactory implements ProxyFactory
      * and used to construct another factory.
      * 
      * @param options
-     * @throws MatlabConnectionException 
      */
-    public MatlabProxyFactory(MatlabProxyFactoryOptions options) throws MatlabConnectionException
+    public MatlabProxyFactory(MatlabProxyFactoryOptions options)
     {
         MatlabProxyFactoryOptions.ImmutableFactoryOptions immutableOptions = options.getImmutableCopy();
                 
@@ -77,32 +77,26 @@ public class MatlabProxyFactory implements ProxyFactory
     }
 
     @Override
-    public String requestProxy() throws MatlabConnectionException
+    public String requestProxy(RequestCallback callback) throws MatlabConnectionException
     {
-        return _delegateFactory.requestProxy();
+        if(callback == null)
+        {
+            throw new NullPointerException("The request callback may not be null");
+        }
+        
+        return _delegateFactory.requestProxy(callback);
     }
-
-    @Override
-    public void addConnectionListener(MatlabConnectionListener listener)
+    
+    /**
+     *  Provides the requested proxy.
+     */
+    public static interface RequestCallback
     {
-        _delegateFactory.addConnectionListener(listener);
-    }
-
-    @Override
-    public void removeConnectionListener(MatlabConnectionListener listener)
-    {
-        _delegateFactory.removeConnectionListener(listener);
-    }
-
-    @Override
-    public void shutdown() throws MatlabConnectionException
-    {
-        _delegateFactory.shutdown();
-    }
-
-    @Override
-    public boolean isShutdown()
-    {
-        return _delegateFactory.isShutdown();
+        /**
+         * Called when the proxy has been created.
+         * 
+         * @param proxy 
+         */
+        public void proxyCreated(MatlabProxy proxy);
     }
 }

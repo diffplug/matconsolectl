@@ -22,8 +22,13 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
+import java.rmi.server.UnicastRemoteObject;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Allows for calling MATLAB from <strong>outside</strong> of MATLAB.
@@ -32,12 +37,12 @@ import java.rmi.UnmarshalException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-final class RemoteMatlabProxy extends MatlabProxy
+class RemoteMatlabProxy extends MatlabProxy
 {
     /**
-     * The underlying proxy which is a remote object connected over RMI.
+     * The remote JMI wrapper which is a remote object connected over RMI.
      */ 
-    private final JMIWrapperRemote _internalProxy;
+    private final JMIWrapperRemote _jmiWrapper;
     
     /**
      * Unique identifier for this proxy.
@@ -50,16 +55,57 @@ final class RemoteMatlabProxy extends MatlabProxy
     private final boolean _existingSession;
     
     /**
+     * The receiver for the proxy. While the receiver is bound to the RMI registry and a reference is maintained
+     * (the RMI registry uses weak references), the connection to MATLAB's JVM will remain active. The JMI wrapper,
+     * while a remote object, is not bound to the registry, and will not keep the RMI thread running.
+     */
+    private final JMIWrapperRemoteReceiver _receiver;
+    
+    /**
+     * A timer that periodically checks if still connected.
+     */
+    private final Timer _connectionTimer;
+    
+    /**
+     * Whether the proxy has become disconnected. This is either because the connection to MATLAB has been actually
+     * been lost or a request came in to make that occur.
+     */
+    //private volatile boolean _isDisconnected = false;
+    
+    /**
+     * Whether the proxy is connected. This variable could be {@code true} but no actual connection exists. It will be
+     * updated the next time {@link #isConnected()} is called.
+     */
+    private volatile boolean _isConnected = true;
+    
+    /**
+     * The duration (in milliseconds) between checks to determine if still connected.
+     */
+    private static final int CONNECTION_CHECK_PERIOD = 1000;
+    
+    /**
+     * Listeners for disconnection.
+     */
+    private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
+    
+    /**
      * The proxy is never to be created outside of this package, it is to be constructed after a
      * {@link JMIWrapperRemote} has been received via RMI.
      * 
      * @param internalProxy
+     * @param receiver
+     * @param id
+     * @param existingSession
      */
-    RemoteMatlabProxy(JMIWrapperRemote internalProxy, String id, boolean existingSession)
+    RemoteMatlabProxy(JMIWrapperRemote internalProxy, JMIWrapperRemoteReceiver receiver, String id, boolean existingSession)
     {
-        _internalProxy = internalProxy;
+        _jmiWrapper = internalProxy;
+        _receiver = receiver;
         _id = id;
         _existingSession = existingSession;
+        
+        _connectionTimer = createTimer();
+        _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
     }
     
     @Override
@@ -72,12 +118,24 @@ final class RemoteMatlabProxy extends MatlabProxy
     public boolean isConnected()
     {
         boolean connected;
-        try
+        
+        //If connected, very this is up to date information
+        if(_isConnected)
         {
-            _internalProxy.checkConnection();    
-            connected = true;
+            try
+            {
+                _jmiWrapper.checkConnection();    
+                connected = true;
+            }
+            catch(Exception e)
+            {
+                connected = false;
+            }
+            
+            _isConnected = connected;
         }
-        catch(Exception e)
+        //If no longer connected, there is no possibility of becoming reconnected
+        else
         {
             connected = false;
         }
@@ -89,6 +147,18 @@ final class RemoteMatlabProxy extends MatlabProxy
     public boolean isExistingSession()
     {
         return _existingSession;
+    }
+
+    @Override
+    public void addDisconnectionListener(DisconnectionListener listener)
+    {
+        _listeners.add(listener);
+    }
+
+    @Override
+    public void removeDisconnectionListener(DisconnectionListener listener)
+    {
+        _listeners.remove(listener);
     }
     
     private static interface RemoteVoidInvocation
@@ -103,42 +173,56 @@ final class RemoteMatlabProxy extends MatlabProxy
 
     private void invoke(RemoteVoidInvocation invocation) throws MatlabInvocationException
     {
-        try
+        if(!_isConnected)
         {
-            invocation.invoke();
+            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
-        catch (RemoteException e)
+        else
         {
-            if(this.isConnected())
+            try
             {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                invocation.invoke();
             }
-            else
+            catch (RemoteException e)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                if(this.isConnected())
+                {
+                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                }
+                else
+                {
+                    throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                }
             }
         }
     }
 
     private <T> T invoke(RemoteReturningInvocation<T> invocation) throws MatlabInvocationException
     {
-        try
+        if(!_isConnected)
         {
-            return invocation.invoke();
+            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
-        catch(UnmarshalException e)
+        else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
-        }
-        catch (RemoteException e)
-        {
-            if(this.isConnected())
+            try
             {
-                throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                return invocation.invoke();
             }
-            else
+            catch(UnmarshalException e)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
+            }
+            catch (RemoteException e)
+            {
+                if(this.isConnected())
+                {
+                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                }
+                else
+                {
+                    throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                }
             }
         }
     }
@@ -151,7 +235,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.setVariable(variableName, value);
+                _jmiWrapper.setVariable(variableName, value);
             }
         });
     }
@@ -164,7 +248,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
-                return _internalProxy.getVariable(variableName);
+                return _jmiWrapper.getVariable(variableName);
             }
         });
     }
@@ -177,7 +261,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.exit();
+                _jmiWrapper.exit();
             }
         });
     }
@@ -190,7 +274,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.eval(command);
+                _jmiWrapper.eval(command);
             }
         });
     }
@@ -203,7 +287,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
-                return _internalProxy.returningEval(command, returnCount);
+                return _jmiWrapper.returningEval(command, returnCount);
             }
         });
     }
@@ -216,7 +300,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.feval(functionName, args);
+                _jmiWrapper.feval(functionName, args);
             }
         });
     }
@@ -229,7 +313,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
-                return _internalProxy.returningFeval(functionName, args);
+                return _jmiWrapper.returningFeval(functionName, args);
             }
         });
     }
@@ -242,7 +326,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
-                return _internalProxy.returningFeval(functionName, args, returnCount);
+                return _jmiWrapper.returningFeval(functionName, args, returnCount);
             }
         });
     }
@@ -255,7 +339,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public void invoke() throws RemoteException, MatlabInvocationException
             {
-                _internalProxy.setDiagnosticMode(enable);
+                _jmiWrapper.setDiagnosticMode(enable);
             }
         });
     }
@@ -268,7 +352,7 @@ final class RemoteMatlabProxy extends MatlabProxy
             @Override
             public String invoke() throws RemoteException, MatlabInvocationException
             {
-                return _internalProxy.storeObject(obj, keepPermanently);
+                return _jmiWrapper.storeObject(obj, keepPermanently);
             }
         });
     }
@@ -276,6 +360,51 @@ final class RemoteMatlabProxy extends MatlabProxy
     @Override
     public String toString()
     {
-        return "[RemoteMatlabProxy identifier=" + _id + "]";
+        return "[" + this.getClass().getName() + " identifier=" + _id + "]";
+    }
+    
+    @Override
+    public void disconnect()
+    {
+        //Unexport the receiver so that the RMI threads can shut down
+        try
+        {
+            UnicastRemoteObject.unexportObject(_receiver, true);
+        }
+        //If it is not exported, that's ok because we were trying to unexport it
+        catch(NoSuchObjectException e) { }
+
+        _isConnected = false;
+    }
+    
+    private Timer createTimer()
+    {
+        final Timer timer = new Timer();
+        timer.schedule(new TimerTask()
+        {
+            @Override
+            public void run()
+            {   
+                if(!RemoteMatlabProxy.this.isConnected())
+                {
+                    //If not connected, perform disconnection so RMI thread can terminate
+                    if(!_isConnected)
+                    {
+                        RemoteMatlabProxy.this.disconnect();
+                    }
+                    
+                    //Notify listeners
+                    for(DisconnectionListener listener : _listeners)
+                    {
+                        listener.proxyDisconnected(RemoteMatlabProxy.this);
+                    }
+                    
+                    //Shutdown timer
+                    timer.cancel();
+                }
+            }
+        }, CONNECTION_CHECK_PERIOD, CONNECTION_CHECK_PERIOD);
+        
+        return timer;
     }
 }
