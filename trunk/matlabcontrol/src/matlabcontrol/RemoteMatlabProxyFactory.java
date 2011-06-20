@@ -73,13 +73,15 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Uses the {@link #_options} and {@code runArg} to build the arguments that launch MATLAB.
+     * Uses the {@link #_options} and the arguments to create a {@link ProcessBuilder} that will launch MATLAB and
+     * connect it to this JVM.
      * 
-     * @param options
+     * @param proxyID
+     * @param receiver
      * @return
      * @throws MatlabConnectionException 
      */
-    private List<String> buildProcessArguments(RemoteIdentifier proxyID, ProxyReceiver receiver)
+    private ProcessBuilder buildProcess(RemoteIdentifier proxyID, ProxyReceiver receiver)
             throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
@@ -130,7 +132,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                         "', '" + proxyID.getUUIDString() + "');";
         processArguments.add(runArg);
         
-        return processArguments; 
+        return new ProcessBuilder(processArguments); 
     }
     
     /**
@@ -296,19 +298,15 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Launch a new session of MATLAB
             else
             {
-                //Build arguments to run MATLAB
-                List<String> args = buildProcessArguments(proxyID, receiver); 
-
-                //Attempt to run MATLAB
+                ProcessBuilder builder = buildProcess(proxyID, receiver); 
                 try
                 {   
-                    ProcessBuilder builder = new ProcessBuilder(args);
                     Process process = builder.start();
                     request = new RemoteRequest(proxyID, process, receiver);
                 }
                 catch(IOException e)
                 {
-                    throw new MatlabConnectionException("Could not launch MATLAB. Process arguments: " + args, e);
+                    throw new MatlabConnectionException("Could not launch MATLAB. Command: " + builder.command(), e);
                 }
             }
         }
@@ -422,7 +420,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private static class GetProxyRequestCallback implements RequestCallback
     {
         private final Thread _requestingThread;
-        private MatlabProxy _proxy;
+        private volatile MatlabProxy _proxy;
         
         public GetProxyRequestCallback()
         {
