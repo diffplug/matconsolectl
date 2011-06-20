@@ -32,9 +32,9 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
+import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
 import matlabcontrol.MatlabProxyFactoryOptions.ImmutableFactoryOptions;
 
@@ -56,7 +56,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * Map of proxyIDs to {@link ProxyReceiver} instances.
      */
-    private final ConcurrentMap<String, ProxyReceiver> _receivers = new ConcurrentHashMap<String, ProxyReceiver>();
+    private final List<ProxyReceiver> _receivers = new CopyOnWriteArrayList<ProxyReceiver>();
+    //private final ConcurrentMap<String, ProxyReceiver> _receivers = new ConcurrentHashMap<String, ProxyReceiver>();
     
     /**
      * The RMI registry used to communicate between JVMs. There is only ever one registry actually running on a given
@@ -160,8 +161,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private class ProxyReceiver implements JMIWrapperRemoteReceiver
     {
         private final RequestCallback _requestCallback;
-        
         private final String _receiverID;
+        private boolean _receivedJMIWrapper = false;
         
         public ProxyReceiver(RequestCallback requestCallback)
         {
@@ -173,8 +174,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         @Override
         public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
         {   
-            //Remove self from the mapping of receivers
-            _receivers.remove(proxyID); 
+            //Note receiver has been received
+            _receivedJMIWrapper = true;
+            
+            //Remove self from the list of receivers
+            _receivers.remove(this); 
             
             //Create proxy, store it
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, proxyID, existingSession);
@@ -187,6 +191,28 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         public String getReceiverID()
         {
             return _receiverID;
+        }
+        
+        public boolean shutdown()
+        {
+            _receivers.remove(this);
+             
+            boolean success;
+            try
+            {
+                success = UnicastRemoteObject.unexportObject(this, true);
+            }
+            catch(NoSuchObjectException e)
+            {
+                success = true;
+            }
+            
+            return success;
+        }
+        
+        public boolean hasReceivedJMIWrapper()
+        {
+            return _receivedJMIWrapper;
         }
     }
     
@@ -206,8 +232,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public String requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
+    public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
     {
+        Request request;
+        
         //Generate random ID for the proxy
         String proxyID = getRandomProxyID();
         
@@ -216,19 +244,19 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         //Create and bind the receiver
         ProxyReceiver receiver = new ProxyReceiver(requestCallback);
-        _receivers.put(proxyID, receiver);
+        _receivers.add(receiver);
         try
         {
             _registry.bind(receiver.getReceiverID(), UnicastRemoteObject.exportObject(receiver, 0));
         }
         catch(RemoteException ex)
         {
-            _receivers.remove(proxyID);
+            _receivers.remove(receiver);
             throw new MatlabConnectionException("Could not bind proxy receiver to the RMI registry", ex);
         }
         catch(AlreadyBoundException ex)
         {
-            _receivers.remove(proxyID);
+            _receivers.remove(receiver);
             throw new MatlabConnectionException("Could not bind proxy receiver to the RMI registry", ex);
         }
         
@@ -248,6 +276,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 try
                 {
                     session.connectFromRMI(receiver.getReceiverID(), proxyID);
+                    request = new RemoteRequest(proxyID, null, receiver);
                 }
                 catch(RemoteException e)
                 {
@@ -275,7 +304,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                 try
                 {   
                     ProcessBuilder builder = new ProcessBuilder(args);
-                    builder.start();
+                    Process process = builder.start();
+                    request = new RemoteRequest(proxyID, process, receiver);
                 }
                 catch(IOException e)
                 {
@@ -285,12 +315,68 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         catch(MatlabConnectionException e)
         {
-            cleanupProxyRequest(proxyID);
-            
+            receiver.shutdown();
             throw e;
         }
         
-        return proxyID;
+        return request;
+    }
+    
+    private static class RemoteRequest implements Request
+    {
+        private final String _proxyID;
+        private final Process _process;
+        private final ProxyReceiver _receiver;
+        private boolean _isCancelled = false;
+        
+        private RemoteRequest(String proxyID, Process process, ProxyReceiver receiver)
+        {
+            _proxyID = proxyID;
+            _process = process;
+            _receiver = receiver;
+        }
+        
+        @Override
+        public String getProxyIdentifer()
+        {
+            return _proxyID;
+        }
+
+        @Override
+        public synchronized boolean cancel()
+        {
+            if(!_isCancelled)
+            {
+                boolean success;
+                if(!this.isCompleted())
+                {
+                    if(_process != null)
+                    {
+                        _process.destroy();
+                    }
+                    success = _receiver.shutdown();
+                }
+                else
+                {
+                    success = false;
+                }
+                _isCancelled = success;
+            }
+            
+            return _isCancelled;
+        }
+
+        @Override
+        public boolean isCancelled()
+        {
+            return _isCancelled;
+        }
+
+        @Override
+        public boolean isCompleted()
+        {
+            return _receiver.hasReceivedJMIWrapper();
+        }
     }
 
     @Override
@@ -298,7 +384,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {        
         //Request proxy
         GetProxyRequestCallback callback = new GetProxyRequestCallback();
-        String proxyID = this.requestProxy(callback);
+        Request request = this.requestProxy(callback);
         
         try
         {   
@@ -329,26 +415,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         catch(MatlabConnectionException e)
         {
-            cleanupProxyRequest(proxyID);
-            
+            request.cancel();
             throw e;
-        }
-    }
-    
-    private void cleanupProxyRequest(String proxyID) throws MatlabConnectionException
-    {
-        ProxyReceiver receiver = _receivers.remove(proxyID);
-        
-        if(receiver != null)
-        {
-            try
-            {
-                UnicastRemoteObject.unexportObject(receiver, true);
-            }
-            catch(NoSuchObjectException e)
-            {
-                throw new MatlabConnectionException("Unable to remove proxy's receiver", e);
-            }
         }
     }
     

@@ -218,7 +218,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void disconnect()
+    public boolean disconnect()
     {
         _isConnected = false;
         
@@ -227,6 +227,8 @@ class LocalMatlabProxy extends MatlabProxy
         {
             listener.proxyDisconnected(this);
         }
+        
+        return true;
     }
     
     @Override

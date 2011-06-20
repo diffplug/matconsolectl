@@ -43,7 +43,7 @@ public class MatlabProxyFactory implements ProxyFactory
      * @throws MatlabConnectionException 
      */
     public MatlabProxyFactory()
-    {        
+    {
         this(new MatlabProxyFactoryOptions());
     }
     
@@ -77,7 +77,7 @@ public class MatlabProxyFactory implements ProxyFactory
     }
 
     @Override
-    public String requestProxy(RequestCallback callback) throws MatlabConnectionException
+    public Request requestProxy(RequestCallback callback) throws MatlabConnectionException
     {
         if(callback == null)
         {
@@ -88,7 +88,11 @@ public class MatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     *  Provides the requested proxy.
+     * Provides the requested proxy.
+     * 
+     * @since 4.0.0
+     * 
+     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
     public static interface RequestCallback
     {
@@ -98,5 +102,49 @@ public class MatlabProxyFactory implements ProxyFactory
          * @param proxy 
          */
         public void proxyCreated(MatlabProxy proxy);
+    }
+    
+    /**
+     * A request for a {@link MatlabProxy}. Because requests have no timeout, a {@code Request} has no concept of
+     * failure.
+     * <br><br>
+     * This interface is not intended to be implemented by users of matlabcontrol.
+     * 
+     * @since 4.0.0
+     * 
+     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+     */
+    public static interface Request
+    {
+        /**
+         * The identifier of the proxy associated with this request. If the proxy is created, then its identifier
+         * accessible via {@link MatlabProxy#getIdentifier()} will match the identifier returned by this method.
+         * 
+         * @return 
+         */
+        public String getProxyIdentifer();
+        
+        /**
+         * Attempts to cancel the request. If the request has already been completed or cannot successfully be canceled
+         * then {@code false} will be returned, otherwise {@code true} will be returned. If the request has already been
+         * successfully canceled then this method will have no effect and {@code true} will be returned.
+         * 
+         * @return if successfully cancelled
+         */
+        public boolean cancel();
+        
+        /**
+         * If the request has been successfully cancelled.
+         * 
+         * @return if successfully cancelled
+         */
+        public boolean isCancelled();
+        
+        /**
+         * Returns {@code true} if the proxy has been created.
+         * 
+         * @return 
+         */
+        public boolean isCompleted();
     }
 }

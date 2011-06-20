@@ -77,6 +77,10 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     
     /**
      * Implementers can be notified of when the proxy becomes disconnected from MATLAB.
+     * 
+     * @since 4.0.0
+     * 
+     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
     public static interface DisconnectionListener
     {
@@ -117,8 +121,10 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     /**
      * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
      * throw an exception. A proxy cannot be reconnected.
+     * 
+     * @return the success of disconnecting
      */
-    public abstract void disconnect();
+    public abstract boolean disconnect();
     
     /**
      * Returns the unique identifier for this proxy.

@@ -24,6 +24,7 @@ package matlabcontrol;
 
 import java.util.concurrent.atomic.AtomicLong;
 
+import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
 
 /**
@@ -52,11 +53,45 @@ class LocalMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public String requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
+    public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
     {   
         LocalMatlabProxy proxy = getProxy();
         requestCallback.proxyCreated(proxy);
         
-        return proxy.getIdentifier();
+        return new LocalRequest(proxy.getIdentifier());
+    }
+    
+    private static final class LocalRequest implements Request
+    {
+        private final String _proxyID;
+        
+        private LocalRequest(String proxyID)
+        {
+            _proxyID = proxyID;
+        }
+
+        @Override
+        public String getProxyIdentifer()
+        {
+            return _proxyID;
+        }
+
+        @Override
+        public boolean cancel()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCancelled()
+        {
+            return false;
+        }
+
+        @Override
+        public boolean isCompleted()
+        {
+            return true;
+        }
     }
 }
