@@ -364,17 +364,22 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void disconnect()
+    public boolean disconnect()
     {
         //Unexport the receiver so that the RMI threads can shut down
+        boolean success;
         try
         {
-            UnicastRemoteObject.unexportObject(_receiver, true);
+            success = UnicastRemoteObject.unexportObject(_receiver, true);
+            _isConnected = !success;
         }
         //If it is not exported, that's ok because we were trying to unexport it
-        catch(NoSuchObjectException e) { }
-
-        _isConnected = false;
+        catch(NoSuchObjectException e)
+        {
+            success = true;
+        }
+        
+        return success;
     }
     
     private Timer createTimer()

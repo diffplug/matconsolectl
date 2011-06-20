@@ -1,7 +1,5 @@
 package matlabcontrol;
 
-import matlabcontrol.MatlabProxyFactory.RequestCallback;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -24,6 +22,9 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import matlabcontrol.MatlabProxyFactory.Request;
+import matlabcontrol.MatlabProxyFactory.RequestCallback;
+
 /**
  * A factory which creates instances of {@link MatlabProxy}.
  * 
@@ -37,7 +38,7 @@ interface ProxyFactory
      * Returns a {@link MatlabProxy}.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
-     * The proxy will be returned nearly instantly.
+     * The proxy will be returned very quickly.
      * <br><br>
      * <strong>Running outside MATLAB</strong><br>
      * This proxy will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
@@ -48,7 +49,6 @@ interface ProxyFactory
      * will be thrown. A timeout can be specified with the factory options provided to this factory. If no timeout was
      * specified, then a default of 90 seconds will be used.
      * 
-     * @see #requestProxy()
      * @throws MatlabConnectionException
      * @return proxy
      */
@@ -57,9 +57,6 @@ interface ProxyFactory
     /**
      * Requests a {@link MatlabProxy}. When the proxy has been created it will be provided to the {@code callback}. The
      * proxy may be provided to the callback before this method returns.
-     * <br><br>
-     * The identifier of the proxy that will be created is returned. A proxy's identifier can be accessed by calling
-     * {@link MatlabProxy#getIdentifier()}.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
      * The proxy will be provided to the callback very quickly.
@@ -71,10 +68,8 @@ interface ProxyFactory
      * <br><br>
      * There is no timeout.
      * 
-     * @see MatlabProxy#getIdentifier()
-     * @see #getProxy()
      * @throws MatlabConnectionException
-     * @return proxy's unique identifier
+     * @return the request
      */
-    public String requestProxy(RequestCallback callback) throws MatlabConnectionException;
+    public Request requestProxy(RequestCallback callback) throws MatlabConnectionException;
 }
