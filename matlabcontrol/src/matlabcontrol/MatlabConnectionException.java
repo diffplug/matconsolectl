@@ -23,7 +23,7 @@ package matlabcontrol;
  */
 
 /**
- * Represents a failure to connect to MATLAB, disconnect from MATLAB, or make MATLAB available for a connection.
+ * Represents a failure to connect to MATLAB or make MATLAB available for a connection.
  * 
  * @since 2.0.0
  * 

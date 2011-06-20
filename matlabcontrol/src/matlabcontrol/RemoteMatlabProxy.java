@@ -45,16 +45,6 @@ class RemoteMatlabProxy extends MatlabProxy
     private final JMIWrapperRemote _jmiWrapper;
     
     /**
-     * Unique identifier for this proxy.
-     */
-    private final String _id;
-    
-    /**
-     * Whether the session of MATLAB this proxy is connected to is an existing session.
-     */
-    private final boolean _existingSession;
-    
-    /**
      * The receiver for the proxy. While the receiver is bound to the RMI registry and a reference is maintained
      * (the RMI registry uses weak references), the connection to MATLAB's JVM will remain active. The JMI wrapper,
      * while a remote object, is not bound to the registry, and will not keep the RMI thread running.
@@ -97,21 +87,16 @@ class RemoteMatlabProxy extends MatlabProxy
      * @param id
      * @param existingSession
      */
-    RemoteMatlabProxy(JMIWrapperRemote internalProxy, JMIWrapperRemoteReceiver receiver, String id, boolean existingSession)
+    RemoteMatlabProxy(JMIWrapperRemote internalProxy, JMIWrapperRemoteReceiver receiver, Identifier id,
+            boolean existingSession)
     {
+        super(id, existingSession);
+        
         _jmiWrapper = internalProxy;
         _receiver = receiver;
-        _id = id;
-        _existingSession = existingSession;
         
         _connectionTimer = createTimer();
         _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
-    }
-    
-    @Override
-    public String getIdentifier()
-    {
-        return _id;
     }
     
     @Override
@@ -141,12 +126,6 @@ class RemoteMatlabProxy extends MatlabProxy
         }
         
         return connected;
-    }
-    
-    @Override
-    public boolean isExistingSession()
-    {
-        return _existingSession;
     }
 
     @Override
@@ -360,7 +339,7 @@ class RemoteMatlabProxy extends MatlabProxy
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() + " identifier=" + _id + "]";
+        return "[" + this.getClass().getName() + " identifier=" + getIdentifier() + "]";
     }
     
     @Override

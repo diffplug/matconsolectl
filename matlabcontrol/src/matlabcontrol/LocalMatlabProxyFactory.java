@@ -23,6 +23,7 @@ package matlabcontrol;
  */
 
 import java.util.concurrent.atomic.AtomicLong;
+import matlabcontrol.MatlabProxy.Identifier;
 
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
@@ -46,7 +47,7 @@ class LocalMatlabProxyFactory implements ProxyFactory
     @Override
     public LocalMatlabProxy getProxy() throws MatlabConnectionException
     {
-        String proxyID = "PROXY_LOCAL_" + PROXY_CREATION_COUNT.getAndIncrement();
+        Identifier proxyID = new LocalIdentifier(PROXY_CREATION_COUNT.getAndIncrement());
         LocalMatlabProxy proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID);
         
         return proxy;
@@ -61,17 +62,50 @@ class LocalMatlabProxyFactory implements ProxyFactory
         return new LocalRequest(proxy.getIdentifier());
     }
     
+    private static final class LocalIdentifier implements Identifier
+    {
+        private final long _id;
+        
+        private LocalIdentifier(long id)
+        {
+            _id = id;
+        }
+        
+        @Override
+        public boolean equals(Object other)
+        {
+            boolean equals;
+            
+            if(other instanceof LocalIdentifier)
+            {
+                equals = (((LocalIdentifier) other)._id == _id);
+            }
+            else
+            {
+                equals = false;
+            }
+            
+            return equals;
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "PROXY_LOCAL_" + _id;
+        }
+    }
+    
     private static final class LocalRequest implements Request
     {
-        private final String _proxyID;
+        private final Identifier _proxyID;
         
-        private LocalRequest(String proxyID)
+        private LocalRequest(Identifier proxyID)
         {
             _proxyID = proxyID;
         }
 
         @Override
-        public String getProxyIdentifer()
+        public Identifier getProxyIdentifer()
         {
             return _proxyID;
         }

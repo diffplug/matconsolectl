@@ -65,18 +65,32 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
 {
     /* Internal implementation notes:
      * 
-     * This class could really be designed as an interface. It has intentionally not been. It is not an interface to
+     * This class could easily be designed as an interface. It has intentionally not been. It is not an interface to
      * prevent users of the matlabcontrol API from making their own proxies, as being able to know for sure what the
      * MatlabProxy actually is, is a useful guarantee.
      */
     
     /**
-     * This constructor is package private to prevent subclasses from outside of this package.
+     * Unique identifier for this proxy.
      */
-    MatlabProxy() { }
+    private final Identifier _id;
     
     /**
-     * Implementers can be notified of when the proxy becomes disconnected from MATLAB.
+     * Whether the session of MATLAB this proxy is connected to is an existing session.
+     */
+    private final boolean _existingSession;
+    
+    /**
+     * This constructor is package private to prevent subclasses from outside of this package.
+     */
+    MatlabProxy(Identifier id, boolean existingSession)
+    {
+        _id = id;
+        _existingSession = existingSession;
+    }
+    
+    /**
+     * Implementers can be notified when a proxy becomes disconnected from MATLAB.
      * 
      * @since 4.0.0
      * 
@@ -92,6 +106,47 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
          * @param proxy disconnected proxy
          */
         public void proxyDisconnected(MatlabProxy proxy);
+    }
+    
+    /**
+     * Uniquely identifies a proxy.
+     * 
+     * @since 4.0.0
+     * 
+     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+     */
+    public static interface Identifier
+    {
+        /**
+         * Returns {@code true} if {@code other} is an identifier and is equal to this identifier, {@code false}
+         * otherwise.
+         * 
+         * @param other
+         * @return 
+         */
+        @Override
+        public boolean equals(Object other);
+    }
+    
+    /**
+     * Returns the unique identifier for this proxy.
+     * 
+     * @return identifier
+     */
+    public Identifier getIdentifier()
+    {
+        return _id;
+    }
+        
+    /**
+     * Whether this proxy is connected to a session of MATLAB that was running previous to the request to create this
+     * proxy.
+     * 
+     * @return if existing session
+     */
+    public boolean isExistingSession()
+    {
+        return _existingSession;
     }
     
     /**
@@ -125,24 +180,6 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @return the success of disconnecting
      */
     public abstract boolean disconnect();
-    
-    /**
-     * Returns the unique identifier for this proxy.
-     * <br><br>
-     * If this proxy was created by a call to {@link MatlabProxyFactory#requestProxy()}, then the {@code String} this
-     * method returns matches that returned when calling to create this proxy.
-     * 
-     * @return identifier
-     */
-    public abstract String getIdentifier();
-    
-    /**
-     * Whether this proxy is connected to a session of MATLAB that was running previous to the request to create this
-     * proxy.
-     * 
-     * @return if existing session
-     */
-    public abstract boolean isExistingSession();
    
     //The following methods are overridden so that they appear in the javadocs
 
