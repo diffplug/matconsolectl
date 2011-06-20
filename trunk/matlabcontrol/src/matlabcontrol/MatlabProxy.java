@@ -34,6 +34,7 @@ package matlabcontrol;
  * <strong>Running outside MATLAB</strong><br>
  * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
  * <ul>
+ * <li>the proxy has been disconnected via {@link #disconnect()}</li>
  * <li>an internal MATLAB exception occurs*</li>
  * <li>communication between this JVM and the one MATLAB is running in is disrupted (likely due to closing MATLAB)</li>
  * <li>the class of the object to be returned is not {@link java.io.Serializable}</li>
@@ -42,10 +43,11 @@ package matlabcontrol;
  * <strong>Running inside MATLAB</strong><br>
  * Proxy methods that are relayed to MATLAB may throw exceptions. They will be thrown if:
  * <ul>
+ * <li>the proxy has been disconnected via {@link #disconnect()}</li>
  * <li>an internal MATLAB exception occurs*</li>
  * <li>the method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components
- *     (This is done to prevent MATLAB from becoming non-responsive or hanging indefinitely. To get around this
- *     limitation the {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.)</li>
+ *     (This is done to prevent MATLAB from hanging indefinitely. To get around this limitation the
+ *     {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.)</li>
  * </ul>
  * *Internal MATLAB exceptions occur primarily for two reasons:
  * <ul>
@@ -74,14 +76,49 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     MatlabProxy() { }
     
     /**
+     * Implementers can be notified of when the proxy becomes disconnected from MATLAB.
+     */
+    public static interface DisconnectionListener
+    {
+        /**
+         * Called when the proxy becomes disconnected from MATLAB. The proxy passed in will always be the proxy that
+         * the listener was added to. The proxy is provided so that a single implementation of this interface may be
+         * used for multiple proxies.
+         * 
+         * @param proxy disconnected proxy
+         */
+        public void proxyDisconnected(MatlabProxy proxy);
+    }
+    
+    /**
+     * Adds a disconnection that will be notified when this proxy becomes disconnected from MATLAB.
+     * 
+     * @param listener 
+     */
+    public abstract void addDisconnectionListener(DisconnectionListener listener);
+    
+    /**
+     * Removes a disconnection listener. It will no longer be notified.
+     * 
+     * @param listener 
+     */
+    public abstract void removeDisconnectionListener(DisconnectionListener listener);
+    
+    /**
      * Whether this proxy is connected to MATLAB.
      * <br><br>
-     * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or the factory that
-     * created this proxy has been shutdown.
+     * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or it has been
+     * disconnected via {@link #disconnect()}.
      * 
      * @return if connected
      */
     public abstract boolean isConnected();
+    
+    /**
+     * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
+     * throw an exception. A proxy cannot be reconnected.
+     */
+    public abstract void disconnect();
     
     /**
      * Returns the unique identifier for this proxy.

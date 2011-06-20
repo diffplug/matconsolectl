@@ -77,7 +77,7 @@ class MatlabConnector
     }
     
     static void connect(String receiverID, String proxyID, boolean existingSession)
-    {
+    {   
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
         _establishConnectionExecutor.submit(new EstablishConnectionRunnable(receiverID, proxyID, existingSession));
@@ -153,6 +153,8 @@ class MatlabConnector
                 System.err.println("Connection to Java application could not be established");
                 ex.printStackTrace();
             }
+            
+            MatlabBroadcaster.connectionAttempted();
         }
     }
 }

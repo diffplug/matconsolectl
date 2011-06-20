@@ -22,9 +22,9 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
+
+import matlabcontrol.MatlabProxyFactory.RequestCallback;
 
 /**
  * Creates local instances of {@link MatlabProxy}.
@@ -35,89 +35,28 @@ import java.util.concurrent.atomic.AtomicLong;
  */
 class LocalMatlabProxyFactory implements ProxyFactory
 {
-    private boolean _isShutdown = false;
-    
     private static final AtomicLong PROXY_CREATION_COUNT = new AtomicLong();
-    
-    private final LocalMatlabProxy _proxy;
-    private final MatlabConnectionListenerManager _listenerManager = new MatlabConnectionListenerManager();
-    private final ExecutorService _requestExecutor = Executors.newSingleThreadExecutor();
     
     public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
     {
-        String proxyID = "PROXY_LOCAL_" + PROXY_CREATION_COUNT.getAndIncrement();
-        _proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID, this);
+
     }
     
     @Override
     public LocalMatlabProxy getProxy() throws MatlabConnectionException
     {
-        if(_isShutdown)
-        {
-            throw new MatlabConnectionException("This factory has been shutdown");
-        }
+        String proxyID = "PROXY_LOCAL_" + PROXY_CREATION_COUNT.getAndIncrement();
+        LocalMatlabProxy proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID);
         
-        _listenerManager.connectionEstablished(_proxy);
-                    
-        return _proxy;
+        return proxy;
     }
     
     @Override
-    public String requestProxy() throws MatlabConnectionException
-    {        
-        if(_isShutdown)
-        {
-            throw new MatlabConnectionException("This factory has been shutdown");
-        }
-    
-        //Notify the creation of the proxy after a 100ms delay so that the proxy's identifier can be returned first
-        _requestExecutor.submit(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    Thread.sleep(100);
-                    _listenerManager.connectionEstablished(_proxy);
-                    
-                }
-                catch(InterruptedException ex) { }
-            }
-        });
+    public String requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
+    {   
+        LocalMatlabProxy proxy = getProxy();
+        requestCallback.proxyCreated(proxy);
         
-        return _proxy.getIdentifier();
-    }
-
-    @Override
-    public void addConnectionListener(MatlabConnectionListener listener)
-    {
-        _listenerManager.addConnectionListener(listener);
-    }
-    
-    @Override
-    public void removeConnectionListener(MatlabConnectionListener listener)
-    {
-        _listenerManager.removeConnectionListener(listener);
-    }
-    
-    @Override
-    public void shutdown()
-    {
-        if(!_isShutdown)
-        {
-            _isShutdown = true;
-            
-            _listenerManager.connectionLost(_proxy);
-
-            _listenerManager.shutdown();
-            _requestExecutor.shutdown();
-        }
-    }
-    
-    @Override
-    public boolean isShutdown()
-    {
-        return _isShutdown;
+        return proxy.getIdentifier();
     }
 }
