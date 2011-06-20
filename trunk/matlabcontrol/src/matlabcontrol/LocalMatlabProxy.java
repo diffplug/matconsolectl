@@ -39,11 +39,6 @@ class LocalMatlabProxy extends MatlabProxy
     private final JMIWrapper _wrapper;
     
     /**
-     * Unique identifier for this proxy.
-     */
-    private final String _id;
-    
-    /**
      * Listeners for disconnection.
      */
     private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
@@ -56,10 +51,11 @@ class LocalMatlabProxy extends MatlabProxy
      */
     private volatile boolean _isConnected = true;
 
-    LocalMatlabProxy(JMIWrapper wrapper, String id)
+    LocalMatlabProxy(JMIWrapper wrapper, Identifier id)
     {
+        super(id, true);
+        
         _wrapper = wrapper;
-        _id = id;
         
         _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
     }
@@ -192,23 +188,11 @@ class LocalMatlabProxy extends MatlabProxy
             throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
     }
-
-    @Override
-    public String getIdentifier()
-    {
-        return _id;
-    }
     
     @Override
     public boolean isConnected()
     {
         return _isConnected;
-    }
-    
-    @Override
-    public boolean isExistingSession()
-    {
-        return true;
     }
     
     @Override
@@ -234,6 +218,6 @@ class LocalMatlabProxy extends MatlabProxy
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() + " identifier=" + _id + "]";
+        return "[" + this.getClass().getName() + " identifier=" + getIdentifier() + "]";
     }
 }

@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import matlabcontrol.MatlabProxy.Identifier;
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
 import matlabcontrol.MatlabProxyFactoryOptions.ImmutableFactoryOptions;
@@ -54,10 +55,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final ImmutableFactoryOptions _options;
     
     /**
-     * Map of proxyIDs to {@link ProxyReceiver} instances.
+     * {@link ProxyReceiver} instances. They need to be stored because the RMI registry only holds weak references to
+     * exported objects.
      */
     private final List<ProxyReceiver> _receivers = new CopyOnWriteArrayList<ProxyReceiver>();
-    //private final ConcurrentMap<String, ProxyReceiver> _receivers = new ConcurrentHashMap<String, ProxyReceiver>();
     
     /**
      * The RMI registry used to communicate between JVMs. There is only ever one registry actually running on a given
@@ -66,10 +67,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private static Registry _registry = null;
     
-    /**
-     * 
-     * @param options 
-     */
     public RemoteMatlabProxyFactory(ImmutableFactoryOptions options)
     {
         _options = options;
@@ -80,9 +77,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * 
      * @param options
      * @return
-     * @throws InitializationException 
+     * @throws MatlabConnectionException 
      */
-    private List<String> buildProcessArguments(String runArg) throws MatlabConnectionException
+    private List<String> buildProcessArguments(RemoteIdentifier proxyID, ProxyReceiver receiver)
+            throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
         
@@ -119,6 +117,17 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         //Code to run on startup
         processArguments.add("-r");
+        
+        //Argument that MATLAB will run on start. Tells MATLAB to:
+        // - Adds matlabcontrol to MATLAB's dynamic class path
+        // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
+        // - Removes matlabcontrol from MATLAB's dynamic class path
+        // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
+        String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
+                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
+                        "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
+                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + 
+                        "', '" + proxyID.getUUIDString() + "');";
         processArguments.add(runArg);
         
         return processArguments; 
@@ -181,7 +190,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             _receivers.remove(this); 
             
             //Create proxy, store it
-            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, proxyID, existingSession);
+            RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
+            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
             
             //Notify the callback
             _requestCallback.proxyCreated(proxy);
@@ -226,9 +236,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         return UUID.randomUUID().toString();
     }
     
-    private static String getRandomProxyID()
+    private static RemoteIdentifier getRandomProxyIdentifier()
     {
-        return "PROXY_REMOTE_" + getRandomValue();
+        return new RemoteIdentifier(UUID.randomUUID());
     }
     
     @Override
@@ -237,7 +247,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         Request request;
         
         //Generate random ID for the proxy
-        String proxyID = getRandomProxyID();
+        RemoteIdentifier proxyID = getRandomProxyIdentifier();
         
         //Initialize the registry (does nothing if already initialized)
         initRegistry();
@@ -275,7 +285,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             {
                 try
                 {
-                    session.connectFromRMI(receiver.getReceiverID(), proxyID);
+                    session.connectFromRMI(receiver.getReceiverID(), proxyID.getUUIDString());
                     request = new RemoteRequest(proxyID, null, receiver);
                 }
                 catch(RemoteException e)
@@ -286,19 +296,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Launch a new session of MATLAB
             else
             {
-                //Argument that MATLAB will run on start. Tells MATLAB to:
-                // - Adds matlabcontrol to MATLAB's dynamic class path
-                // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
-                // - Removes matlabcontrol from MATLAB's dynamic class path
-                // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
-                String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
-                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
-                        "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
-                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + 
-                        "', '" + proxyID + "');";
-
-                //Build complete arguments to run MATLAB
-                List<String> args = buildProcessArguments(runArg); 
+                //Build arguments to run MATLAB
+                List<String> args = buildProcessArguments(proxyID, receiver); 
 
                 //Attempt to run MATLAB
                 try
@@ -324,12 +323,12 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     
     private static class RemoteRequest implements Request
     {
-        private final String _proxyID;
+        private final Identifier _proxyID;
         private final Process _process;
         private final ProxyReceiver _receiver;
         private boolean _isCancelled = false;
         
-        private RemoteRequest(String proxyID, Process process, ProxyReceiver receiver)
+        private RemoteRequest(Identifier proxyID, Process process, ProxyReceiver receiver)
         {
             _proxyID = proxyID;
             _process = process;
@@ -337,7 +336,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         @Override
-        public String getProxyIdentifer()
+        public Identifier getProxyIdentifer()
         {
             return _proxyID;
         }
@@ -441,6 +440,49 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         public MatlabProxy getProxy()
         {
             return _proxy;
+        }
+    }
+    
+    private static final class RemoteIdentifier implements Identifier
+    {
+        private final UUID _id;
+        
+        private RemoteIdentifier(UUID id)
+        {
+            _id = id;
+        }
+        
+        private RemoteIdentifier(String uuidString)
+        {
+            _id  = UUID.fromString(uuidString);
+        }
+        
+        @Override
+        public boolean equals(Object other)
+        {
+            boolean equals;
+            
+            if(other instanceof RemoteIdentifier)
+            {
+                equals = ((RemoteIdentifier) other)._id.equals(_id);
+            }
+            else
+            {
+                equals = false;
+            }
+            
+            return equals;
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "PROXY_REMOTE_" + _id;
+        }
+        
+        private String getUUIDString()
+        {
+            return _id.toString();
         }
     }
     

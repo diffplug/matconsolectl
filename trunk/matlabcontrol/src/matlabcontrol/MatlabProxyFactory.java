@@ -1,5 +1,7 @@
 package matlabcontrol;
 
+import matlabcontrol.MatlabProxy.Identifier;
+
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -122,7 +124,7 @@ public class MatlabProxyFactory implements ProxyFactory
          * 
          * @return 
          */
-        public String getProxyIdentifer();
+        public Identifier getProxyIdentifer();
         
         /**
          * Attempts to cancel the request. If the request has already been completed or cannot successfully be canceled
