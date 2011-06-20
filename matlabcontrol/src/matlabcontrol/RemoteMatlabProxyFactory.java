@@ -72,190 +72,19 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         _options = options;
     }
     
-    /**
-     * Uses the {@link #_options} and the arguments to create a {@link ProcessBuilder} that will launch MATLAB and
-     * connect it to this JVM.
-     * 
-     * @param proxyID
-     * @param receiver
-     * @return
-     * @throws MatlabConnectionException 
-     */
-    private ProcessBuilder buildProcess(RemoteIdentifier proxyID, ProxyReceiver receiver)
-            throws MatlabConnectionException
-    {
-        List<String> processArguments = new ArrayList<String>();
-        
-        //Location of MATLAB
-        if(_options.getMatlabLocation() != null)
-        {
-            processArguments.add(_options.getMatlabLocation());
-        }
-        else
-        {
-            processArguments.add(Configuration.getMatlabLocation());
-        }
-        
-        //MATLAB flags
-        if(_options.getHidden())
-        {
-            if(Configuration.isWindows())
-            {
-                processArguments.add("-automation");
-            }
-            else
-            {
-                processArguments.add("-nosplash");
-                processArguments.add("-nodesktop");
-            }
-        }
-        else
-        {
-            if(Configuration.isOSX() || Configuration.isLinux())
-            {
-                processArguments.add("-desktop");
-            }
-        }
-        
-        //Code to run on startup
-        processArguments.add("-r");
-        
-        //Argument that MATLAB will run on start. Tells MATLAB to:
-        // - Adds matlabcontrol to MATLAB's dynamic class path
-        // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
-        // - Removes matlabcontrol from MATLAB's dynamic class path
-        // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
-        String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
-                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
-                        "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
-                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + 
-                        "', '" + proxyID.getUUIDString() + "');";
-        processArguments.add(runArg);
-        
-        return new ProcessBuilder(processArguments); 
-    }
-    
-    /**
-     * Initializes the registry if it has not already been set up. Specifies the codebase so that paths with spaces in
-     * them will work properly.
-     * 
-     * @throws MatlabConnectionException
-     */
-    private static void initRegistry() throws MatlabConnectionException
-    {
-        //If the registry hasn't been created
-        if(_registry == null)
-        {   
-            //Create a RMI registry
-            try
-            {
-                _registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
-            }
-            //If we can't create one, try to retrieve an existing one
-            catch(Exception e)
-            {
-                try
-                {
-                    _registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
-                }
-                catch(Exception ex)
-                {
-                    throw new MatlabConnectionException("Could not create or connect to the RMI registry", ex);
-                }
-            }
-        }
-    }
-    
-    /**
-     * Receives the wrapper around JMI from MATLAB.
-     */
-    private class ProxyReceiver implements JMIWrapperRemoteReceiver
-    {
-        private final RequestCallback _requestCallback;
-        private final String _receiverID;
-        private boolean _receivedJMIWrapper = false;
-        
-        public ProxyReceiver(RequestCallback requestCallback)
-        {
-            _requestCallback = requestCallback;
-            
-            _receiverID = "PROXY_RECEIVER_" + getRandomValue();
-        }
-        
-        @Override
-        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
-        {   
-            //Note receiver has been received
-            _receivedJMIWrapper = true;
-            
-            //Remove self from the list of receivers
-            _receivers.remove(this); 
-            
-            //Create proxy, store it
-            RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
-            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
-            
-            //Notify the callback
-            _requestCallback.proxyCreated(proxy);
-        }
-
-        @Override
-        public String getReceiverID()
-        {
-            return _receiverID;
-        }
-        
-        public boolean shutdown()
-        {
-            _receivers.remove(this);
-             
-            boolean success;
-            try
-            {
-                success = UnicastRemoteObject.unexportObject(this, true);
-            }
-            catch(NoSuchObjectException e)
-            {
-                success = true;
-            }
-            
-            return success;
-        }
-        
-        public boolean hasReceivedJMIWrapper()
-        {
-            return _receivedJMIWrapper;
-        }
-    }
-    
-    /**
-     * Generates a random value to be used in binding and proxy IDs.
-     * 
-     * @return random value
-     */
-    private static String getRandomValue()
-    {
-        return UUID.randomUUID().toString();
-    }
-    
-    private static RemoteIdentifier getRandomProxyIdentifier()
-    {
-        return new RemoteIdentifier(UUID.randomUUID());
-    }
-    
     @Override
     public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
     {
         Request request;
         
         //Generate random ID for the proxy
-        RemoteIdentifier proxyID = getRandomProxyIdentifier();
+        RemoteIdentifier proxyID = new RemoteIdentifier();
         
         //Initialize the registry (does nothing if already initialized)
         initRegistry();
         
         //Create and bind the receiver
-        ProxyReceiver receiver = new ProxyReceiver(requestCallback);
+        ProxyReceiver receiver = new ProxyReceiver(requestCallback, proxyID);
         _receivers.add(receiver);
         try
         {
@@ -318,6 +147,306 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         return request;
     }
+
+    @Override
+    public MatlabProxy getProxy() throws MatlabConnectionException
+    {
+        //Request proxy
+        GetProxyRequestCallback callback = new GetProxyRequestCallback();
+        Request request = this.requestProxy(callback);
+        
+        try
+        {   
+            //TODO: What if proxy is received before putting thread to sleep?
+            
+            //Wait until the proxy is received or until timeout
+            try
+            {
+                Thread.sleep(_options.getProxyTimeout());
+            }
+            catch(InterruptedException e)
+            {
+                //If interrupted, it should be because the proxy has been returned - if not throw an exception
+                if(callback.getProxy() == null)
+                {
+                    throw new MatlabConnectionException("Thread was interrupted while waiting for MATLAB proxy", e);
+                }
+            }
+
+            //If the proxy has not be received before the timeout
+            if(callback.getProxy() == null)
+            {
+                throw new MatlabConnectionException("MATLAB proxy could not be created in " +
+                        _options.getProxyTimeout() + " milliseconds");
+            }
+
+            return callback.getProxy();
+        }
+        catch(MatlabConnectionException e)
+        {
+            request.cancel();
+            throw e;
+        }
+    }
+    
+    /**
+     * Initializes the registry if it has not already been set up.
+     * 
+     * @throws MatlabConnectionException
+     */
+    private static void initRegistry() throws MatlabConnectionException
+    {
+        //If the registry hasn't been created
+        if(_registry == null)
+        {   
+            //Create a RMI registry
+            try
+            {
+                _registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+            }
+            //If we can't create one, try to retrieve an existing one
+            catch(Exception e)
+            {
+                try
+                {
+                    _registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+                }
+                catch(Exception ex)
+                {
+                    throw new MatlabConnectionException("Could not create or connect to the RMI registry", ex);
+                }
+            }
+        }
+    }
+    
+    /**
+     * Returns a session that is available for connection. If no session is available, {@code null} will be returned.
+     * 
+     * @return 
+     */
+    private MatlabSession getRunningSession()
+    {
+        MatlabSession availableSession = null;
+        
+        try
+        {
+            Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);
+            
+            String[] remoteNames = registry.list();
+            for(String name : remoteNames)
+            {
+                if(name.startsWith(MatlabBroadcaster.MATLAB_SESSION_PREFIX))
+                {
+                    MatlabSession session = (MatlabSession) registry.lookup(name);
+                    if(session.isAvailableForConnection())
+                    {
+                        availableSession = session;
+                        break;
+                    }
+                }
+            }
+        }
+        catch(Exception e) { }
+        
+        return availableSession;
+    }
+    
+    /**
+     * Uses the {@link #_options} and the arguments to create a {@link ProcessBuilder} that will launch MATLAB and
+     * connect it to this JVM.
+     * 
+     * @param proxyID
+     * @param receiver
+     * @return
+     * @throws MatlabConnectionException 
+     */
+    private ProcessBuilder buildProcess(RemoteIdentifier proxyID, ProxyReceiver receiver) throws MatlabConnectionException
+    {
+        List<String> processArguments = new ArrayList<String>();
+        
+        //Location of MATLAB
+        if(_options.getMatlabLocation() != null)
+        {
+            processArguments.add(_options.getMatlabLocation());
+        }
+        else
+        {
+            processArguments.add(Configuration.getMatlabLocation());
+        }
+        
+        //MATLAB flags
+        if(_options.getHidden())
+        {
+            if(Configuration.isWindows())
+            {
+                processArguments.add("-automation");
+            }
+            else
+            {
+                processArguments.add("-nosplash");
+                processArguments.add("-nodesktop");
+            }
+        }
+        else
+        {
+            if(Configuration.isOSX() || Configuration.isLinux())
+            {
+                processArguments.add("-desktop");
+            }
+        }
+        
+        //Code to run on startup
+        processArguments.add("-r");
+        
+        //Argument that MATLAB will run on start. Tells MATLAB to:
+        // - Adds matlabcontrol to MATLAB's dynamic class path
+        // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
+        // - Removes matlabcontrol from MATLAB's dynamic class path
+        // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
+        String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
+                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
+                        "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
+                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + 
+                        "', '" + proxyID.getUUIDString() + "');";
+        processArguments.add(runArg);
+        
+        return new ProcessBuilder(processArguments);
+    }
+    
+    /**
+     * Receives the wrapper around JMI from MATLAB.
+     */
+    private class ProxyReceiver implements JMIWrapperRemoteReceiver
+    {
+        private final RequestCallback _requestCallback;
+        private final String _receiverID;
+        private boolean _receivedJMIWrapper = false;
+        
+        public ProxyReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID)
+        {
+            _requestCallback = requestCallback;
+            
+            _receiverID = "PROXY_RECEIVER_" + proxyID.getUUIDString();
+        }
+        
+        @Override
+        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
+        {   
+            //Note receiver has been received
+            _receivedJMIWrapper = true;
+            
+            //Remove self from the list of receivers
+            _receivers.remove(this); 
+            
+            //Create proxy, store it
+            RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
+            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
+            
+            //Notify the callback
+            _requestCallback.proxyCreated(proxy);
+        }
+
+        @Override
+        public String getReceiverID()
+        {
+            return _receiverID;
+        }
+        
+        public boolean shutdown()
+        {
+            _receivers.remove(this);
+             
+            boolean success;
+            try
+            {
+                success = UnicastRemoteObject.unexportObject(this, true);
+            }
+            catch(NoSuchObjectException e)
+            {
+                success = true;
+            }
+            
+            return success;
+        }
+        
+        public boolean hasReceivedJMIWrapper()
+        {
+            return _receivedJMIWrapper;
+        }
+    }
+    
+    private static class GetProxyRequestCallback implements RequestCallback
+    {
+        private final Thread _requestingThread;
+        private volatile MatlabProxy _proxy;
+        
+        public GetProxyRequestCallback()
+        {
+            _requestingThread = Thread.currentThread();
+        }
+
+        @Override
+        public void proxyCreated(MatlabProxy proxy)
+        {
+            _proxy = proxy;
+            
+            _requestingThread.interrupt();
+        }
+        
+        public MatlabProxy getProxy()
+        {
+            return _proxy;
+        }
+    }
+    
+    private static final class RemoteIdentifier implements Identifier
+    {
+        private final UUID _id;
+        
+        private RemoteIdentifier()
+        {
+            _id = UUID.randomUUID();
+        }
+        
+        private RemoteIdentifier(String uuidString)
+        {
+            _id  = UUID.fromString(uuidString);
+        }
+        
+        @Override
+        public boolean equals(Object other)
+        {
+            boolean equals;
+            
+            if(other instanceof RemoteIdentifier)
+            {
+                equals = ((RemoteIdentifier) other)._id.equals(_id);
+            }
+            else
+            {
+                equals = false;
+            }
+            
+            return equals;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return _id.hashCode();
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "PROXY_REMOTE_" + _id;
+        }
+        
+        private String getUUIDString()
+        {
+            return _id.toString();
+        }
+    }
     
     private static class RemoteRequest implements Request
     {
@@ -374,145 +503,5 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         {
             return _receiver.hasReceivedJMIWrapper();
         }
-    }
-
-    @Override
-    public MatlabProxy getProxy() throws MatlabConnectionException
-    {        
-        //Request proxy
-        GetProxyRequestCallback callback = new GetProxyRequestCallback();
-        Request request = this.requestProxy(callback);
-        
-        try
-        {   
-            //TODO: What if proxy is received before putting thread to sleep?
-            
-            //Wait until the proxy is received or until timeout
-            try
-            {
-                Thread.sleep(_options.getProxyTimeout());
-            }
-            catch(InterruptedException e)
-            {
-                //If interrupted, it should be because the proxy has been returned - if not throw an exception
-                if(callback.getProxy() == null)
-                {
-                    throw new MatlabConnectionException("Thread was interrupted while waiting for MATLAB proxy", e);
-                }
-            }
-
-            //If the proxy has not be received before the timeout
-            if(callback.getProxy() == null)
-            {
-                throw new MatlabConnectionException("MATLAB proxy could not be created in " +
-                        _options.getProxyTimeout() + " milliseconds");
-            }
-
-            return callback.getProxy();
-        }
-        catch(MatlabConnectionException e)
-        {
-            request.cancel();
-            throw e;
-        }
-    }
-    
-    private static class GetProxyRequestCallback implements RequestCallback
-    {
-        private final Thread _requestingThread;
-        private volatile MatlabProxy _proxy;
-        
-        public GetProxyRequestCallback()
-        {
-            _requestingThread = Thread.currentThread();
-        }
-
-        @Override
-        public void proxyCreated(MatlabProxy proxy)
-        {
-            _proxy = proxy;
-            
-            _requestingThread.interrupt();
-        }
-        
-        public MatlabProxy getProxy()
-        {
-            return _proxy;
-        }
-    }
-    
-    private static final class RemoteIdentifier implements Identifier
-    {
-        private final UUID _id;
-        
-        private RemoteIdentifier(UUID id)
-        {
-            _id = id;
-        }
-        
-        private RemoteIdentifier(String uuidString)
-        {
-            _id  = UUID.fromString(uuidString);
-        }
-        
-        @Override
-        public boolean equals(Object other)
-        {
-            boolean equals;
-            
-            if(other instanceof RemoteIdentifier)
-            {
-                equals = ((RemoteIdentifier) other)._id.equals(_id);
-            }
-            else
-            {
-                equals = false;
-            }
-            
-            return equals;
-        }
-        
-        @Override
-        public String toString()
-        {
-            return "PROXY_REMOTE_" + _id;
-        }
-        
-        private String getUUIDString()
-        {
-            return _id.toString();
-        }
-    }
-    
-    /**
-     * Returns a session that is available for connection. If no session is available, {@code null} will be returned.
-     * 
-     * @return 
-     */
-    private MatlabSession getRunningSession()
-    {
-        MatlabSession availableSession = null;
-        
-        try
-        {
-            Registry registry = LocateRegistry.getRegistry(MatlabBroadcaster.MATLAB_SESSION_PORT);
-            
-            String[] remoteNames = registry.list();
-            for(String name : remoteNames)
-            {
-                if(name.startsWith(MatlabBroadcaster.MATLAB_SESSION_PREFIX))
-                {
-                    MatlabSession session = (MatlabSession) registry.lookup(name);
-                    if(session.isAvailableForConnection())
-                    {
-                        availableSession = session;
-                        break;
-                    }
-                }
-            }
-        }
-        catch(Exception e) { }
-        
-        return availableSession;
     }
 }
