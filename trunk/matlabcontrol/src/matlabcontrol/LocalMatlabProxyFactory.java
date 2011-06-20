@@ -22,9 +22,9 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.util.concurrent.atomic.AtomicLong;
-import matlabcontrol.MatlabProxy.Identifier;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import matlabcontrol.MatlabProxy.Identifier;
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
 
@@ -37,24 +37,19 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
  */
 class LocalMatlabProxyFactory implements ProxyFactory
 {
-    private static final AtomicLong PROXY_CREATION_COUNT = new AtomicLong();
-    
     public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
     {
-
-    }
-    
-    @Override
-    public LocalMatlabProxy getProxy() throws MatlabConnectionException
-    {
-        Identifier proxyID = new LocalIdentifier(PROXY_CREATION_COUNT.getAndIncrement());
-        LocalMatlabProxy proxy = new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), proxyID);
         
-        return proxy;
     }
     
     @Override
-    public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
+    public LocalMatlabProxy getProxy()
+    {   
+        return new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), new LocalIdentifier());
+    }
+    
+    @Override
+    public Request requestProxy(RequestCallback requestCallback)
     {   
         LocalMatlabProxy proxy = getProxy();
         requestCallback.proxyCreated(proxy);
@@ -64,12 +59,9 @@ class LocalMatlabProxyFactory implements ProxyFactory
     
     private static final class LocalIdentifier implements Identifier
     {
-        private final long _id;
+        private static final AtomicInteger PROXY_CREATION_COUNT = new AtomicInteger();
         
-        private LocalIdentifier(long id)
-        {
-            _id = id;
-        }
+        private final int _id = PROXY_CREATION_COUNT.getAndIncrement();
         
         @Override
         public boolean equals(Object other)
@@ -86,6 +78,12 @@ class LocalMatlabProxyFactory implements ProxyFactory
             }
             
             return equals;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return _id;
         }
         
         @Override

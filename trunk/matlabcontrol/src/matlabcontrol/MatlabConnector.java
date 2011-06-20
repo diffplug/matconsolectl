@@ -42,7 +42,7 @@ import java.util.concurrent.Executors;
  */
 class MatlabConnector
 {
-    private static JMIWrapper _wrapper = null;
+    private static JMIWrapper _wrapper = new JMIWrapper();
     
     /**
      * Used to establish connections on a separate thread.
@@ -56,11 +56,6 @@ class MatlabConnector
     
     static JMIWrapper getJMIWrapper()
     {
-        if(_wrapper == null)
-        {
-            _wrapper = new JMIWrapper();
-        }
-        
         return _wrapper;
     }
     
@@ -77,7 +72,7 @@ class MatlabConnector
     }
     
     static void connect(String receiverID, String proxyID, boolean existingSession)
-    {   
+    {
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
         _establishConnectionExecutor.submit(new EstablishConnectionRunnable(receiverID, proxyID, existingSession));
@@ -101,7 +96,7 @@ class MatlabConnector
 
         @Override
         public void run()
-        {    
+        {
             //If MATLAB was just launched, wait for it to initialize and make it available for reconnection
             if(!_existingSession)
             {
