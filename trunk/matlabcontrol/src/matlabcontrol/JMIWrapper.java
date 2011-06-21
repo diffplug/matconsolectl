@@ -60,6 +60,8 @@ class JMIWrapper
     
     /**
      * Retrieves the stored object. If it is not to be kept permanently then the reference will no longer be kept.
+     * This method is intended to be called from within MATLAB, see {@link #storeObject(java.lang.Object, boolean)} for
+     * how this works.
      * 
      * @param id
      * @return 
@@ -99,7 +101,7 @@ class JMIWrapper
      */
     private static class StoredObject
     {
-        private static AtomicLong _creationCounter = new AtomicLong();
+        private static AtomicLong CREATION_COUNTER = new AtomicLong();
         
         private final Object object;
         private final boolean storePermanently;
@@ -109,7 +111,7 @@ class JMIWrapper
         {
             this.object = object;
             this.storePermanently = storePermanently;
-            this.id = "STORED_OBJECT_" + _creationCounter.incrementAndGet();
+            this.id = "STORED_OBJECT_" + CREATION_COUNTER.incrementAndGet();
         }
     }
     
@@ -212,7 +214,6 @@ class JMIWrapper
                 
                 return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
             }
-                    
         });
     }
     
