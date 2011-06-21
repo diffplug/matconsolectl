@@ -161,15 +161,6 @@ public interface MatlabInteractor<E>
      * @throws MatlabInvocationException
      */
     public E getVariable(String variableName) throws MatlabInvocationException;
-    
-    /**
-     * Allows for enabling a diagnostic mode that will show in MATLAB each time a Java method that calls into MATLAB is
-     * invoked.
-     * 
-     * @param enable
-     * @throws MatlabInvocationException 
-     */
-    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException;
             
     /**
      * Stores an object that can be accessed from MATLAB, but is not stored as a MATLAB variable. The {@code String}

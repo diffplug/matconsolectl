@@ -95,12 +95,6 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     {
         _wrapper.feval(command, args);
     }
-
-    @Override
-    public void setDiagnosticMode(boolean enable) throws RemoteException, MatlabInvocationException
-    {
-        _wrapper.setDiagnosticMode(enable);
-    }
     
     @Override
     public String storeObject(Object obj, boolean keepPermanently) throws RemoteException

@@ -177,19 +177,6 @@ class LocalMatlabProxy extends MatlabProxy
             throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
     }
-
-    @Override
-    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
-    {
-        if(this.isConnected())
-        {
-            _wrapper.setDiagnosticMode(enable);
-        }
-        else
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
-        }
-    }
     
     @Override
     public String storeObject(Object obj, boolean keepPermanently)
