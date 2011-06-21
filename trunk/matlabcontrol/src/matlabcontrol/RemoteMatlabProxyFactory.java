@@ -341,6 +341,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Create proxy, store it
             RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
+            proxy.init();
             
             //Notify the callback
             _requestCallback.proxyCreated(proxy);

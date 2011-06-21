@@ -1,7 +1,5 @@
 package matlabcontrol;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -23,6 +21,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Allows for Java to communicate with a running MATLAB session. This class cannot be instantiated, it may be created
@@ -216,9 +216,9 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     
     /**
      * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
-     * throw an exception. A proxy cannot be reconnected.
+     * throw an exception. A proxy cannot be reconnected. Returns {@code true} if the proxy is now disconnected.
      * 
-     * @return the success of disconnecting
+     * @return if disconnected
      */
     public abstract boolean disconnect();
     
