@@ -206,7 +206,8 @@ class JMIWrapper
                 //If an unlimited number of arguments (represented by -1), throw an exception
                 if(nargout == -1)
                 {
-                    throw new IllegalArgumentException(functionName + " has a variable number of return arguments");
+                    throw new MatlabInvocationException(functionName + " has a variable number of return arguments. " +
+                            "Instead used returningFeval(String, Object[], int) with the return count specified.");
                 }
                 
                 return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
@@ -274,8 +275,15 @@ class JMIWrapper
                 //If exception was thrown, rethrow it
                 if(matlabReturn.exceptionThrown)
                 {
-                    Throwable cause = new ThrowableWrapper(matlabReturn.exception);
-                    throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                    if(matlabReturn.exception instanceof MatlabInvocationException)
+                    {
+                        throw (MatlabInvocationException) matlabReturn.exception;
+                    }
+                    else
+                    {
+                        Throwable cause = new ThrowableWrapper(matlabReturn.exception);
+                        throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                    }
                 }
                 //Return value computed by MATLAB
                 else
