@@ -25,6 +25,7 @@ package matlabcontrol;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import matlabcontrol.MatlabProxy.Identifier;
+import matlabcontrol.MatlabProxyFactory.ImmutableOptions;
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
 
@@ -37,7 +38,7 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
  */
 class LocalMatlabProxyFactory implements ProxyFactory
 {
-    public LocalMatlabProxyFactory(MatlabProxyFactoryOptions.ImmutableFactoryOptions options)
+    public LocalMatlabProxyFactory(ImmutableOptions options)
     {
         
     }
