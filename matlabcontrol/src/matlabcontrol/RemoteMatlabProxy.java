@@ -74,11 +74,6 @@ class RemoteMatlabProxy extends MatlabProxy
     private static final int CONNECTION_CHECK_PERIOD = 1000;
     
     /**
-     * Listeners for disconnection.
-     */
-    private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
-    
-    /**
      * The proxy is never to be created outside of this package, it is to be constructed after a
      * {@link JMIWrapperRemote} has been received via RMI.
      * 
@@ -96,7 +91,6 @@ class RemoteMatlabProxy extends MatlabProxy
         _receiver = receiver;
         
         _connectionTimer = createTimer();
-        _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
     }
     
     @Override
@@ -126,18 +120,6 @@ class RemoteMatlabProxy extends MatlabProxy
         }
         
         return connected;
-    }
-
-    @Override
-    public void addDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.add(listener);
-    }
-
-    @Override
-    public void removeDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.remove(listener);
     }
     
     private static interface RemoteVoidInvocation
@@ -337,12 +319,6 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public String toString()
-    {
-        return "[" + this.getClass().getName() + " identifier=" + getIdentifier() + "]";
-    }
-    
-    @Override
     public boolean disconnect()
     {
         //Unexport the receiver so that the RMI threads can shut down
@@ -378,10 +354,7 @@ class RemoteMatlabProxy extends MatlabProxy
                     }
                     
                     //Notify listeners
-                    for(DisconnectionListener listener : _listeners)
-                    {
-                        listener.proxyDisconnected(RemoteMatlabProxy.this);
-                    }
+                    notifyDisconnectionListeners();
                     
                     //Shutdown timer
                     timer.cancel();

@@ -39,11 +39,6 @@ class LocalMatlabProxy extends MatlabProxy
     private final JMIWrapper _wrapper;
     
     /**
-     * Listeners for disconnection.
-     */
-    private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
-    
-    /**
      * If connected to MATLAB.
      * 
      * This notion of connection exists to make it consistent with {@link RemoteMatlabProxy}, but is not actually
@@ -56,20 +51,6 @@ class LocalMatlabProxy extends MatlabProxy
         super(id, true);
         
         _wrapper = wrapper;
-        
-        _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
-    }
-    
-    @Override
-    public void addDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.add(listener);
-    }
-
-    @Override
-    public void removeDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.remove(listener);
     }
 
     @Override
@@ -207,17 +188,8 @@ class LocalMatlabProxy extends MatlabProxy
         _isConnected = false;
         
         //Notify listeners
-        for(DisconnectionListener listener : _listeners)
-        {
-            listener.proxyDisconnected(this);
-        }
+        notifyDisconnectionListeners();
         
         return true;
-    }
-    
-    @Override
-    public String toString()
-    {
-        return "[" + this.getClass().getName() + " identifier=" + getIdentifier() + "]";
     }
 }
