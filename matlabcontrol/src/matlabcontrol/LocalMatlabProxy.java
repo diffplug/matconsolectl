@@ -1,7 +1,5 @@
 package matlabcontrol;
 
-import java.util.concurrent.CopyOnWriteArrayList;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -52,6 +50,29 @@ class LocalMatlabProxy extends MatlabProxy
         
         _wrapper = wrapper;
     }
+    
+    // Methods defined in MatlabProxy
+    
+    
+    @Override
+    public boolean isConnected()
+    {
+        return _isConnected;
+    }
+    
+    @Override
+    public boolean disconnect()
+    {
+        _isConnected = false;
+        
+        //Notify listeners
+        notifyDisconnectionListeners();
+        
+        return true;
+    }
+    
+    // Methods defined in MatlabInteractor
+    
 
     @Override
     public void exit() throws MatlabInvocationException
@@ -171,25 +192,8 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public boolean isConnected()
-    {
-        return _isConnected;
-    }
-    
-    @Override
     public String storeObject(Object obj, boolean keepPermanently)
     {
         return _wrapper.storeObject(obj, keepPermanently);
-    }
-    
-    @Override
-    public boolean disconnect()
-    {
-        _isConnected = false;
-        
-        //Notify listeners
-        notifyDisconnectionListeners();
-        
-        return true;
     }
 }

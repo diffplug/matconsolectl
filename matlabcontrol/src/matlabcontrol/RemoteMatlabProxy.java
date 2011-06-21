@@ -28,7 +28,6 @@ import java.rmi.UnmarshalException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Allows for calling MATLAB from <strong>outside</strong> of MATLAB.
@@ -54,17 +53,12 @@ class RemoteMatlabProxy extends MatlabProxy
     /**
      * A timer that periodically checks if still connected.
      */
-    private final Timer _connectionTimer;
+    private final Timer _connectionTimer = new Timer();
     
     /**
-     * Whether the proxy has become disconnected. This is either because the connection to MATLAB has been actually
-     * been lost or a request came in to make that occur.
-     */
-    //private volatile boolean _isDisconnected = false;
-    
-    /**
-     * Whether the proxy is connected. This variable could be {@code true} but no actual connection exists. It will be
-     * updated the next time {@link #isConnected()} is called.
+     * Whether the proxy is connected. If the value is {@code false} the proxy is definitely disconnected. If the value
+     * is {@code true} then the proxy <i>may</i> be disconnected. The accuracy of this will be checked then the next
+     * time {@link #isConnected()} is called and this value will be updated if necessary.
      */
     private volatile boolean _isConnected = true;
     
@@ -89,38 +83,79 @@ class RemoteMatlabProxy extends MatlabProxy
         
         _jmiWrapper = internalProxy;
         _receiver = receiver;
-        
-        _connectionTimer = createTimer();
     }
+    
+    /**
+     * Initializes aspects of the proxy that cannot be done safely in the constructor without leaking a reference to
+     * {@code this}.
+     */
+    void init()
+    {
+        _connectionTimer.schedule(new CheckConnectionTask(), CONNECTION_CHECK_PERIOD, CONNECTION_CHECK_PERIOD);
+    }
+    
+    private class CheckConnectionTask extends TimerTask
+    {
+        @Override
+        public void run()
+        {
+            if(!RemoteMatlabProxy.this.isConnected())
+            {
+                //If not connected, perform disconnection so RMI thread can terminate
+                RemoteMatlabProxy.this.disconnect();
+
+                //Notify listeners
+                notifyDisconnectionListeners();
+
+                //Cancel task, which will terminate the timer's thread
+                this.cancel();
+            }
+        }
+    }
+    
+    // Methods defined in MatlabProxy
     
     @Override
     public boolean isConnected()
     {
-        boolean connected;
-        
-        //If connected, very this is up to date information
+        //If believed to be connected, verify this is up to date information
         if(_isConnected)
         {
+            boolean connected;
+            //Call a remote method, if it throws a RemoteException then it is no longer connected
             try
             {
                 _jmiWrapper.checkConnection();    
                 connected = true;
             }
-            catch(Exception e)
+            catch(RemoteException e)
             {
                 connected = false;
             }
             
             _isConnected = connected;
         }
-        //If no longer connected, there is no possibility of becoming reconnected
-        else
-        {
-            connected = false;
-        }
         
-        return connected;
+        return _isConnected;
     }
+    
+    @Override
+    public boolean disconnect()
+    {
+        //Unexport the receiver so that the RMI threads can shut down
+        try
+        {
+            //If succesfully exported, then definitely not connected
+            //If the export failed, we still might be connected, isConnected() will check
+            _isConnected = !UnicastRemoteObject.unexportObject(_receiver, true);
+        }
+        //If it is not exported, that's ok because we were trying to unexport it
+        catch(NoSuchObjectException e) { }
+        
+        return this.isConnected();
+    }
+    
+    // Methods defined in MatlabInteractor (and helper methods and interfaces)
     
     private static interface RemoteVoidInvocation
     {
@@ -316,52 +351,5 @@ class RemoteMatlabProxy extends MatlabProxy
                 return _jmiWrapper.storeObject(obj, keepPermanently);
             }
         });
-    }
-    
-    @Override
-    public boolean disconnect()
-    {
-        //Unexport the receiver so that the RMI threads can shut down
-        boolean success;
-        try
-        {
-            success = UnicastRemoteObject.unexportObject(_receiver, true);
-            _isConnected = !success;
-        }
-        //If it is not exported, that's ok because we were trying to unexport it
-        catch(NoSuchObjectException e)
-        {
-            success = true;
-        }
-        
-        return success;
-    }
-    
-    private Timer createTimer()
-    {
-        final Timer timer = new Timer();
-        timer.schedule(new TimerTask()
-        {
-            @Override
-            public void run()
-            {   
-                if(!RemoteMatlabProxy.this.isConnected())
-                {
-                    //If not connected, perform disconnection so RMI thread can terminate
-                    if(!_isConnected)
-                    {
-                        RemoteMatlabProxy.this.disconnect();
-                    }
-                    
-                    //Notify listeners
-                    notifyDisconnectionListeners();
-                    
-                    //Shutdown timer
-                    timer.cancel();
-                }
-            }
-        }, CONNECTION_CHECK_PERIOD, CONNECTION_CHECK_PERIOD);
-        
-        return timer;
     }
 }
