@@ -326,19 +326,6 @@ class RemoteMatlabProxy extends MatlabProxy
             }
         });
     }
-
-    @Override
-    public void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
-    {        
-        this.invoke(new RemoteVoidInvocation()
-        {
-            @Override
-            public void invoke() throws RemoteException, MatlabInvocationException
-            {
-                _jmiWrapper.setDiagnosticMode(enable);
-            }
-        });
-    }
     
     @Override
     public String storeObject(final Object obj, final boolean keepPermanently) throws MatlabInvocationException

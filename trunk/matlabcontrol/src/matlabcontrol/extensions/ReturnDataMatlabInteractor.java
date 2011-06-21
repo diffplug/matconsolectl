@@ -145,18 +145,6 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     {
         return new ReturnData(this.getVariable(variableName));
     }
-
-    /**
-     * Delegates to the interactor.
-     * 
-     * @param enable
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public void setDiagnosticMode(boolean enable) throws MatlabInvocationException
-    {
-        _delegateInteractor.setDiagnosticMode(enable);
-    }
     
     /**
      * Delegates to the interactor.

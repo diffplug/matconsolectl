@@ -266,32 +266,6 @@ public class MatlabCallbackInteractor<E>
             }       
         });
     }
-
-    /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
-     * 
-     * @param enable
-     * @param callback 
-     */
-    public void setDiagnosticMode(final boolean enable, final MatlabCallback callback)
-    {        
-        _executor.submit(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    _delegateInteractor.setDiagnosticMode(enable);
-                    callback.invocationSucceeded();
-                }
-                catch(MatlabInvocationException e)
-                {
-                    callback.invocationFailed(e);
-                }
-            }       
-        });
-    }
     
     /**
      * Delegates to the interactor, calling the {@code callback} when the method has been executed.

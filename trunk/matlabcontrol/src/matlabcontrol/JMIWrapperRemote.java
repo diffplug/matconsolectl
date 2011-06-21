@@ -51,15 +51,13 @@ interface JMIWrapperRemote extends Remote
     
     public void eval(String command) throws RemoteException, MatlabInvocationException;
     
+    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
+    
     public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
     
     public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
     
     public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException;
-    
-    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
-
-    public void setDiagnosticMode(boolean enable) throws RemoteException, MatlabInvocationException;
     
     public String storeObject(Object obj, boolean keepPermanently) throws RemoteException;
     

@@ -330,31 +330,6 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
             }
         });
     }
-
-    /**
-     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
-     * 
-     * @param enable
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
-    {
-        this.invoke(new VoidInvocation()
-        {
-            @Override
-            public void invoke() throws MatlabInvocationException
-            {
-                _delegateInteractor.setDiagnosticMode(enable);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "setDiagnosticMode(boolean)";
-            }
-        });
-    }
     
     @Override
     public String storeObject(final Object obj, final boolean storePermanently) throws MatlabInvocationException

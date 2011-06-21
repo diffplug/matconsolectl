@@ -23,13 +23,14 @@ package matlabcontrol;
  */
 
 import java.awt.EventQueue;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -48,7 +49,7 @@ class JMIWrapper
     /**
      * Map of unique identifier to stored object.
      */
-    private static final Map<String, StoredObject> STORED_OBJECTS = new HashMap<String, StoredObject>();
+    private static final Map<String, StoredObject> STORED_OBJECTS = new ConcurrentHashMap<String, StoredObject>();
     
     /**
      * The fully qualified name of this class.
@@ -82,7 +83,7 @@ class JMIWrapper
     /**
      * @see MatlabInteractor#storeObject(java.lang.Object, boolean) 
      */
-    synchronized String storeObject(Object obj, boolean storePermanently)
+    String storeObject(Object obj, boolean storePermanently)
     {
         StoredObject stored = new StoredObject(obj, storePermanently);
         STORED_OBJECTS.put(stored.id, stored);
@@ -96,6 +97,8 @@ class JMIWrapper
      */
     private static class StoredObject
     {
+        private static AtomicLong _creationCounter = new AtomicLong();
+        
         private final Object object;
         private final boolean storePermanently;
         private final String id;
@@ -104,7 +107,7 @@ class JMIWrapper
         {
             this.object = object;
             this.storePermanently = storePermanently;
-            this.id = "STORED_OBJECT_" + UUID.randomUUID().toString();
+            this.id = "STORED_OBJECT_" + _creationCounter.incrementAndGet();
         }
     }
     
@@ -113,8 +116,7 @@ class JMIWrapper
      */
     synchronized void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        String retrievalStr = storeObject(value, false);
-        this.eval(variableName + " = " + retrievalStr + ";");
+        this.feval("assignin", new Object[] { "base", variableName, value });
     }
     
     /**
@@ -292,31 +294,5 @@ class JMIWrapper
         
         //Send the request
         return this.returningFeval(functionName, args, nargout);
-    }
-
-    /**
-     * @see MatlabInteractor#setDiagnosticMode(boolean)
-     */
-    synchronized void setDiagnosticMode(final boolean enable) throws MatlabInvocationException
-    {
-        if(EventQueue.isDispatchThread())
-        {
-            throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
-        }
-        else if(NativeMatlab.nativeIsMatlabThread())
-        {
-            Matlab.setEchoEval(enable);
-        }
-        else
-        {
-            Matlab.whenMatlabReady(new Runnable()
-            {
-                @Override
-                public void run()
-                {
-                    Matlab.setEchoEval(enable);
-                }
-            });
-        }
     }
 }
