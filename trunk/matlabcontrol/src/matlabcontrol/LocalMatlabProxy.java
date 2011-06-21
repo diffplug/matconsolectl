@@ -30,12 +30,7 @@ package matlabcontrol;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class LocalMatlabProxy extends MatlabProxy
-{
-    /**
-     * The underlying wrapper to JMI.
-     */
-    private final JMIWrapper _wrapper;
-    
+{   
     /**
      * If connected to MATLAB.
      * 
@@ -44,11 +39,9 @@ class LocalMatlabProxy extends MatlabProxy
      */
     private volatile boolean _isConnected = true;
 
-    LocalMatlabProxy(JMIWrapper wrapper, Identifier id)
+    LocalMatlabProxy(Identifier id)
     {
         super(id, true);
-        
-        _wrapper = wrapper;
     }
     
     // Methods defined in MatlabProxy
@@ -73,13 +66,12 @@ class LocalMatlabProxy extends MatlabProxy
     
     // Methods defined in MatlabInteractor
     
-
     @Override
     public void exit() throws MatlabInvocationException
     {
         if(this.isConnected())
         {
-            _wrapper.exit();
+            JMIWrapper.exit();
         }
         else
         {
@@ -92,7 +84,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            _wrapper.eval(command);
+            JMIWrapper.eval(command);
         }
         else
         {
@@ -105,7 +97,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            return _wrapper.returningEval(command, returnCount);
+            return JMIWrapper.returningEval(command, returnCount);
         }
         else
         {
@@ -118,7 +110,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            _wrapper.feval(functionName, args);
+            JMIWrapper.feval(functionName, args);
         }
         else
         {
@@ -131,7 +123,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            return _wrapper.returningFeval(functionName, args);
+            return JMIWrapper.returningFeval(functionName, args);
         }
         else
         {
@@ -144,7 +136,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            return _wrapper.returningFeval(functionName, args, returnCount);
+            return JMIWrapper.returningFeval(functionName, args, returnCount);
         }
         else
         {
@@ -157,7 +149,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            _wrapper.setVariable(variableName, value);
+            JMIWrapper.setVariable(variableName, value);
         }
         else
         {
@@ -170,7 +162,7 @@ class LocalMatlabProxy extends MatlabProxy
     {
         if(this.isConnected())
         {
-            return _wrapper.getVariable(variableName);
+            return JMIWrapper.getVariable(variableName);
         }
         else
         {
@@ -181,6 +173,6 @@ class LocalMatlabProxy extends MatlabProxy
     @Override
     public String storeObject(Object obj, boolean keepPermanently)
     {
-        return _wrapper.storeObject(obj, keepPermanently);
+        return JMIWrapper.storeObject(obj, keepPermanently);
     }
 }

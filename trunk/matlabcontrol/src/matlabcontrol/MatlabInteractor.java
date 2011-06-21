@@ -99,9 +99,9 @@ public interface MatlabInteractor<E>
      * <br><br>
      * The result of this function can be returned. In order for a function's return data to be returned to MATLAB it is
      * necessary to know how many arguments will be returned. This method will attempt to determine that automatically,
-     * but in the case where a function has a variable number of arguments returned it will only return one of them. To
-     * have all of them returned use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
-     * that will be returned.
+     * but in the case where a function has a variable number of arguments an exception will be thrown. To invoke the
+     * function successfully use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
+     * that will be returned for the provided arguments.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none

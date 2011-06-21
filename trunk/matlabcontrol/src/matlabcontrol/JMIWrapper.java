@@ -23,14 +23,13 @@ package matlabcontrol;
  */
 
 import java.awt.EventQueue;
-import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
-import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -49,12 +48,15 @@ class JMIWrapper
     /**
      * Map of unique identifier to stored object.
      */
-    private static final Map<String, StoredObject> STORED_OBJECTS = new ConcurrentHashMap<String, StoredObject>();
+    private static final ConcurrentHashMap<String, StoredObject> STORED_OBJECTS =
+            new ConcurrentHashMap<String, StoredObject>();
     
     /**
      * The fully qualified name of this class.
      */
     private static final String CLASS_NAME = JMIWrapper.class.getName();
+    
+    private JMIWrapper() { }
     
     /**
      * Retrieves the stored object. If it is not to be kept permanently then the reference will no longer be kept.
@@ -83,7 +85,7 @@ class JMIWrapper
     /**
      * @see MatlabInteractor#storeObject(java.lang.Object, boolean) 
      */
-    String storeObject(Object obj, boolean storePermanently)
+    static String storeObject(Object obj, boolean storePermanently)
     {
         StoredObject stored = new StoredObject(obj, storePermanently);
         STORED_OBJECTS.put(stored.id, stored);
@@ -112,78 +114,122 @@ class JMIWrapper
     }
     
     /**
+     * @see MatlabInteractor#exit()
+     */
+    static void exit() throws MatlabInvocationException
+    {
+        invoke(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    Matlab.mtFevalConsoleOutput("exit", null, 0);
+                }
+                catch (Exception e) { }
+            }
+        });
+    }
+    
+    /**
      * @see MatlabInteractor#setVariable(java.lang.String, java.lang.Object) 
      */
-    synchronized void setVariable(String variableName, Object value) throws MatlabInvocationException
+    static void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        this.feval("assignin", new Object[] { "base", variableName, value });
+        feval("assignin", new Object[] { "base", variableName, value });
     }
     
     /**
      * @see MatlabInteractor#getVariable(java.lang.String) 
      */
-    synchronized Object getVariable(String variableName) throws MatlabInvocationException
+    static Object getVariable(String variableName) throws MatlabInvocationException
     {
-        return this.returningEval(variableName, 1);
-    }
-    
-    /**
-     * @see MatlabInteractor#exit()
-     */
-    synchronized void exit() throws MatlabInvocationException
-    {
-        new Thread()
-        {
-            @Override
-            public void run()
-            {
-                Matlab.whenMatlabReady(new Runnable()
-                {
-                    @Override
-                    public void run()
-                    {
-                        try
-                        {
-                            Matlab.mtFevalConsoleOutput("exit", null, 0);
-                        }
-                        catch (Exception e) { }
-                    }
-                });
-            }
-        }.start();
+        return returningEval(variableName, 1);
     }
     
     /**
      * @see MatlabInteractor#eval(java.lang.String)
      */
-    synchronized void eval(final String command) throws MatlabInvocationException
+    static void eval(final String command) throws MatlabInvocationException
     {   
-        this.returningEval(command, 0);
+        returningEval(command, 0);
     }
     
     /**
      * @see MatlabInteractor#returningEval(java.lang.String, int)
      */
-    synchronized Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    static Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
-        return this.returningFeval("eval", new Object[]{ command }, returnCount);
+        return returningFeval("eval", new Object[]{ command }, returnCount);
     }
 
     /**
      * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
      */
-    synchronized void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    static void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
-        this.returningFeval(functionName, args, 0);
+        returningFeval(functionName, args, 0);
     }
 
     /**
      * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[], int)
      */
-    synchronized Object returningFeval(final String functionName, final Object[] args,
-            final int returnCount) throws MatlabInvocationException
-    {   
-        Object result;
+    static Object returningFeval(final String functionName, final Object[] args, final int returnCount)
+            throws MatlabInvocationException
+    {
+        return invokeAndWait(new Callable<Object>()
+        {
+            @Override
+            public Object call() throws Exception
+            {
+                return Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
+            }
+        });
+    }
+        
+    /**
+     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
+     */
+    static Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
+    {
+        return invokeAndWait(new Callable<Object>()
+        {
+            @Override
+            public Object call() throws Exception
+            {
+                //Get the number of arguments that will be returned
+                int nargout = 0;
+                Object result = Matlab.mtFevalConsoleOutput("nargout", new String[] { functionName }, 1);
+                nargout = (int) ((double[]) result)[0];
+
+                //If an unlimited number of arguments (represented by -1), throw an exception
+                if(nargout == -1)
+                {
+                    throw new IllegalArgumentException(functionName + " has a variable number of return arguments");
+                }
+                
+                return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
+            }
+                    
+        });
+    }
+    
+    private static void invoke(final Runnable runnable)
+    {
+        if(NativeMatlab.nativeIsMatlabThread())
+        {
+            runnable.run();
+        }
+        else
+        {
+            Matlab.whenMatlabReady(runnable);
+        }
+    }
+
+    private static <T> T invokeAndWait(final Callable<T> callable) throws MatlabInvocationException
+    {
+        T result;
         
         if(EventQueue.isDispatchThread())
         {
@@ -193,7 +239,7 @@ class JMIWrapper
         {
             try
             {
-                result = Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
+                result = callable.call();
             }
             catch(Exception e)
             {
@@ -202,8 +248,8 @@ class JMIWrapper
         }
         else
         {
-            final ArrayBlockingQueue<MatlabReturn> returnQueue = new ArrayBlockingQueue<MatlabReturn>(1); 
-            
+            final ArrayBlockingQueue<MatlabReturn<T>> returnQueue = new ArrayBlockingQueue<MatlabReturn<T>>(1); 
+
             Matlab.whenMatlabReady(new Runnable()
             {
                 @Override
@@ -211,20 +257,20 @@ class JMIWrapper
                 {
                     try
                     {
-                        returnQueue.add(new MatlabReturn(Matlab.mtFevalConsoleOutput(functionName, args, returnCount)));
+                        returnQueue.add(new MatlabReturn<T>(callable.call()));
                     }
                     catch(Exception e)
                     {
-                        returnQueue.add(new MatlabReturn(e));
+                        returnQueue.add(new MatlabReturn<T>(e));
                     }
                 }    
             });
-            
+
             try
             {
                 //Wait for MATLAB's main thread to finish computation
-                MatlabReturn matlabReturn = returnQueue.take();
-                
+                MatlabReturn<T> matlabReturn = returnQueue.take();
+
                 //If exception was thrown, rethrow it
                 if(matlabReturn.exceptionThrown)
                 {
@@ -249,13 +295,13 @@ class JMIWrapper
     /**
      * Data returned from MATLAB.
      */
-    private static class MatlabReturn
+    private static class MatlabReturn<T>
     {
-        final boolean exceptionThrown;
-        final Object value;
-        final Exception exception;
+        private final boolean exceptionThrown;
+        private final T value;
+        private final Exception exception;
         
-        MatlabReturn(Object value)
+        MatlabReturn(T value)
         {
             this.exceptionThrown = false;
             
@@ -270,29 +316,5 @@ class JMIWrapper
             this.value = null;
             this.exception = exception;
         }
-    }
-    
-    /**
-     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
-     */
-    synchronized Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
-    {
-        //Get the number of arguments that will be returned
-        Object result = this.returningFeval("nargout", new String[] { functionName }, 1);
-        int nargout = 0;
-        try
-        {
-            nargout = (int) ((double[]) result)[0];
-            
-            //If an unlimited number of arguments (represented by -1), choose 1
-            if(nargout == -1)
-            {
-                nargout = 1;
-            }
-        }
-        catch(Exception e) {}
-        
-        //Send the request
-        return this.returningFeval(functionName, args, nargout);
     }
 }

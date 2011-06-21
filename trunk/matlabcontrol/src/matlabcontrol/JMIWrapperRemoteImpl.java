@@ -41,67 +41,62 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
 {
     private static final long serialVersionUID = 1L;
     
-    private final JMIWrapper _wrapper;
+    public JMIWrapperRemoteImpl() throws RemoteException { }
     
-    public JMIWrapperRemoteImpl(JMIWrapper wrapper) throws RemoteException
+    @Override
+    public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        _wrapper = wrapper;
+        JMIWrapper.setVariable(variableName, value);
     }
     
     @Override
-    public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException
+    public Object getVariable(String variableName) throws MatlabInvocationException
     {
-        _wrapper.setVariable(variableName, value);
+        return JMIWrapper.getVariable(variableName);
     }
     
     @Override
-    public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException
+    public void exit() throws MatlabInvocationException
     {
-        return _wrapper.getVariable(variableName);
-    }
-    
-    @Override
-    public void exit() throws RemoteException, MatlabInvocationException
-    {
-        _wrapper.exit();
+        JMIWrapper.exit();
     }
 
     @Override
-    public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException
+    public Object returningFeval(String command, Object[] args) throws MatlabInvocationException
     {
-        return _wrapper.returningFeval(command, args);
+        return JMIWrapper.returningFeval(command, args);
     }
     
     @Override
-    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException
+    public Object returningFeval(String command, Object[] args, int returnCount) throws MatlabInvocationException
     {
-        return _wrapper.returningFeval(command, args, returnCount);
+        return JMIWrapper.returningFeval(command, args, returnCount);
     }
     
     @Override
-    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException
+    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
     {    
-        return _wrapper.returningEval(command, returnCount);
+        return JMIWrapper.returningEval(command, returnCount);
     }
 
     @Override
-    public void eval(String command) throws RemoteException, MatlabInvocationException
+    public void eval(String command) throws MatlabInvocationException
     {
-        _wrapper.eval(command);
+        JMIWrapper.eval(command);
     }
 
     @Override
-    public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException
+    public void feval(String command, Object[] args) throws MatlabInvocationException
     {
-        _wrapper.feval(command, args);
+        JMIWrapper.feval(command, args);
     }
     
     @Override
-    public String storeObject(Object obj, boolean keepPermanently) throws RemoteException
+    public String storeObject(Object obj, boolean keepPermanently)
     {
-        return _wrapper.storeObject(obj, keepPermanently);
+        return JMIWrapper.storeObject(obj, keepPermanently);
     }
     
     @Override
-    public void checkConnection() throws RemoteException { }
+    public void checkConnection() { }
 }
