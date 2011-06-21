@@ -120,7 +120,7 @@ class JMIWrapper
      */
     static void exit() throws MatlabInvocationException
     {
-        invoke(new Runnable()
+        Runnable runnable = new Runnable()
         {
             @Override
             public void run()
@@ -131,7 +131,16 @@ class JMIWrapper
                 }
                 catch (Exception e) { }
             }
-        });
+        };
+        
+        if(NativeMatlab.nativeIsMatlabThread())
+        {
+            runnable.run();
+        }
+        else
+        {
+            Matlab.whenMatlabReady(runnable);
+        }
     }
     
     /**
@@ -139,7 +148,7 @@ class JMIWrapper
      */
     static void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
-        feval("assignin", new Object[] { "base", variableName, value });
+        returningFeval("assignin", new Object[]{ "base", variableName, value }, 0);
     }
     
     /**
@@ -147,7 +156,7 @@ class JMIWrapper
      */
     static Object getVariable(String variableName) throws MatlabInvocationException
     {
-        return returningEval(variableName, 1);
+        return returningFeval("eval", new Object[] { variableName }, 1);
     }
     
     /**
@@ -155,7 +164,7 @@ class JMIWrapper
      */
     static void eval(final String command) throws MatlabInvocationException
     {   
-        returningEval(command, 0);
+        returningFeval("eval", new Object[]{ command }, 0);
     }
     
     /**
@@ -215,18 +224,6 @@ class JMIWrapper
                 return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
             }
         });
-    }
-    
-    private static void invoke(final Runnable runnable)
-    {
-        if(NativeMatlab.nativeIsMatlabThread())
-        {
-            runnable.run();
-        }
-        else
-        {
-            Matlab.whenMatlabReady(runnable);
-        }
     }
 
     private static <T> T invokeAndWait(final Callable<T> callable) throws MatlabInvocationException
