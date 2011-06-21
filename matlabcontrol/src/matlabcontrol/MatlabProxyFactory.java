@@ -27,9 +27,10 @@ import matlabcontrol.MatlabProxy.Identifier;
 /**
  * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with the factory.
  * <br><br>
- * This class is thread-safe. Proxies may be created simultaneously. While {@link #getProxy()} blocks the calling thread
- * until a proxy is created (or the timeout is reached), any number of threads may call {@code getProxy()} at the same
- * time.
+ * This class is thread-safe. {@link #requestProxy(matlabcontrol.MatlabProxyFactory.RequestCallback)} is non-blocking.
+ * Any number of requests may be made simultaneously. While {@link #getProxy()} blocks the calling thread until a proxy
+ * is created (or the timeout is reached), any number of threads may call {@code getProxy()} simultaneously. Any
+ * number of proxies may be created simultaneously.
  * 
  * @since 4.0.0
  * 
