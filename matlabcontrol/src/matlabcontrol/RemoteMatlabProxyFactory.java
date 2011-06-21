@@ -37,7 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import matlabcontrol.MatlabProxy.Identifier;
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
-import matlabcontrol.MatlabProxyFactoryOptions.ImmutableFactoryOptions;
+import matlabcontrol.MatlabProxyFactory.ImmutableOptions;
 
 /**
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will either connect to an existing session of
@@ -52,7 +52,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * The options that configure this instance of the factory.
      */
-    private final ImmutableFactoryOptions _options;
+    private final ImmutableOptions _options;
     
     /**
      * {@link ProxyReceiver} instances. They need to be stored because the RMI registry only holds weak references to
@@ -67,7 +67,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private static Registry _registry = null;
     
-    public RemoteMatlabProxyFactory(ImmutableFactoryOptions options)
+    public RemoteMatlabProxyFactory(ImmutableOptions options)
     {
         _options = options;
     }
