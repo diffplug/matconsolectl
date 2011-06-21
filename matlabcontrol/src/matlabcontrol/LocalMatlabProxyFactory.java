@@ -38,15 +38,12 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
  */
 class LocalMatlabProxyFactory implements ProxyFactory
 {
-    public LocalMatlabProxyFactory(ImmutableOptions options)
-    {
-        
-    }
+    public LocalMatlabProxyFactory(ImmutableOptions options) { }
     
     @Override
     public LocalMatlabProxy getProxy()
     {   
-        return new LocalMatlabProxy(MatlabConnector.getJMIWrapper(), new LocalIdentifier());
+        return new LocalMatlabProxy(new LocalIdentifier());
     }
     
     @Override

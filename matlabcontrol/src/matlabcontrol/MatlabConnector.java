@@ -41,9 +41,7 @@ import java.util.concurrent.Executors;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class MatlabConnector
-{
-    private static JMIWrapper _wrapper = new JMIWrapper();
-    
+{   
     /**
      * Used to establish connections on a separate thread.
      */
@@ -53,11 +51,6 @@ class MatlabConnector
      * Private constructor so this class cannot be constructed.
      */
     private MatlabConnector() { }
-    
-    static JMIWrapper getJMIWrapper()
-    {
-        return _wrapper;
-    }
     
     /**
      * Called from MATLAB to create a proxy. Creates the proxy and then sends it over RMI to the Java program running in
@@ -136,7 +129,7 @@ class MatlabConnector
                 MatlabBroadcaster.addReceiver(receiver);
 
                 //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
-                receiver.registerControl(_proxyID, new JMIWrapperRemoteImpl(getJMIWrapper()), _existingSession);
+                receiver.registerControl(_proxyID, new JMIWrapperRemoteImpl(), _existingSession);
             }
             catch(RemoteException ex)
             {
