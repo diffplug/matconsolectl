@@ -203,11 +203,11 @@ class JMIWrapper
                 Object result = Matlab.mtFevalConsoleOutput("nargout", new String[] { functionName }, 1);
                 nargout = (int) ((double[]) result)[0];
 
-                //If an unlimited number of arguments (represented by -1), throw an exception
+                //If a variable number of return arguments (represented by -1), throw an exception
                 if(nargout == -1)
                 {
                     throw new MatlabInvocationException(functionName + " has a variable number of return arguments. " +
-                            "Instead used returningFeval(String, Object[], int) with the return count specified.");
+                            "Instead use returningFeval(String, Object[], int) with the return count specified.");
                 }
                 
                 return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
