@@ -61,18 +61,18 @@ class MatlabBroadcaster
     /**
      * Receivers that have been retrieved from Java programs running outside of MATLAB.
      */
-    private static final List<JMIWrapperRemoteReceiver> _receivers = new ArrayList<JMIWrapperRemoteReceiver>();
+    private static final List<JMIWrapperRemoteReceiver> RECEIVERS = new ArrayList<JMIWrapperRemoteReceiver>();
     
     /**
      * The bound name in the RMI registry for the instance of {@code MatlabSession} that represents this session of
      * MATLAB.
      */
-    private static final String _sessionID = MATLAB_SESSION_PREFIX + UUID.randomUUID().toString();
+    private static final String SESSION_ID = MATLAB_SESSION_PREFIX + UUID.randomUUID().toString();
     
     /**
      * Represents this session of MATLAB.
      */
-    private static final MatlabSessionImpl _session = new MatlabSessionImpl();
+    private static final MatlabSessionImpl SESSION = new MatlabSessionImpl();
     
     /**
      * The frequency (in milliseconds) with which to check if the connection to the registry still exists.
@@ -82,12 +82,23 @@ class MatlabBroadcaster
     /**
      * The timer used to check if still connected to the registry.
      */
-    private static Timer _broadcastTimer;
+    private static Timer BROADCAST_TIMER = new Timer();
     
     /**
      * Private constructor so this class cannot be constructed.
      */
     private MatlabBroadcaster() { }
+    
+
+    /**
+     * Returns the session object bound to the RMI registry by this broadcaster.
+     * 
+     * @return 
+     */
+    static MatlabSessionImpl getSession()
+    {
+        return SESSION;
+    }
     
     /**
      * Makes this session of MATLAB visible to matlabcontrol. Once broadcasting, matlabcontrol running outside MATLAB
@@ -101,18 +112,9 @@ class MatlabBroadcaster
      */
     synchronized static void broadcast() throws MatlabConnectionException
     {   
-        //Only allow this class to be used from with MATLAB
-        if(!Configuration.isRunningInsideMatlab())
-        {
-            throw new MatlabConnectionException(MatlabBroadcaster.class.getName() + " may only be created inside MATLAB");
-        }
-        
         //If the registry hasn't been created
         if(_registry == null)
         {   
-            //Configure class loading as necessary to work properly with RMI
-            //MatlabClassLoaderHelper.configureClassLoading();
-            
             //Create or retrieve an RMI registry
             setupRegistry();
             
@@ -122,15 +124,6 @@ class MatlabBroadcaster
             //If the registry becomes disconnected, either create a new one or locate a new one
             maintainRegistryConnection();
         }
-    }
-    
-    /**
-     * Called to notify the broadcaster that an attempt to establish a connection has been completed. Does not
-     * communicate if a connection was established successfully, only that the attempt is now done.
-     */
-    synchronized static void connectionAttempted()
-    {
-        _session.connectionAttempted();
     }
     
     /**
@@ -159,7 +152,7 @@ class MatlabBroadcaster
     }
     
     /**
-     * Binds the session object, an instance of {@link MatlabSession} to the registry with {@link #_sessionID}.
+     * Binds the session object, an instance of {@link MatlabSession} to the registry with {@link #SESSION_ID}.
      * 
      * @throws MatlabConnectionException 
      */
@@ -168,13 +161,13 @@ class MatlabBroadcaster
         //Unexport the object, it will throw an exception if it is not bound - so ignore that
         try
         {
-            UnicastRemoteObject.unexportObject(_session, true);
+            UnicastRemoteObject.unexportObject(SESSION, true);
         }
         catch(NoSuchObjectException e) { }
         
         try
         {   
-            _registry.bind(_sessionID, UnicastRemoteObject.exportObject(_session, 0));
+            _registry.bind(SESSION_ID, UnicastRemoteObject.exportObject(SESSION, 0));
         }
         catch(Exception e)
         {
@@ -189,7 +182,7 @@ class MatlabBroadcaster
      */
     synchronized static void addReceiver(JMIWrapperRemoteReceiver receiver)
     {
-        _receivers.add(receiver);
+        RECEIVERS.add(receiver);
     }
     
     /**
@@ -204,7 +197,7 @@ class MatlabBroadcaster
     {
         //Remove all receivers that are no longer connected
         List<JMIWrapperRemoteReceiver> disconnectedReceivers = new ArrayList<JMIWrapperRemoteReceiver>();
-        for(JMIWrapperRemoteReceiver receiver : _receivers)
+        for(JMIWrapperRemoteReceiver receiver : RECEIVERS)
         {
             try
             {
@@ -215,9 +208,9 @@ class MatlabBroadcaster
                 disconnectedReceivers.add(receiver);
             }
         }
-        _receivers.removeAll(disconnectedReceivers);
+        RECEIVERS.removeAll(disconnectedReceivers);
         
-        return !_receivers.isEmpty();
+        return !RECEIVERS.isEmpty();
     }
     
     /**
@@ -226,9 +219,8 @@ class MatlabBroadcaster
      */
     private static void maintainRegistryConnection()
     {
-        //Create a timer to monitor the broadcast
-        _broadcastTimer = new Timer();
-        _broadcastTimer.schedule(new TimerTask()
+        //Configure the a timer to monitor the broadcast
+        BROADCAST_TIMER.schedule(new TimerTask()
         {
             @Override
             public void run()
@@ -237,7 +229,7 @@ class MatlabBroadcaster
                 try
                 {
                     //Will succeed if connected and the session object is still exported
-                    _registry.lookup(_sessionID);
+                    _registry.lookup(SESSION_ID);
                 }
                 //Session object is no longer exported
                 catch(NotBoundException e)

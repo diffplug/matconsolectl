@@ -58,7 +58,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * {@link ProxyReceiver} instances. They need to be stored because the RMI registry only holds weak references to
      * exported objects.
      */
-    private final List<ProxyReceiver> _receivers = new CopyOnWriteArrayList<ProxyReceiver>();
+    private final CopyOnWriteArrayList<ProxyReceiver> _receivers = new CopyOnWriteArrayList<ProxyReceiver>();
     
     /**
      * The RMI registry used to communicate between JVMs. There is only ever one registry actually running on a given
@@ -75,10 +75,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     @Override
     public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
     {
-        Request request;
-        
-        //Generate random ID for the proxy
+        //Unique identifier for the proxy
         RemoteIdentifier proxyID = new RemoteIdentifier();
+        
+        Request request;
         
         //Initialize the registry (does nothing if already initialized)
         initRegistry();
@@ -157,7 +157,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         try
         {   
-            //TODO: What if proxy is received before putting thread to sleep?
+            //It is possible (although very unlikely) for the proxy to have been created before the following call to
+            //sleep occurs. If this happens then the proxy will not be returned until the timeout is reached.
             
             //Wait until the proxy is received or until timeout
             try
@@ -194,7 +195,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * 
      * @throws MatlabConnectionException
      */
-    private static void initRegistry() throws MatlabConnectionException
+    private synchronized static void initRegistry() throws MatlabConnectionException
     {
         //If the registry hasn't been created
         if(_registry == null)
@@ -320,7 +321,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {
         private final RequestCallback _requestCallback;
         private final String _receiverID;
-        private boolean _receivedJMIWrapper = false;
+        private volatile boolean _receivedJMIWrapper = false;
         
         public ProxyReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID)
         {
@@ -332,9 +333,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         @Override
         public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
         {   
-            //Note receiver has been received
-            _receivedJMIWrapper = true;
-            
             //Remove self from the list of receivers
             _receivers.remove(this); 
             
@@ -342,6 +340,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
             RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
             proxy.init();
+            
+            //Record wrapper has been received
+            _receivedJMIWrapper = true;
             
             //Notify the callback
             _requestCallback.proxyCreated(proxy);
@@ -443,7 +444,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             return "PROXY_REMOTE_" + _id;
         }
         
-        private String getUUIDString()
+        public String getUUIDString()
         {
             return _id.toString();
         }
@@ -494,7 +495,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
 
         @Override
-        public boolean isCancelled()
+        public synchronized boolean isCancelled()
         {
             return _isCancelled;
         }

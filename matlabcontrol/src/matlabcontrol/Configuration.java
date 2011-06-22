@@ -36,9 +36,34 @@ import java.net.URL;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class Configuration
-{
+{   
+    //Cached values may be recomputed in race conditions. This is not problematic because the computed values should
+    //always be the same.
     
     /**
+     * Caches {@link #getMatlabLocation()}.
+     */
+    private static volatile String _matlabLocation = null;
+        
+    /**
+     * Caches {@link #getCodebaseLocation()}.
+     */
+    private static volatile String _codebaseLocation = null;
+    
+    /**
+     * Caches {@link #getSupportCodeLocation()}.
+     */
+    private static volatile String _supportCodeLocation = null;
+    
+    /**
+     * Caches {@link #isRunningInsideMatlab()}.
+     */
+    private static volatile Boolean _runningInsideMatlab = null;
+    
+    private Configuration() { }
+    
+    /**
+     * If running on OS X.
      * 
      * @return 
      * @throws MatlabConnectionException
@@ -49,6 +74,7 @@ class Configuration
     }
     
     /**
+     * If running on Windows.
      * 
      * @return 
      * @throws MatlabConnectionException
@@ -59,6 +85,7 @@ class Configuration
     }
     
     /**
+     * If running on Linux.
      * 
      * @return 
      * @throws MatlabConnectionException
@@ -69,7 +96,7 @@ class Configuration
     }
     
     /**
-     * 
+     * Gets a string naming the operating system.
      * 
      * @return 
      * @throws MatlabConnectionException
@@ -86,8 +113,7 @@ class Configuration
         }
     }
 
-    private static String _matlabLocation = null;
-    
+
     /**
      * Returns the location or alias of MATLAB on an operating system specific basis.
      * <br><br>
@@ -168,8 +194,7 @@ class Configuration
         
         return matlabLocation;
     }
-    
-    private static String _codebaseLocation = null;
+
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. The
@@ -192,8 +217,6 @@ class Configuration
         
         return _codebaseLocation;
     }
-    
-    private static String _supportCodeLocation = null;
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
@@ -268,21 +291,26 @@ class Configuration
      */
     static boolean isRunningInsideMatlab()
     {
-        boolean available;
-        try
+        if(_runningInsideMatlab == null)
         {
-            //Load the class com.mathworks.jmi.Matlab and then calls its static method isMatlabAvailable()
-            //All of this is done with reflection so that this class does not cause the class loader to attempt
-            //to load JMI classes (and if not running inside of MATLAB - fail)
-            Class<?> matlabClass = Class.forName("com.mathworks.jmi.Matlab");
-            Method isAvailableMethod = matlabClass.getMethod("isMatlabAvailable");
-            available = (Boolean) isAvailableMethod.invoke(null);
-        }
-        catch(Throwable t)
-        {
-            available = false;
+            boolean available;
+            try
+            {
+                //Load the class com.mathworks.jmi.Matlab and then calls its static method isMatlabAvailable()
+                //All of this is done with reflection so that this class does not cause the class loader to attempt
+                //to load JMI classes (and if not running inside of MATLAB - fail)
+                Class<?> matlabClass = Class.forName("com.mathworks.jmi.Matlab");
+                Method isAvailableMethod = matlabClass.getMethod("isMatlabAvailable");
+                available = (Boolean) isAvailableMethod.invoke(null);
+            }
+            catch(Throwable t)
+            {
+                available = false;
+            }
+            
+            _runningInsideMatlab = available;
         }
         
-        return available;
+        return _runningInsideMatlab;
     }
 }
