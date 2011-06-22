@@ -46,7 +46,6 @@ class LocalMatlabProxy extends MatlabProxy
     
     // Methods defined in MatlabProxy
     
-    
     @Override
     public boolean isConnected()
     {
@@ -76,9 +75,7 @@ class LocalMatlabProxy extends MatlabProxy
             throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
     }
-    
-    // Methods defined in MatlabInteractor
-    
+        
     @Override
     public void exit() throws MatlabInvocationException
     {
@@ -92,6 +89,8 @@ class LocalMatlabProxy extends MatlabProxy
         }
     }
     
+    // Methods defined in MatlabInteractor
+
     @Override
     public void eval(String command) throws MatlabInvocationException
     {

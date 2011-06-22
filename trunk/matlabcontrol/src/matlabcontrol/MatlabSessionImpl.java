@@ -22,8 +22,6 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import java.rmi.RemoteException;
-
 /**
  * Implementation of {@link MatlabSession}. Split into interface and implementation to work properly with RMI.
  * 
@@ -36,7 +34,7 @@ class MatlabSessionImpl implements MatlabSession
     private boolean _expectingConnection = false;
     
     @Override
-    public synchronized boolean isAvailableForConnection() throws RemoteException
+    public synchronized boolean isAvailableForConnection()
     {   
         boolean isAvailable;
         
@@ -59,11 +57,15 @@ class MatlabSessionImpl implements MatlabSession
     }
 
     @Override
-    public synchronized void connectFromRMI(String receiverID, String proxyID) throws RemoteException
+    public synchronized void connectFromRMI(String receiverID, String proxyID)
     {
         MatlabConnector.connect(receiverID, proxyID, true);
     }
 
+    /**
+     * Called to notify the broadcaster that an attempt to establish a connection has been completed. Does not
+     * communicate if a connection was established successfully, only that the attempt is now done.
+     */
     synchronized void connectionAttempted()
     {
         _expectingConnection = false;

@@ -24,7 +24,7 @@ package matlabcontrol;
 
 /**
  * A wrapper around any {@link Throwable} so that it  can be sent over RMI without needing the class to be defined in
- * the receiving JVM. The stack trace will print as if it were the original exception.
+ * the receiving JVM. The stack trace will print as if it were the original throwable.
  * 
  * @since 4.0.0
  * 
@@ -42,9 +42,9 @@ class ThrowableWrapper extends Throwable
 
     /**
      * Creates a wrapper around {@code innerThrowable} so that when the stack trace is printed it is the same to the
-     * developer, but can be easily sent over RMI.
+     * developer, but can be sent over RMI without the throwable being defined in the other JVM.
      * 
-     * @param innerException
+     * @param innerThrowable
      */
     ThrowableWrapper(Throwable innerThrowable)
     {
