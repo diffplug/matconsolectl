@@ -38,16 +38,17 @@ public class MatlabInvocationException extends Exception
     static final String INTERRUPTED_MSG = "Method could not be completed because the thread was interrupted before MATLAB returned",
                         PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
                         UNKNOWN_REMOTE_REASON_MSG = "Method could not be invoked for an unknown reason",
-                        UNMARSHALLING_MSG = "Object attempting to be returned cannot be sent across Java Virtual Machines",
+                        UNMARSHALLING_MSG = "Object attempting to be sent or returned cannot be sent across Java Virtual Machines",
                         INTERNAL_EXCEPTION_MSG = "Method did not return properly because of an internal MATLAB exception",
-                        EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread";
+                        EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread",
+                        USER_EXCEPTION_CALLABLE_MSG = "User exception in MatlabCallable";
                  
-    public MatlabInvocationException(String msg)
+    MatlabInvocationException(String msg)
     {
         super(msg);
     }
     
-    public MatlabInvocationException(String msg, Throwable cause)
+    MatlabInvocationException(String msg, Throwable cause)
     {
         super(msg, cause);
     }

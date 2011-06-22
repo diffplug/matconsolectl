@@ -155,6 +155,19 @@ class RemoteMatlabProxy extends MatlabProxy
         return this.isConnected();
     }
     
+    @Override
+    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<T>()
+        {
+            @Override
+            public T invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _jmiWrapper.invokeAndWait(callable);
+            }
+        });
+    }
+    
     // Methods defined in MatlabInteractor (and helper methods and interfaces)
     
     private static interface RemoteVoidInvocation
@@ -179,7 +192,11 @@ class RemoteMatlabProxy extends MatlabProxy
             {
                 invocation.invoke();
             }
-            catch (RemoteException e)
+            catch(UnmarshalException e)
+            {
+                throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
+            }
+            catch(RemoteException e)
             {
                 if(this.isConnected())
                 {
@@ -209,7 +226,7 @@ class RemoteMatlabProxy extends MatlabProxy
             {
                 throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
             }
-            catch (RemoteException e)
+            catch(RemoteException e)
             {
                 if(this.isConnected())
                 {
@@ -323,19 +340,6 @@ class RemoteMatlabProxy extends MatlabProxy
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.returningFeval(functionName, args, returnCount);
-            }
-        });
-    }
-    
-    @Override
-    public String storeObject(final Object obj, final boolean keepPermanently) throws MatlabInvocationException
-    {
-        return this.invoke(new RemoteReturningInvocation<String>()
-        {
-            @Override
-            public String invoke() throws RemoteException, MatlabInvocationException
-            {
-                return _jmiWrapper.storeObject(obj, keepPermanently);
             }
         });
     }

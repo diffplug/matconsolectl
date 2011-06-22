@@ -125,30 +125,6 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
     /**
      * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
      * 
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public void exit() throws MatlabInvocationException
-    {
-        this.invoke(new VoidInvocation()
-        {
-            @Override
-            public void invoke() throws MatlabInvocationException
-            {
-                _delegateInteractor.exit();
-            }
-
-            @Override
-            public String getName()
-            {
-                return "exit()";
-            }
-        });
-    }
-
-    /**
-     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
-     * 
      * @param command
      * @throws MatlabInvocationException 
      */
@@ -327,25 +303,6 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
             public String getName()
             {
                 return "getVariable(String)";
-            }
-        });
-    }
-    
-    @Override
-    public String storeObject(final Object obj, final boolean storePermanently) throws MatlabInvocationException
-    {
-        return this.invoke(new ReturningInvocation<String>() {
-
-            @Override
-            public String invoke() throws MatlabInvocationException
-            {
-                return _delegateInteractor.storeObject(obj, storePermanently);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "storeObject(Object, boolean)";
             }
         });
     }

@@ -53,35 +53,6 @@ public class MatlabCallbackInteractor<E>
     /**
      * Delegates to the interactor, calling the {@code callback} when the method has been executed.
      * 
-     * @param callback 
-     */
-    public void exit(final MatlabCallback callback)
-    {
-        _executor.submit(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    _delegateInteractor.exit();
-                    callback.invocationSucceeded();
-                }
-                catch(MatlabInvocationException e)
-                {
-                    callback.invocationFailed(e);
-                }
-                finally
-                {
-                    _executor.shutdown();
-                }
-            }       
-        });
-    }
-
-    /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
-     * 
      * @param command
      * @param callback 
      */
@@ -257,35 +228,6 @@ public class MatlabCallbackInteractor<E>
                 try
                 {
                     E data = _delegateInteractor.getVariable(variableName);
-                    callback.invocationSucceeded(data);
-                }
-                catch(MatlabInvocationException e)
-                {
-                    callback.invocationFailed(e);
-                }
-            }       
-        });
-    }
-    
-    /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
-     * 
-     * @param obj
-     * @param storePermanently
-     * @param callback
-     * @throws MatlabInvocationException 
-     */
-    public void storeObject(final Object obj, final boolean storePermanently,
-            final MatlabDataCallback<String> callback) throws MatlabInvocationException
-    {        
-        _executor.submit(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    String data = _delegateInteractor.storeObject(obj, storePermanently);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)

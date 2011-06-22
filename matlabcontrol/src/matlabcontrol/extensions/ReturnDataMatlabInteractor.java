@@ -44,17 +44,6 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     /**
      * Delegates to the interactor.
      * 
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public void exit() throws MatlabInvocationException
-    {
-        _delegateInteractor.exit();
-    }
-
-    /**
-     * Delegates to the interactor.
-     * 
      * @param command
      * @throws MatlabInvocationException 
      */
@@ -144,20 +133,6 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     public ReturnData getVariable(String variableName) throws MatlabInvocationException
     {
         return new ReturnData(this.getVariable(variableName));
-    }
-    
-    /**
-     * Delegates to the interactor.
-     * 
-     * @param obj
-     * @param storePermanently
-     * @return
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public String storeObject(Object obj, boolean storePermanently) throws MatlabInvocationException
-    {
-        return _delegateInteractor.storeObject(obj, storePermanently);
     }
     
     @Override

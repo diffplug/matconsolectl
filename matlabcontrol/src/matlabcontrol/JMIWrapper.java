@@ -23,13 +23,12 @@ package matlabcontrol;
  */
 
 import java.awt.EventQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicLong;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
+
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -45,80 +44,14 @@ import com.mathworks.jmi.NativeMatlab;
  */
 class JMIWrapper
 {
-    /**
-     * Map of unique identifier to stored object.
-     */
-    private static final ConcurrentHashMap<String, StoredObject> STORED_OBJECTS =
-            new ConcurrentHashMap<String, StoredObject>();
-    
-    /**
-     * The fully qualified name of this class.
-     */
-    private static final String CLASS_NAME = JMIWrapper.class.getName();
-    
     private JMIWrapper() { }
     
     /**
-     * Retrieves the stored object. If it is not to be kept permanently then the reference will no longer be kept.
-     * This method is intended to be called from within MATLAB, see {@link #storeObject(java.lang.Object, boolean)} for
-     * how this works.
+     * Exits MATLAB without waiting for MATLAB to return, because MATLAB will not return when exiting.
      * 
-     * @param id
-     * @return 
+     * @throws MatlabInvocationException 
      */
-    public static Object retrieveStoredObject(String id)
-    {
-        Object obj = null;
-        
-        StoredObject stored = STORED_OBJECTS.get(id);
-        if(stored != null)
-        {
-            obj = stored.object;
-            
-            if(!stored.storePermanently)
-            {
-                STORED_OBJECTS.remove(id);
-            }
-        }
-                
-        return obj;
-    }
-    
-    /**
-     * @see MatlabInteractor#storeObject(java.lang.Object, boolean) 
-     */
-    static String storeObject(Object obj, boolean storePermanently)
-    {
-        StoredObject stored = new StoredObject(obj, storePermanently);
-        STORED_OBJECTS.put(stored.id, stored);
-        String retrievalString = CLASS_NAME + ".retrieveStoredObject('" + stored.id + "')";
-        
-        return retrievalString;
-    }
-    
-    /**
-     * An object stored by matlabcontrol that can be accessed via {@link #retrieveStoredObject(java.lang.String)}.
-     */
-    private static class StoredObject
-    {
-        private static AtomicLong CREATION_COUNTER = new AtomicLong();
-        
-        private final Object object;
-        private final boolean storePermanently;
-        private final String id;
-        
-        private StoredObject(Object object, boolean storePermanently)
-        {
-            this.object = object;
-            this.storePermanently = storePermanently;
-            this.id = "STORED_OBJECT_" + CREATION_COUNTER.incrementAndGet();
-        }
-    }
-    
-    /**
-     * @see MatlabInteractor#exit()
-     */
-    static void exit() throws MatlabInvocationException
+    static void exit()
     {
         Runnable runnable = new Runnable()
         {
@@ -143,90 +76,109 @@ class JMIWrapper
         }
     }
     
-    /**
-     * @see MatlabInteractor#setVariable(java.lang.String, java.lang.Object) 
-     */
-    static void setVariable(String variableName, Object value) throws MatlabInvocationException
+    //The following functions wait for MATLAB to complete the computation before returning
+    //See MatlabInteractor for the method documentation
+    
+    static void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {
-        returningFeval("assignin", new Object[]{ "base", variableName, value }, 0);
+        invokeAndWait(new MatlabThreadCallable<Object>()
+        {
+            @Override
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            {
+                proxy.setVariable(variableName, value);
+                
+                return null;
+            }
+        });
     }
     
-    /**
-     * @see MatlabInteractor#getVariable(java.lang.String) 
-     */
-    static Object getVariable(String variableName) throws MatlabInvocationException
+    static Object getVariable(final String variableName) throws MatlabInvocationException
     {
-        return returningFeval("eval", new Object[] { variableName }, 1);
+        return invokeAndWait(new MatlabThreadCallable<Object>()
+        {
+            @Override
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            {
+                return proxy.getVariable(variableName);
+            }
+        });
     }
     
-    /**
-     * @see MatlabInteractor#eval(java.lang.String)
-     */
     static void eval(final String command) throws MatlabInvocationException
-    {   
-        returningFeval("eval", new Object[]{ command }, 0);
+    {           
+        invokeAndWait(new MatlabThreadCallable<Object>()
+        {
+            @Override
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            {
+                proxy.eval(command);
+                
+                return null;
+            }
+        });
     }
     
-    /**
-     * @see MatlabInteractor#returningEval(java.lang.String, int)
-     */
     static Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
-        return returningFeval("eval", new Object[]{ command }, returnCount);
+        return invokeAndWait(new MatlabThreadCallable<Object>()
+        {
+            @Override
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            {
+                return proxy.returningEval(command, returnCount);
+            }
+        });
     }
 
-    /**
-     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
-     */
     static void feval(final String functionName, final Object[] args) throws MatlabInvocationException
-    {
-        returningFeval(functionName, args, 0);
+    {   
+        invokeAndWait(new MatlabThreadCallable<Object>()
+        {
+            @Override
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            {
+                proxy.feval(functionName, args);
+                
+                return null;
+            }
+        });
     }
 
-    /**
-     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[], int)
-     */
     static Object returningFeval(final String functionName, final Object[] args, final int returnCount)
             throws MatlabInvocationException
     {
-        return invokeAndWait(new Callable<Object>()
+        return invokeAndWait(new MatlabThreadCallable<Object>()
         {
             @Override
-            public Object call() throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
             {
-                return Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
-            }
+                return proxy.returningFeval(functionName, args, returnCount);
+            }      
         });
     }
-        
-    /**
-     * @see MatlabInteractor#returningFeval(java.lang.String, java.lang.Object[])
-     */
+
     static Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
-        return invokeAndWait(new Callable<Object>()
+        return invokeAndWait(new MatlabThreadCallable<Object>()
         {
             @Override
-            public Object call() throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws Exception
             {
-                //Get the number of arguments that will be returned
-                int nargout = 0;
-                Object result = Matlab.mtFevalConsoleOutput("nargout", new String[] { functionName }, 1);
-                nargout = (int) ((double[]) result)[0];
-
-                //If a variable number of return arguments (represented by -1), throw an exception
-                if(nargout == -1)
-                {
-                    throw new MatlabInvocationException(functionName + " has a variable number of return arguments. " +
-                            "Instead use returningFeval(String, Object[], int) with the return count specified.");
-                }
-                
-                return Matlab.mtFevalConsoleOutput(functionName, args, nargout);
-            }
+                return proxy.returningFeval(functionName, args);
+            }      
         });
     }
-
-    private static <T> T invokeAndWait(final Callable<T> callable) throws MatlabInvocationException
+    
+    /**
+     * Invokes the {@code callable} on the main MATLAB thread and waits for the computation to be completed.
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    static <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
     {
         T result;
         
@@ -236,17 +188,29 @@ class JMIWrapper
         }
         else if(NativeMatlab.nativeIsMatlabThread())
         {
+            MatlabThreadInteractor proxy = new MatlabThreadInteractor();
+            
             try
             {
-                result = callable.call();
+                result = callable.call(proxy);
             }
-            catch(Exception e)
+            catch(Exception ex)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, e);
+                //If the exception was thrown by a proxy method
+                if(proxy.isExceptionThrown())
+                {
+                    throw proxy.getThrownException();
+                }
+                //If the exception was thrown by user code
+                else
+                {
+                    throw new MatlabInvocationException(MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
+                }
             }
         }
         else
         {
+            //Used to block the calling thread while waiting for MATLAB to finish computing
             final ArrayBlockingQueue<MatlabReturn<T>> returnQueue = new ArrayBlockingQueue<MatlabReturn<T>>(1); 
 
             Matlab.whenMatlabReady(new Runnable()
@@ -254,15 +218,31 @@ class JMIWrapper
                 @Override
                 public void run()
                 {
+                    MatlabThreadInteractor proxy = new MatlabThreadInteractor();
+                    MatlabReturn matlabReturn;
+                    
                     try
                     {
-                        returnQueue.add(new MatlabReturn<T>(callable.call()));
+                        matlabReturn = new MatlabReturn<T>(callable.call(proxy));
                     }
-                    catch(Exception e)
+                    catch(Exception ex)
                     {
-                        returnQueue.add(new MatlabReturn<T>(e));
+                        //If the exception was thrown by a proxy method
+                        if(proxy.isExceptionThrown())
+                        {
+                            matlabReturn = new MatlabReturn<T>(proxy.getThrownException());
+                        }
+                        //If the exception was thrown by user code
+                        else
+                        {
+                            MatlabInvocationException userCausedException = new MatlabInvocationException(
+                                    MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
+                            matlabReturn = new MatlabReturn<T>(userCausedException);
+                        }
                     }
-                }    
+                    
+                    returnQueue.add(matlabReturn);
+                }
             });
 
             try
@@ -271,22 +251,14 @@ class JMIWrapper
                 MatlabReturn<T> matlabReturn = returnQueue.take();
 
                 //If exception was thrown, rethrow it
-                if(matlabReturn.exceptionThrown)
+                if(matlabReturn.exception != null)
                 {
-                    if(matlabReturn.exception instanceof MatlabInvocationException)
-                    {
-                        throw (MatlabInvocationException) matlabReturn.exception;
-                    }
-                    else
-                    {
-                        Throwable cause = new ThrowableWrapper(matlabReturn.exception);
-                        throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
-                    }
+                    throw matlabReturn.exception;
                 }
-                //Return value computed by MATLAB
+                //Return data computed by MATLAB
                 else
                 {
-                    result = matlabReturn.value;
+                    result = matlabReturn.data;
                 }
             }
             catch(InterruptedException e)
@@ -299,28 +271,122 @@ class JMIWrapper
     }
     
     /**
-     * Data returned from MATLAB.
+     * Data returned from MATLAB or exception thrown. The two different constructs are needed as opposed to using
+     * {@code instanceof} because it is possible the user would want to <strong>return</strong> an exception. The
+     * appropriate constructor will always be used because determining which overloaded constructor (or method) is done
+     * at compile time, not run time.
      */
     private static class MatlabReturn<T>
     {
-        private final boolean exceptionThrown;
-        private final T value;
-        private final Exception exception;
+        private final T data;
+        private final MatlabInvocationException exception;
         
         MatlabReturn(T value)
         {
-            this.exceptionThrown = false;
-            
-            this.value = value;
+            this.data = value;
             this.exception = null;
         }
         
-        MatlabReturn(Exception exception)
+        MatlabReturn(MatlabInvocationException exception)
         {
-            this.exceptionThrown = true;
-            
-            this.value = null;
+            this.data = null;
             this.exception = exception;
+        }
+    }
+    /**
+     * Interacts with MATLAB on MATLAB's main thread. Interacting on MATLAB's main thread is not enforced by this class,
+     * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)}.
+     */
+    private static class MatlabThreadInteractor implements MatlabInteractor<Object>
+    {   
+        /**
+         * Keeps track of if an exception is thrown, to be able to distinguish between an exception thrown by
+         * interacting with MATLAB vs. in the rest of a MatlabThreadCallback
+         */
+        private MatlabInvocationException _exception = null;
+        
+        @Override
+        public void setVariable(String variableName, Object value) throws MatlabInvocationException
+        {
+            this.returningFeval("assignin", new Object[]{ "base", variableName, value }, 0);
+        }
+
+        @Override
+        public Object getVariable(String variableName) throws MatlabInvocationException
+        {
+            return this.returningFeval("eval", new Object[] { variableName }, 1);
+        }
+
+        @Override
+        public void eval(String command) throws MatlabInvocationException
+        {
+            this.returningFeval("eval", new Object[]{ command }, 0);
+        }
+
+        @Override
+        public Object returningEval(String command, int returnCount) throws MatlabInvocationException
+        {
+            return this.returningFeval("eval", new Object[]{ command }, returnCount);
+        }
+
+        @Override
+        public void feval(String functionName, Object[] args) throws MatlabInvocationException
+        {
+            this.returningFeval(functionName, args, 0);
+        }
+        
+        @Override
+        public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+        {
+            //Get the number of arguments that will be returned
+            int nargout = 0;
+            Object result = this.returningFeval("nargout", new String[] { functionName }, 1);
+            
+            try
+            {
+                nargout = (int) ((double[]) result)[0];
+            }
+            catch(Exception e)
+            {
+                _exception = new MatlabInvocationException("Unable to parse nargout information", e);
+                throw _exception;
+            }
+
+            //If a variable number of return arguments (represented by -1), throw an exception
+            if(nargout == -1)
+            {
+                _exception = new MatlabInvocationException(functionName + " has a variable number of return "
+                        + "arguments. Instead use returningFeval(String, Object[], int) with the return count "
+                        + "specified.");
+                return _exception;
+            }
+
+            return this.returningFeval(functionName, args, nargout);
+        }
+
+        @Override
+        public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+        {
+            try
+            {
+                return Matlab.mtFevalConsoleOutput(functionName, args, returnCount);
+            }
+            catch(Exception ex)
+            {
+                Throwable cause = new ThrowableWrapper(ex);
+                _exception = new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                throw _exception;
+            }
+        }
+        
+        public boolean isExceptionThrown()
+        {
+            return _exception != null;
+        }
+        
+        public MatlabInvocationException getThrownException()
+        {
+            return _exception;
         }
     }
 }

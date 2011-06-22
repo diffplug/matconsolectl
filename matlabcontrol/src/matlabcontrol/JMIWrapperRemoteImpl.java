@@ -44,6 +44,12 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     public JMIWrapperRemoteImpl() throws RemoteException { }
     
     @Override
+    public void exit()
+    {
+        JMIWrapper.exit();
+    }
+    
+    @Override
     public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
         JMIWrapper.setVariable(variableName, value);
@@ -53,12 +59,6 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     public Object getVariable(String variableName) throws MatlabInvocationException
     {
         return JMIWrapper.getVariable(variableName);
-    }
-    
-    @Override
-    public void exit() throws MatlabInvocationException
-    {
-        JMIWrapper.exit();
     }
 
     @Override
@@ -92,9 +92,9 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     }
     
     @Override
-    public String storeObject(Object obj, boolean keepPermanently)
+    public <T> T invokeAndWait(MatlabProxy.MatlabThreadCallable<T> callable) throws MatlabInvocationException
     {
-        return JMIWrapper.storeObject(obj, keepPermanently);
+        return JMIWrapper.invokeAndWait(callable);
     }
     
     @Override

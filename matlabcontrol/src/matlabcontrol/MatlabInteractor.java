@@ -23,7 +23,7 @@ package matlabcontrol;
  */
 
 /**
- * Interacts with a session of MATLAB. The intended use of this interface is to create a wrapper around another
+ * Interacts with a session of MATLAB. This interface can be used to create a wrapper around another
  * {@code MatlabInteractor} such as {@link MatlabProxy}.
  * 
  * @since 4.0.0
@@ -32,13 +32,6 @@ package matlabcontrol;
  */
 public interface MatlabInteractor<E>
 {    
-    /**
-     * Exits MATLAB.
-     * 
-     * @throws MatlabInvocationException 
-     */
-    public void exit() throws MatlabInvocationException;
-
     /**
      * Evaluates a command in MATLAB. The result of this command will not be returned.
      * <br><br>
@@ -161,33 +154,4 @@ public interface MatlabInteractor<E>
      * @throws MatlabInvocationException
      */
     public E getVariable(String variableName) throws MatlabInvocationException;
-            
-    /**
-     * Stores an object that can be accessed from MATLAB, but is not stored as a MATLAB variable. The {@code String}
-     * returned from this method will retrieve the object into the MATLAB environment. This string is intended to be
-     * used as if were the name of a MATLAB variable. This allows for passing objects to MATLAB and then using them
-     * in an {@code eval} statement without having to expose the object as a MATLAB variable. It acts as a "read-only"
-     * variable because it cannot be assigned to.
-     * <br><br>
-     * Simple example usage:<br>
-     * <pre>
-     * {@code
-     * String varName = proxy.storeObject(42, false);
-     * proxy.eval("newSum = currSum + " varName;
-     * }
-     * </pre>
-     * The returned string should be considered an internal implementation detail. It should only be used in its
-     * entirety, not a substring of it. The format of the string is not guaranteed to remain the same in future
-     * versions.
-     * 
-     * @param obj object to be stored
-     * @param storePermanently if {@code false} then the object will no longer be referenced or retrievable by
-     * matlabcontrol after the first time it is retrieved, if {@code true} it will remain referenced and retrievable
-     * during the entire time MATLAB is running
-     * 
-     * @return string to retrieve stored object
-     * 
-     * @throws MatlabInvocationException 
-     */
-    public String storeObject(Object obj, boolean storePermanently) throws MatlabInvocationException;
 }
