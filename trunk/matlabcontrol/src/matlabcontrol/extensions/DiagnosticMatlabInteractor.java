@@ -31,6 +31,9 @@ import matlabcontrol.MatlabInteractor;
 /**
  * Wraps around an interactor to provide a log of interactions. The data is not altered.
  * 
+ * TODO: THIS CLASS IS NOT THREAD-SAFE. The diagnostic print outs from multiple threads will interweave one another
+ * giving a very confused understanding of what is occurring.
+ * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
