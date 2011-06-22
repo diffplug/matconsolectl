@@ -64,6 +64,19 @@ class LocalMatlabProxy extends MatlabProxy
         return true;
     }
     
+    @Override
+    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    {
+        if(this.isConnected())
+        {
+            return JMIWrapper.invokeAndWait(callable);
+        }
+        else
+        {
+            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+        }
+    }
+    
     // Methods defined in MatlabInteractor
     
     @Override
@@ -168,11 +181,5 @@ class LocalMatlabProxy extends MatlabProxy
         {
             throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
         }
-    }
-    
-    @Override
-    public String storeObject(Object obj, boolean keepPermanently)
-    {
-        return JMIWrapper.storeObject(obj, keepPermanently);
     }
 }

@@ -22,9 +22,14 @@ package matlabcontrol.extensions;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.Serializable;
+import java.util.Arrays;
+
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabProxyFactory;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
@@ -35,18 +40,16 @@ import matlabcontrol.MatlabProxy;
  */
 public class MatrixProcessor
 {
-    private final MatlabInteractor<Object> _interactor;
+    private final MatlabProxy _proxy;
     
     /**
-     * Constructs the processor. The {@code interactor} does not have to be a {@link MatlabProxy}, but in order for
-     * the processor to operate properly it expects that the method calls and their return value occur as they would
-     * ordinarily.
+     * Constructs the processor.
      * 
-     * @param interactor
+     * @param proxy
      */
-    public MatrixProcessor(MatlabInteractor<Object> interactor)
+    public MatrixProcessor(MatlabProxy proxy)
     {
-        _interactor = interactor;
+        _proxy = proxy;
     }
     
     /**
@@ -61,26 +64,54 @@ public class MatrixProcessor
      */
     public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException
     {
-        //Retrieve real values
-        Object realObject = _interactor.returningEval("real(" + matrixName + ")", 1);
-        if(!realObject.getClass().equals(double[].class))
+        MatrixInfo info = _proxy.invokeAndWait(new GetMatrixCallable(matrixName));
+        
+        return new MatlabMatrix(info.real, info.imaginary, info.lengths);
+    }
+    
+    private static class GetMatrixCallable implements MatlabThreadCallable<MatrixInfo>, Serializable
+    {
+        private final String _matrixName;
+        
+        public GetMatrixCallable(String matrixName)
         {
-            throw new MatlabProcessingException(matrixName + " is not a MATLAB array of doubles");
+            _matrixName = matrixName;
         }
-        double[] realValues = (double[]) realObject;
-        
-        //Retrieve imaginary values
-        Object imaginaryObject = _interactor.returningEval("imag(" + matrixName + ")", 1);
-        if(!imaginaryObject.getClass().equals(double[].class))
+
+        @Override
+        public MatrixInfo call(MatlabInteractor<Object> interactor) throws Exception
         {
-            throw new MatlabProcessingException(matrixName + " is not a MATLAB array of doubles");
+            //Retrieve real values
+            Object realObject = interactor.returningFeval("real", new Object[] { _matrixName }, 1);
+            double[] realValues = (double[]) realObject;
+
+            //Retrieve imaginary values
+            Object imaginaryObject = interactor.returningFeval("imag", new Object[] { _matrixName }, 1);
+            double[] imaginaryValues = (double[]) imaginaryObject;
+
+            //Retrieve lengths of array
+            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ")", 1);
+            int[] lengths = new int[size.length];
+            for(int i = 0; i < size.length; i++)
+            {
+                lengths[i] = (int) size[i];
+            }
+
+            return new MatrixInfo(realValues, imaginaryValues, lengths);
         }
-        double[] imaginaryValues = (double[]) imaginaryObject;
+    }
+    
+    private static class MatrixInfo implements Serializable
+    {
+        private final double[] real, imaginary;
+        private final int[] lengths;
         
-        //Retrieve lengths of array
-        int[] lengths = this.getMatrixLengths(matrixName);
-        
-        return new MatlabMatrix(realValues, imaginaryValues, lengths);
+        public MatrixInfo(double[] real, double[] imaginary, int[] lengths)
+        {
+            this.real = real;
+            this.imaginary = imaginary;
+            this.lengths = lengths;
+        }
     }
     
     /**
@@ -92,39 +123,49 @@ public class MatrixProcessor
      */
     public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
     {
-        //Store real and imaginary arrays in the MATLAB environment
-        String realArray = _interactor.storeObject(matrix.getRealLinearArray(), false);
-        String imaginaryArray = _interactor.storeObject(matrix.getImaginaryLinearArray(), false);
-        
-        //Combine the real and imaginary arrays, set the proper dimension length metadata, and then store as matrixName
-        String evalStatement = matrixName + " = reshape(" + realArray + " + " + imaginaryArray + " * i";
-        int[] lengths = matrix.getLengths();
-        for(int length : lengths)
-        {
-            evalStatement += ", " + length;
-        }
-        evalStatement += ");";
-        
-        _interactor.eval(evalStatement);
+        _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
     
-    /**
-     * Retrieves the lengths of the matrix named {@code matrixName}.
-     * 
-     * @param matrixName
-     * @return
-     * @throws MatlabInvocationException 
-     */
-    private int[] getMatrixLengths(String matrixName) throws MatlabInvocationException
+    private static class SetMatrixCallable implements MatlabThreadCallable<Object>, Serializable
     {
-        double[] size = (double[]) _interactor.returningEval("size(" + matrixName + ")", 1);
-        int[] lengths = new int[size.length];
+        private final String _matrixName;
+        private final double[] _realArray, _imaginaryArray;
+        private final int[] _lengths;
         
-        for(int i = 0; i < size.length; i++)
+        private SetMatrixCallable(String matrixName, MatlabMatrix matrix)
         {
-            lengths[i] = (int) size[i];
+            _matrixName = matrixName;
+            _realArray = matrix.getRealLinearArray();
+            _imaginaryArray = matrix.getImaginaryLinearArray();
+            _lengths = matrix.getLengths();
         }
         
-        return lengths;
+        @Override
+        public Object call(MatlabInteractor<Object> interactor) throws Exception
+        {
+            //Store real and imaginary arrays in the MATLAB environment
+            String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);
+            interactor.setVariable(realArray, _realArray);
+            String imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1);
+            interactor.setVariable(imagArray, _imaginaryArray);
+
+            //Build a statement to eval
+            // - Combine the real and imaginary arrays
+            // - Set the proper dimension length metadata
+            // - Store as matrixName
+            String evalStatement = _matrixName + " = reshape(" + realArray + " + " + imagArray + " * i";
+            for(int length : _lengths)
+            {
+                evalStatement += ", " + length;
+            }
+            evalStatement += ");";
+            interactor.eval(evalStatement);
+            
+            //Clear variables holding separate real and imaginary arrays
+            interactor.eval("clear " + realArray + ";");
+            interactor.eval("clear " + imagArray + ";");
+            
+            return null;
+        }
     }
 }

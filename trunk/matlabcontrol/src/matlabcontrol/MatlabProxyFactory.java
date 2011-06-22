@@ -256,7 +256,7 @@ public final class MatlabProxyFactory implements ProxyFactory
          * 
          * @param timeout
          * 
-         * @throw IllegalArgumentException if timeout is negative
+         * @throws IllegalArgumentException if timeout is negative
          */
         public synchronized void setProxyTimeout(long timeout)
         {

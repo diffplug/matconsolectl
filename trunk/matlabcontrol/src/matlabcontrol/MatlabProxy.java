@@ -22,11 +22,12 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.Serializable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Allows for Java to communicate with a running MATLAB session. This class cannot be instantiated, it may be created
- * with a {@link MatlabProxyFactory}. The methods used to communicate with MATLAB are defined in the
+ * with a {@link MatlabProxyFactory}. The primary methods used to communicate with MATLAB are defined in the
  * {@link MatlabInteractor} interface which this class implements. Interaction with MATLAB occurs as if calling
  * {@code eval} and {@code feval} in the MATLAB Command Window.
  * <h3>Communicating with MATLAB</h3>
@@ -52,9 +53,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * How Java objects sent to MATLAB or retrieved from MATLAB behave depends on several factors:
  * <br><br>
  * <strong>Running inside MATLAB</strong><br>
- * References to Java objects in MATLAB that are returned to Java, reference the same object. When passing a reference to
- * a Java object to MATLAB, if the Java object is <i>not</i> converted to a MATLAB type then it will reference the same
- * object in the MATLAB environment.
+ * References to Java objects in MATLAB that are returned to Java, reference the same object. When passing a reference
+ * to a Java object to MATLAB, if the Java object is <i>not</i> converted to a MATLAB type then it will reference the
+ * same object in the MATLAB environment.
  * <br><br>
  * <strong>Running outside MATLAB</strong><br>
  * References to Java objects are copies. There is one exception to this rule. Objects that are
@@ -62,15 +63,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Java Virtual Machine using <a href="http://download.oracle.com/javase/6/docs/platform/rmi/spec/rmiTOC.html">Remote
  * Method Invocation</a>. Properly using RMI is non-trivial, if you plan to make use of {@code Remote} objects you
  * should take care to understand how RMI operates.
- * <h3>Thread Safety and Threads</h3>
- * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} may be called concurrently; however they will
- * be completed sequentially on MATLAB's main thread. More than one proxy may be interacting with MATLAB (for instance
- * one proxy might be running inside MATLAB and another might be running outside MATLAB) and their interactions will not
- * occur simultaneously. If MATLAB is being used independently of matlabcontrol, the proxy will have to wait until
- * MATLAB's main thread is done with whatever else it is being asked to do. Regardless of the number of proxies
- * communicating with a given session of MATLAB, interaction with MATLAB occurs in a single threaded manner. Methods not
- * defined in {@code MatlabInteractor} may execute concurrently.
- * <br><br>
+ * <h3>Thread Safety</h3>
+ * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} and 
+ * {@link #invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)} may be called concurrently;
+ * however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given thread will be
+ * executed in the order they were invoked. No guarantees are made about the relative ordering of calls made from
+ * different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One proxy running
+ * outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If MATLAB is not
+ * hidden from user interaction then a user may also be making use of MATLAB's main thread. This means that two
+ * sequential calls to the proxy from the same thread that interact with MATLAB will execute in that order, but
+ * interactions with MATLAB may occur between the two calls. In typical use this behavior will not pose a problem.
+ * However, in some multi-threaded uses cases it may be necessary to guarantee that several interactions with MATLAB
+ * occur without interruption. Uninterrupted access to MATLAB's main thread may be obtained by use of
+ * {@link #invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)}.
+ * <h3>Threads</h3>
  * When <strong>running outside MATLAB</strong>, the proxy makes use of multiple internally managed threads. When the
  * proxy becomes disconnected from MATLAB it notifies its disconnection listeners and then terminates all threads it was
  * using internally.
@@ -223,6 +229,24 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     public abstract boolean disconnect();
     
     /**
+     * Exits MATLAB. Attempting to exit MATLAB with either a {@code eval} or {@code feval} command will cause MATLAB to
+     * hang indefinitely.
+     * 
+     * @throws MatlabInvocationException 
+     */
+    public abstract void exit() throws MatlabInvocationException;
+    
+    /**
+     * TODO: DOCUMENT ME!
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    public abstract <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
+    
+    /**
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
      * 
      * @since 4.0.0
@@ -259,5 +283,22 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
          */
         @Override
         public boolean equals(Object other);
+    }
+    
+    /**
+     * TODO: DOCUMENT ME
+     * 
+     * @param <T> 
+     */
+    public static interface MatlabThreadCallable<T>
+    {
+        /**
+         * TODO: DOCUMENT ME
+         * 
+         * @param proxy
+         * @return
+         * @throws Exception 
+         */
+        public T call(MatlabInteractor<Object> proxy) throws Exception;
     }
 }
