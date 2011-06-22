@@ -31,10 +31,15 @@ import matlabcontrol.MatlabInteractor;
 /**
  * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
  * difference this class does not implement {@link MatlabInteractor}, but it closely matches the methods. For each
- * method that calls MATLAB in {@code MatlabInteractor} the same method exists but has one additional parameter that is
- * either {@link MatlabCallbackInteractor.MatlabCallback} or {@link MatlabCallbackInteractor.MatlabDataCallback}.
- * Because the actual proxy invocation occurs on a separate thread from the one calling the methods in this class, it
- * can be used from within MATLAB on the Event Dispatch Thread (EDT).
+ * method in {@code MatlabInteractor} the same method exists but has one additional parameter that is either
+ * {@link MatlabCallbackInteractor.MatlabCallback} or {@link MatlabCallbackInteractor.MatlabDataCallback}. Method
+ * invocations do not throw exceptions, but if the interator throws an exception it will be provided to the callback.
+ * <br><br>
+ * This class is thread-safe even if the interactor provided to it is not thread-safe. All interactions with the
+ * interactor will be done in a single threaded manner. The internally managed thread used by this class can be
+ * terminated via the {@link #shutdown()} method. Because methods invocations on the delegate interactor occur on a
+ * separate thread from the one calling the methods in this class, it can be used from within MATLAB on the Event
+ * Dispatch Thread (EDT).
  * 
  * @since 4.0.0
  * 
@@ -42,12 +47,52 @@ import matlabcontrol.MatlabInteractor;
  */
 public class MatlabCallbackInteractor<E>
 {
+    /**
+     * Executor that manages the single thread used to invoke methods on the interactor. 
+     */
     private final ExecutorService _executor = Executors.newSingleThreadExecutor();
-    private MatlabInteractor<E> _delegateInteractor;
     
+    /**
+     * The interactor delegated to.
+     */
+    private final MatlabInteractor<E> _delegateInteractor;
+    
+    /**
+     * Constructs this interactor which will delegate to the provided {@code interactor}. The type returned by the
+     * delegate {@code interactor} is the same type that will be returned in the callbacks. A
+     * {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
+     * {@code MatlabProxy}:
+     * <br><br>
+     * {@code
+     * MatlabCallbackInteractor<Object> callbackInteractor = new MatlabCallbackInteractor<Object>(proxy);
+     * }
+     * 
+     * @param interactor 
+     */
     public MatlabCallbackInteractor(MatlabInteractor<E> interactor)
     {
         _delegateInteractor = interactor;
+    }
+    
+    /**
+     * Shuts down the thread used by this interactor. The thread will not be shutdown until all pending callbacks have
+     * been completed. After the thread has been shutdown future calls to other interactor methods will have no effect.
+     */
+    public void shutdown()
+    {
+        _executor.shutdown();
+    }
+        
+    /**
+     * Returns a brief description of this interactor. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString()
+    {
+        return "[" + this.getClass().getName() + " delegate=" + _delegateInteractor + "]";
     }
 
     /**
@@ -165,7 +210,8 @@ public class MatlabCallbackInteractor<E>
      * @param returnCount
      * @param callback 
      */
-    public void returningFeval(final String functionName, final Object[] args, final int returnCount, final MatlabDataCallback<E> callback)
+    public void returningFeval(final String functionName, final Object[] args, final int returnCount,
+            final MatlabDataCallback<E> callback)
     {
         _executor.submit(new Runnable()
         {
@@ -236,12 +282,6 @@ public class MatlabCallbackInteractor<E>
                 }
             }       
         });
-    }
-    
-    @Override
-    public String toString()
-    {
-        return "[MatlabCallbackInteractor delegate:" + _delegateInteractor + "]";
     }
     
     /**
