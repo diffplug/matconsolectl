@@ -95,7 +95,7 @@ public class MatrixProcessor
             }
 
             //Retrieve lengths of array
-            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ")", 1);
+            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ");", 1);
             int[] lengths = new int[size.length];
             for(int i = 0; i < size.length; i++)
             {
