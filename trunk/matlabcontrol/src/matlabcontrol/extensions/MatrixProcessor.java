@@ -23,16 +23,16 @@ package matlabcontrol.extensions;
  */
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
-import matlabcontrol.MatlabProxyFactory;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
+ * <br><br>
+ * This class is thread-safe.
  * 
  * @since 4.0.0
  * 

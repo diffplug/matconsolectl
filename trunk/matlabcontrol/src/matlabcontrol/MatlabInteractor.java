@@ -22,6 +22,8 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+
 /**
  * Interacts with a session of MATLAB. This interface can be used to create a wrapper around another
  * {@code MatlabInteractor} such as {@link MatlabProxy}.
@@ -154,4 +156,14 @@ public interface MatlabInteractor<E>
      * @throws MatlabInvocationException
      */
     public E getVariable(String variableName) throws MatlabInvocationException;
+    
+    /**
+     * TODO: DOCUMENT ME!
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
 }

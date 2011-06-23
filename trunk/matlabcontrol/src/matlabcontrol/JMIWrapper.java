@@ -27,6 +27,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
@@ -375,6 +377,32 @@ class JMIWrapper
             {
                 Throwable cause = new ThrowableWrapper(ex);
                 _exception = new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                throw _exception;
+            }
+        }
+
+        @Override
+        public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+        {
+            //Invoking this from inside a MatlabThreadCallable does not make a lot of sense, but it can be done without
+            //issue by invoking it right away as this is code is running on the MATLAB thread
+            MatlabThreadInteractor interactor = new MatlabThreadInteractor();
+            try
+            {
+                return callable.call(interactor);
+            }
+            catch(Exception ex)
+            {
+                //If the exception was thrown by a proxy method
+                if(interactor.isExceptionThrown())
+                {
+                    _exception = interactor.getThrownException();
+                }
+                //If the exception was thrown by user code
+                else
+                {
+                    _exception = new MatlabInvocationException(MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
+                }
                 throw _exception;
             }
         }

@@ -27,6 +27,7 @@ import java.lang.reflect.Array;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor to provide a log of interactions. The data is not altered.
@@ -306,6 +307,33 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
             public String getName()
             {
                 return "getVariable(String)";
+            }
+        });
+    }
+    
+    /**
+     * Delegates to the interactor; prints the interaction to the {@code PrintStream}.
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    {
+        return this.invoke(new ReturningInvocation<T>()
+        {
+            @Override
+            public T invoke() throws MatlabInvocationException
+            {
+                return _delegateInteractor.invokeAndWait(callable);
+            }
+
+            @Override
+            public String getName()
+            {
+                return "invokeAndWait(MatlabThreadCallable)";
             }
         });
     }

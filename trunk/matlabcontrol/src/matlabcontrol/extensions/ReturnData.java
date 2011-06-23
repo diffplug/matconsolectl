@@ -56,7 +56,7 @@ public class ReturnData
      * @return
      * @throws ClassCastException if the cast cannot be performed
      */
-    public <E> E getAs(Class<E> clazz) throws ClassCastException
+    public <E> E getAs(Class<E> clazz)
     {
         return clazz.cast(_data);
     }
@@ -67,7 +67,7 @@ public class ReturnData
      * @return
      * @throws ClassCastException if the cast cannot be performed
      */
-    public String getAsString() throws ClassCastException
+    public String getAsString()
     {
         return this.getAs(String.class);
     }
@@ -78,7 +78,7 @@ public class ReturnData
      * @return
      * @throws ClassCastException if the cast cannot be performed
      */
-    public double[] getAsDoubleArray() throws ClassCastException
+    public double[] getAsDoubleArray()
     {
         return this.getAs(double[].class);
     }
@@ -89,7 +89,7 @@ public class ReturnData
      * @return
      * @throws ClassCastException if the cast cannot be performed
      */
-    public Object[] getAsObjectArray() throws ClassCastException
+    public Object[] getAsObjectArray()
     {
         return this.getAs(Object[].class);
     }
