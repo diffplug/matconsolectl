@@ -35,11 +35,11 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
  * difference this class does not implement {@link MatlabInteractor}, but it closely matches the methods. For each
  * method in {@code MatlabInteractor} the same method exists but has one additional parameter that is either
- * {@link MatlabCallbackInteractor.MatlabCallback} or {@link MatlabCallbackInteractor.MatlabDataCallback}. Method
- * invocations do not throw exceptions, but if the interator throws an exception it will be provided to the callback.
+ * {@link MatlabCallback} or {@link MatlabDataCallback}. Method invocations do not throw exceptions, but if the
+ * interactor throws an exception it will be provided to the callback.
  * <br><br>
  * This class is thread-safe even if the interactor provided to it is not thread-safe. All interactions with the
- * interactor will be done in a single threaded manner. Because methods invocations on the delegate interactor occur on
+ * interactor will be done in a single threaded manner. Because method invocations on the delegate interactor occur on
  * a separate thread from the one calling the methods in this class, it can be used from within MATLAB on the Event
  * Dispatch Thread (EDT).
  * 
