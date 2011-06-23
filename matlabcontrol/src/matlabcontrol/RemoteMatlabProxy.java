@@ -155,19 +155,6 @@ class RemoteMatlabProxy extends MatlabProxy
         return this.isConnected();
     }
     
-    @Override
-    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
-    {
-        return this.invoke(new RemoteReturningInvocation<T>()
-        {
-            @Override
-            public T invoke() throws RemoteException, MatlabInvocationException
-            {
-                return _jmiWrapper.invokeAndWait(callable);
-            }
-        });
-    }
-    
     // Methods defined in MatlabInteractor (and helper methods and interfaces)
     
     private static interface RemoteVoidInvocation
@@ -340,6 +327,19 @@ class RemoteMatlabProxy extends MatlabProxy
             public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.returningFeval(functionName, args, returnCount);
+            }
+        });
+    }
+    
+    @Override
+    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    {
+        return this.invoke(new RemoteReturningInvocation<T>()
+        {
+            @Override
+            public T invoke() throws RemoteException, MatlabInvocationException
+            {
+                return _jmiWrapper.invokeAndWait(callable);
             }
         });
     }

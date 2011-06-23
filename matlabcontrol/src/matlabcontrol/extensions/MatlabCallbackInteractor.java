@@ -27,6 +27,7 @@ import java.util.concurrent.Executors;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
@@ -274,6 +275,36 @@ public class MatlabCallbackInteractor<E>
                 try
                 {
                     E data = _delegateInteractor.getVariable(variableName);
+                    callback.invocationSucceeded(data);
+                }
+                catch(MatlabInvocationException e)
+                {
+                    callback.invocationFailed(e);
+                }
+            }       
+        });
+    }
+    
+    /**
+     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * The name of this method has been retained for consistency with {@code MatlabInteractor}, but not that while the
+     * code in the callable will be invoked on the MATLAB thread and it will wait until completion so as to return a
+     * result, this method - like all others in this class, will not wait for completion. Instead, the result will be
+     * provided to the {@code callback}.
+     * 
+     * @param callable
+     * @param callback 
+     */
+    public <T> void invokeAndWait(final MatlabThreadCallable<T> callable, final MatlabDataCallback<T> callback)
+    {        
+        _executor.submit(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                try
+                {
+                    T data = _delegateInteractor.invokeAndWait(callable);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)

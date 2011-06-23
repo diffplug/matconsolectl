@@ -24,9 +24,12 @@ package matlabcontrol.extensions;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor to conveniently handle casts of the data returned from MATLAB.
+ * <br><br>
+ * The thread-safety of this class is determined by the thread-safety of its delegate {@link MatlabInteractor}.
  * 
  * @since 4.0.0
  * 
@@ -36,6 +39,11 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
 {
     private final MatlabInteractor<?> _delegateInteractor;
     
+    /**
+     * Constructs this interactor, delegating all method calls to the {@code interactor}.
+     * 
+     * @param interactor 
+     */
     public ReturnDataMatlabInteractor(MatlabInteractor<?> interactor)
     {   
         _delegateInteractor = interactor;
@@ -64,7 +72,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public ReturnData returningEval(String command, int returnCount) throws MatlabInvocationException
     {
-        return new ReturnData(this.returningEval(command, returnCount));
+        return new ReturnData(_delegateInteractor.returningEval(command, returnCount));
     }
 
     /**
@@ -91,7 +99,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public ReturnData returningFeval(String functionName, Object[] args) throws MatlabInvocationException
     {
-        return new ReturnData(this.returningFeval(functionName, args));
+        return new ReturnData(_delegateInteractor.returningFeval(functionName, args));
     }
 
     /**
@@ -106,7 +114,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public ReturnData returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
     {
-        return new ReturnData(this.returningFeval(functionName, args, returnCount));
+        return new ReturnData(_delegateInteractor.returningFeval(functionName, args, returnCount));
     }
 
     /**
@@ -132,7 +140,22 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     @Override
     public ReturnData getVariable(String variableName) throws MatlabInvocationException
     {
-        return new ReturnData(this.getVariable(variableName));
+        return new ReturnData(_delegateInteractor.getVariable(variableName));
+    }
+
+    /**
+     * Delegates to the interactor. The return of this method cannot be wrapped in a {@link ReturnData} due to type
+     * mismatch in method signature, so it returns data of type {@code T} instead.
+     * 
+     * @param <T>
+     * @param callable
+     * @return
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    {
+        return _delegateInteractor.invokeAndWait(callable);
     }
     
     @Override

@@ -64,13 +64,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Method Invocation</a>. Properly using RMI is non-trivial, if you plan to make use of {@code Remote} objects you
  * should take care to understand how RMI operates.
  * <h3>Thread Safety</h3>
- * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} and 
- * {@link #invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)} may be called concurrently;
- * however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given thread will be
- * executed in the order they were invoked. No guarantees are made about the relative ordering of calls made from
- * different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One proxy running
- * outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If MATLAB is not
- * hidden from user interaction then a user may also be making use of MATLAB's main thread. This means that two
+ * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} may be called
+ * concurrently; however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given
+ * thread will be xecuted in the order they were invoked. No guarantees are made about the relative ordering of calls
+ * made from different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One proxy
+ * running outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If MATLAB is
+ * not hidden from user interaction then a user may also be making use of MATLAB's main thread. This means that two
  * sequential calls to the proxy from the same thread that interact with MATLAB will execute in that order, but
  * interactions with MATLAB may occur between the two calls. In typical use this behavior will not pose a problem.
  * However, in some multi-threaded uses cases it may be necessary to guarantee that several interactions with MATLAB
@@ -235,16 +234,6 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @throws MatlabInvocationException 
      */
     public abstract void exit() throws MatlabInvocationException;
-    
-    /**
-     * TODO: DOCUMENT ME!
-     * 
-     * @param <T>
-     * @param callable
-     * @return
-     * @throws MatlabInvocationException 
-     */
-    public abstract <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
     
     /**
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
