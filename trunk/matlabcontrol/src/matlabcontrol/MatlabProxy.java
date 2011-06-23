@@ -32,21 +32,21 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * {@code eval} and {@code feval} in the MATLAB Command Window.
  * <h3>Communicating with MATLAB</h3>
  * Methods which interact with MATLAB may provide any objects as function arguments and those methods return any
- * object. (When running outside MATLAB there are further restrictions, documented below.) As such the return type of
- * all methods that interact with MATLAB and return a value is {@code Object}. Primitives will be autoboxed
- * appropriately. Certain Java types will be converted into MATLAB types as
+ * object. (When <strong>running outside MATLAB</strong> there are further restrictions, documented below.) As such the
+ * return type of all methods that interact with MATLAB and return a value is {@code Object}. Primitives will be
+ * autoboxed appropriately. Certain Java types will be converted into MATLAB types as
  * <a href="http://www.mathworks.com/help/techdoc/matlab_external/f6671.html">documented</a> by MathWorks. Similarly
  * MATLAB types are converted into Java types as
  * <a href="http://www.mathworks.com/help/techdoc/matlab_external/f6425.html">documented</a> by MathWorks. The
  * documentation provides the information from the perspective of MATLAB code calling Java code, which is officially
  * supported. For matlabcontrol, the <i>opposite</i> is occurring with Java calling MATLAB code.
  * <br><br>
- * The {@link matlabcontrol.extensions.DiagnosticMatlabInteractor} exists to help determine what is being returned by
+ * The {@link matlabcontrol.extensions.LoggingMatlabInteractor} exists to help determine what is being returned by
  * MATLAB. {@link matlabcontrol.extensions.ReturnDataMatlabInteractor} simplifies casting the returned data. MATLAB
  * matrices are implemented in a fundamentally different manner than Java arrays.
  * {@link matlabcontrol.extensions.MatlabMatrix} can convert between the two formats; MATLAB matrices can be sent to and
  * retrieved from MATLAB with the {@link matlabcontrol.extensions.MatrixProcessor}. Some of these extensions implement
- * {@code MatlabInteractor} and all operate on {@code MatlabInteractor}. They can therefore be combined with one
+ * {@code MatlabInteractor} and most operate on {@code MatlabInteractor}. They can therefore be combined with one
  * another. You may wish to develop your own wrapper around this proxy, if you do so should consider operating on a
  * {@code MatlabInteractor} instead of a {@code MatlabProxy} so that your code can be used with other extensions. 
  * <br><br>
@@ -58,22 +58,22 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * same object in the MATLAB environment.
  * <br><br>
  * <strong>Running outside MATLAB</strong><br>
- * References to Java objects are copies. There is one exception to this rule. Objects that are
+ * References to Java objects are copies. (There is one exception to this rule. Objects that are
  * {@link java.rmi.Remote} will act as if they are not copies. This is because matlabcontrol communicates with MATLAB's
  * Java Virtual Machine using <a href="http://download.oracle.com/javase/6/docs/platform/rmi/spec/rmiTOC.html">Remote
  * Method Invocation</a>. Properly using RMI is non-trivial, if you plan to make use of {@code Remote} objects you
- * should take care to understand how RMI operates.
+ * should take care to understand how RMI operates.)
  * <h3>Thread Safety</h3>
  * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} may be called
  * concurrently; however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given
- * thread will be xecuted in the order they were invoked. No guarantees are made about the relative ordering of calls
+ * thread will be executed in the order they were invoked. No guarantees are made about the relative ordering of calls
  * made from different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One proxy
  * running outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If MATLAB is
  * not hidden from user interaction then a user may also be making use of MATLAB's main thread. This means that two
  * sequential calls to the proxy from the same thread that interact with MATLAB will execute in that order, but
- * interactions with MATLAB may occur between the two calls. In typical use this behavior will not pose a problem.
- * However, in some multi-threaded uses cases it may be necessary to guarantee that several interactions with MATLAB
- * occur without interruption. Uninterrupted access to MATLAB's main thread may be obtained by use of
+ * interactions with MATLAB may occur between the two calls. In typical use it is unlikely this behavior will pose a
+ * problem. However, in some multi-threaded uses cases it may be necessary to guarantee that several interactions with
+ * MATLAB occur without interruption. Uninterrupted access to MATLAB's main thread may be obtained by use of
  * {@link #invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)}.
  * <h3>Threads</h3>
  * When <strong>running outside MATLAB</strong>, the proxy makes use of multiple internally managed threads. When the
@@ -88,13 +88,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <br><strong>Running outside MATLAB</strong>
  * <li>Communication between this JVM and the one that MATLAB is running in is disrupted (likely due to closing
  *     MATLAB).</li>
- * <li>The class of the object to be sent or returned is not {@link java.io.Serializable} (unless it is {@code Remote}.
+ * <li>The class of the object to be sent or returned is not {@link java.io.Serializable} (unless it is {@code Remote}).
  *     Java primitives and arrays are {@code Serializable}.</li>
  * <li>The class of the object to be sent or returned is not defined in the Java Virtual Machine receiving the
  *     object.*</li>
  * <br><strong>Running inside MATLAB</strong>
  * <li>The method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components.✝ (To get around
- *     this limitation a {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.)</li>
+ *     this limitation a {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.) This does not apply to
+ *     {@code exit()} which may be called from the EDT.</li>
  * </ul>
  * * This limitation is due to Java prohibiting loading arbitrary classes from remote Java Virtual Machines unless a
  * {@link SecurityManager} has been set that will allow this behavior. matlabcontrol intentionally does not set a
@@ -104,13 +105,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * ✝ This is done to prevent MATLAB from hanging indefinitely. In order to properly interact with MATLAB the calling
  * thread (unless it is the main MATLAB thread) is paused until MATLAB completes the requested operation. When a thread
  * is paused, no work can be done on the thread. MATLAB makes extensive use of the EDT when creating or manipulating
- * figure windows, uicontrols or plots. For instance, calling {@code plot} from the EDT would never  return because the
- * {@code plot} function waits for the EDT to dispatch its event, which will never occur, because the thread has been
- * paused. A related, but far less critical issue, is that pausing the EDT would make user interface of MATLAB and any
- * other Java GUI code running inside MATLAB non-responsive until MATLAB completed evaluating the command.
+ * figure windows, uicontrols, plots, and other graphical elements. For instance, calling {@code plot} from the EDT
+ * would never  return because the {@code plot} function waits for the EDT to dispatch its event, which will never
+ * occur, because the thread has been paused. A related, but far less critical issue, is that pausing the EDT would make
+ * the user interface of MATLAB and any other Java GUI code running inside MATLAB non-responsive until MATLAB completed
+ * evaluating the command.
  * 
+ * @see MatlabProxyFactory#getProxy()
+ * @see MatlabProxyFactory#requestProxy(matlabcontrol.MatlabProxyFactory.RequestCallback)
  * @since 4.0.0
- * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public abstract class MatlabProxy implements MatlabInteractor<Object>
@@ -212,8 +215,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     /**
      * Whether this proxy is connected to MATLAB.
      * <br><br>
-     * The most likely reasons for this method to return {@code false} is if MATLAB has been closed or it has been
-     * disconnected via {@link #disconnect()}.
+     * The most likely reasons for this method to return {@code false} if the proxy has been disconnected via
+     * {@link #disconnect()} or is if MATLAB has been closed (when running outside MATLAB).
      * 
      * @return if connected
      */
@@ -238,8 +241,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     /**
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
      * 
+     * @see MatlabProxy#addDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener)
      * @since 4.0.0
-     * 
      * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
     public static interface DisconnectionListener
@@ -264,8 +267,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     public static interface Identifier
     {
         /**
-         * Returns {@code true} if {@code other} is an identifier and is equal to this identifier, {@code false}
-         * otherwise.
+         * Returns {@code true} if {@code other} is equal to this identifier, {@code false} otherwise.
          * 
          * @param other
          * @return 
@@ -288,6 +290,6 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
          * @return
          * @throws Exception 
          */
-        public T call(MatlabInteractor<Object> proxy) throws Exception;
+        public T call(MatlabInteractor<Object> interactor) throws Exception;
     }
 }

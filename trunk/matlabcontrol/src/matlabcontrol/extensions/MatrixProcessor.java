@@ -82,7 +82,7 @@ public class MatrixProcessor
         public MatrixInfo call(MatlabInteractor<Object> interactor) throws Exception
         {
             //Retrieve real values
-            Object realObject = interactor.returningFeval("real", new Object[] { _matrixName }, 1);
+            Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1);
             double[] realValues = (double[]) realObject;
             
             //Retrieve imaginary values if present
@@ -90,7 +90,7 @@ public class MatrixProcessor
             double[] imaginaryValues = null;
             if(!isReal)
             {
-                Object imaginaryObject = interactor.returningFeval("imag", new Object[] { _matrixName }, 1);
+                Object imaginaryObject = interactor.returningEval("imag(" + _matrixName + ");", 1);
                 imaginaryValues = (double[]) imaginaryObject;
             }
 
