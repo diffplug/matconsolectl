@@ -341,7 +341,7 @@ public class DiagnosticMatlabInteractor<E> implements MatlabInteractor<E>
     @Override
     public String toString()
     {
-        return "[DiagnosticMatlabInteractor delegate:" + _delegateInteractor + "]";
+        return "[" + this.getClass().getName() + " delegate=" + _delegateInteractor + "]";
     }
     
     /**

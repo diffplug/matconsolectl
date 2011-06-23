@@ -24,9 +24,11 @@ package matlabcontrol.extensions;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
@@ -37,9 +39,8 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  * invocations do not throw exceptions, but if the interator throws an exception it will be provided to the callback.
  * <br><br>
  * This class is thread-safe even if the interactor provided to it is not thread-safe. All interactions with the
- * interactor will be done in a single threaded manner. The internally managed thread used by this class can be
- * terminated via the {@link #shutdown()} method. Because methods invocations on the delegate interactor occur on a
- * separate thread from the one calling the methods in this class, it can be used from within MATLAB on the Event
+ * interactor will be done in a single threaded manner. Because methods invocations on the delegate interactor occur on
+ * a separate thread from the one calling the methods in this class, it can be used from within MATLAB on the Event
  * Dispatch Thread (EDT).
  * 
  * @since 4.0.0
@@ -51,7 +52,7 @@ public class MatlabCallbackInteractor<E>
     /**
      * Executor that manages the single thread used to invoke methods on the interactor. 
      */
-    private final ExecutorService _executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService _executor = Executors.newFixedThreadPool(1, new DaemonThreadFactory()); 
     
     /**
      * The interactor delegated to.
@@ -73,15 +74,6 @@ public class MatlabCallbackInteractor<E>
     public MatlabCallbackInteractor(MatlabInteractor<E> interactor)
     {
         _delegateInteractor = interactor;
-    }
-    
-    /**
-     * Shuts down the thread used by this interactor. The thread will not be shutdown until all pending callbacks have
-     * been completed. After the thread has been shutdown future calls to other interactor methods will have no effect.
-     */
-    public void shutdown()
-    {
-        _executor.shutdown();
     }
         
     /**
@@ -353,5 +345,22 @@ public class MatlabCallbackInteractor<E>
          * @param e the exception raised 
          */
         public void invocationFailed(MatlabInvocationException e);
+    }
+    
+    /**
+     * Creates daemon threads that will allow the JVM to terminate.
+     */
+    private static class DaemonThreadFactory implements ThreadFactory
+    {
+        private final ThreadFactory _delegateFactory = Executors.defaultThreadFactory();
+        
+        @Override
+        public Thread newThread(Runnable r)
+        {
+            Thread thread = _delegateFactory.newThread(r);
+            thread.setDaemon(true);
+            
+            return thread;
+        }
     }
 }
