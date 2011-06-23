@@ -23,11 +23,13 @@ package matlabcontrol.extensions;
  */
 
 import java.lang.reflect.Array;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Acts as a MATLAB matrix of doubles. Supports both the real and imaginary components of the matrix.
+ * Acts as a MATLAB matrix of doubles. Supports both the real and imaginary components of the matrix. If the matrix
+ * has no imaginary values then attempts to access these values will result in {@link IllegalStateException}s.
  * <br><br>
  * Matrices in MATLAB are stored in a linear manner. The number and lengths of the dimensions are stored separately from
  * the real and imaginary value entries. Each dimension has a fixed length. (MATLAB's array implementation is known as
@@ -61,6 +63,9 @@ import java.util.Map;
  * While this class mimics the dimension and lengths of the MATLAB matrix, it uses Java's 0-index convention instead of
  * MATLAB's 1-index. For instance in MATLAB indexing into {@code matrix} would be {@code matrix(3,4,7,2)} while in Java
  * it would be {@code matrix[2][3][6][1]}.
+ * <br><br>
+ * This class is immutable and therefore thread-safe once constructed. Problems may arise if values provided to the
+ * constructor change during construction.
  * 
  * @since 4.0.0
  * 
@@ -91,7 +96,13 @@ public class MatlabMatrix
     /**
      * If the matrix was retrieved from MATLAB.
      */
-    private final boolean _retrievedFromMatlab;
+    private final boolean _fromMatlab;
+    
+    /**
+     * If the matrix is composed entirely of real values. If this is {@code true} then {@link #_imaginaryValues} will be
+     * {@code null}.
+     */
+    private final boolean _isReal;
     
     /**
      * Constructs a matrix from data retrieved from MATLAB.
@@ -102,54 +113,58 @@ public class MatlabMatrix
      */
     MatlabMatrix(double[] real, double[] imaginary, int[] lengths)
     {   
-        _retrievedFromMatlab = true;
+        _fromMatlab = true;
         
         _realValues = real;
         _imaginaryValues = imaginary;
+        _isReal = (imaginary == null);
+        
         _lengths = lengths;
         _arrayType = DoubleArrayType.get(lengths.length);
     }
     
     /**
-     * Constructs a matrix from Java arrays that can be transferred to MATLAB. Either the {@code real} or
-     * {@code imaginary} array may be {@code null}, but not both. References to the arrays passed in are not kept, and
+     * Constructs a matrix from Java arrays that can be transferred to MATLAB. The {@code imaginary} array may be
+     * {@code null}, if so then this matrix will be real. References to the arrays passed in are not kept, and
      * modifying the array data after the matrix has been constructed will have no effect. If the data is modified
      * concurrently with this class's construction, problems may arise.
      * <br><br>
-     * The arrays may be jagged; however, MATLAB does not support jagged arrays and there data will be treated as if
-     * they had uniform length for each dimension. For each dimension the maximum length is determined. If both the
-     * {@code real} and {@code imaginary} arrays are provided then the maximum length per dimension is determined across
-     * both arrays. For parts of the array that have a length less than the maximum length, {@code 0} will be used.
+     * The arrays may be jagged; however, MATLAB does not support jagged arrays and therefore the arrays will be treated
+     * as if they had uniform length for each dimension. For each dimension the maximum length is determined. If both
+     * the {@code real} and {@code imaginary} arrays are provided then the maximum length per dimension is determined
+     * across both arrays. For parts of the array that have a length less than the maximum length, {@code 0} will be
+     * used.
      * 
      * @param <T>
      * @param type may not be {@code null}
-     * @param real may be {@code null}
-     * @param imaginary may be {@code null}
-     * 
+     * @param real may not be {@code null}
+     * @param imaginary may be {@code null}, if {@code null} then this matrix will be real
      * @throws NullPointerException
      */
     public <T> MatlabMatrix(DoubleArrayType<T> type, T real, T imaginary)
-    {
-        _retrievedFromMatlab = false;
-        
+    {        
         //Validate input
         if(type == null)
         {
             throw new NullPointerException("The type of the arrays may not be null.");
+        }        
+        if(real == null)
+        {
+            throw new NullPointerException("Real array may not be null.");
         }
+        
+        _fromMatlab = false;
+        _isReal = (imaginary == null);
         
         //Store type
         _arrayType = type;
         
         //Determine lengths
         _lengths = new int[type.getDimensions()];
-        if(real != null)
+        int[] realLengths = computeBoundingLengths(real);
+        for(int i = 0; i < realLengths.length; i++)
         {
-            int[] realLengths = computeBoundingLengths(real);
-            for(int i = 0; i < realLengths.length; i++)
-            {
-                _lengths[i] = Math.max(_lengths[i], realLengths[i]);
-            }
+            _lengths[i] = Math.max(_lengths[i], realLengths[i]);
         }
         if(imaginary != null)
         {
@@ -161,22 +176,14 @@ public class MatlabMatrix
         }
         
         //Linearize arrays
-        if(real != null)
-        {
-            _realValues = linearize(real, _lengths);
-        }
-        else
-        {
-            _realValues = new double[getTotalSize(_lengths)];
-        }
-        
+        _realValues = linearize(real, _lengths);
         if(imaginary != null)
         {
             _imaginaryValues = linearize(imaginary, _lengths);
         }
         else
         {   
-            _imaginaryValues = new double[getTotalSize(_lengths)];
+            _imaginaryValues = null;
         }
     }
     
@@ -261,9 +268,15 @@ public class MatlabMatrix
      * @param linearIndex
      * @return imaginary value at {@code linearIndex}
      * @throws ArrayIndexOutOfBoundsException
+     * @throws IllegalStateException if the matrix is real
      */
     public double getImaginaryValue(int linearIndex)
     {
+        if(_isReal)
+        {
+            throw new IllegalStateException("Matrix is real.");
+        }
+        
         return _imaginaryValues[linearIndex];
     }
     
@@ -289,9 +302,15 @@ public class MatlabMatrix
      * @return imaginary value at {@code indices}
      * @throws MatrixDimensionException if number of indices is not the number of dimensions
      * @throws IndexOutOfBoundsException if the indices are out of bound
+     * @throws IllegalStateException if the matrix is real
      */
     public double getImaginaryValue(int... indices)
     {
+        if(_isReal)
+        {
+            throw new IllegalStateException("Matrix is real.");
+        }
+        
         return this.getValue(_imaginaryValues, indices);
     }
     
@@ -357,7 +376,7 @@ public class MatlabMatrix
         return _realValues.length;
     }
     
-    private <T> T getAsJavaArray(DoubleArrayType<T> type, double[] values) throws MatrixDimensionException
+    private <T> T getAsJavaArray(DoubleArrayType<T> type, double[] values)
     {
         if(type.getDimensions() != _arrayType.getDimensions())
         {
@@ -376,7 +395,7 @@ public class MatlabMatrix
      * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not of the dimension
      * specified by {@code type}
      */
-    public <T> T getRealArray(DoubleArrayType<T> type) throws MatrixDimensionException
+    public <T> T getRealArray(DoubleArrayType<T> type)
     {
         return getAsJavaArray(type, _realValues);
     }
@@ -388,7 +407,7 @@ public class MatlabMatrix
      * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a two dimensional
      * matrix
      */
-    public double[][] getRealArray2D() throws MatrixDimensionException
+    public double[][] getRealArray2D()
     {
         return this.getRealArray(DoubleArrayType.DIM_2);
     }
@@ -400,7 +419,7 @@ public class MatlabMatrix
      * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a three dimensional
      * matrix
      */
-    public double[][][] getRealArray3D() throws MatrixDimensionException
+    public double[][][] getRealArray3D() 
     {
         return this.getRealArray(DoubleArrayType.DIM_3);
     }
@@ -409,10 +428,10 @@ public class MatlabMatrix
      * Equivalent to {@code getRealArray(DoubleArrayType.DIM_4)}.
      * 
      * @return
-     * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a four dimensional
+     * @throws MatrixDimensionException if the matrix is not a four dimensional
      * matrix
      */
-    public double[][][][] getRealArray4D() throws MatrixDimensionException
+    public double[][][][] getRealArray4D()
     {
         return this.getRealArray(DoubleArrayType.DIM_4);
     }
@@ -423,11 +442,16 @@ public class MatlabMatrix
      * @param <T>
      * @param type
      * @return 
-     * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not of the dimension
-     * specified by {@code type}
+     * @throws MatrixDimensionException if the matrix is not of the dimension specified by {@code type}
+     * @throws IllegalStateException if the matrix is real
      */
-    public <T> T getImaginaryArray(DoubleArrayType<T> type) throws MatrixDimensionException
+    public <T> T getImaginaryArray(DoubleArrayType<T> type)
     {
+        if(_isReal)
+        {
+            throw new IllegalStateException("Matrix is real.");
+        }
+        
         return getAsJavaArray(type, _imaginaryValues);
     }
         
@@ -435,10 +459,10 @@ public class MatlabMatrix
      * Equivalent to {@code getImaginaryArray(DoubleArrayType.DIM_2)}.
      * 
      * @return
-     * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a two dimensional
-     * matrix
+     * @throws MatrixDimensionException if the matrix is not a two dimensional matrix
+     * @throws IllegalStateException if the matrix is real
      */
-    public double[][] getImaginaryArray2D() throws MatrixDimensionException
+    public double[][] getImaginaryArray2D()
     {
         return this.getImaginaryArray(DoubleArrayType.DIM_2);
     }
@@ -447,10 +471,10 @@ public class MatlabMatrix
      * Equivalent to {@code getImaginaryArray(DoubleArrayType.DIM_3)}.
      * 
      * @return
-     * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a three dimensional
-     * matrix
+     * @throws MatrixDimensionException if the matrix is not a three dimensional matrix
+     * @throws IllegalStateException if the matrix is real
      */
-    public double[][][] getImaginaryArray3D() throws MatrixDimensionException
+    public double[][][] getImaginaryArray3D()
     {
         return this.getImaginaryArray(DoubleArrayType.DIM_3);
     }
@@ -459,12 +483,23 @@ public class MatlabMatrix
      * Equivalent to {@code getImaginaryArray(DoubleArrayType.DIM_4)}.
      * 
      * @return
-     * @throws matlabcontrol.extensions.MatlabMatrix.MatrixDimensionException if the matrix is not a four dimensional
-     * matrix
+     * @throws MatrixDimensionException if the matrix is not a four dimensional matrix
+     * @throws IllegalStateException if the matrix is real
      */
-    public double[][][][] getImaginaryArray4D() throws MatrixDimensionException
+    public double[][][][] getImaginaryArray4D()
     {
         return this.getImaginaryArray(DoubleArrayType.DIM_4);
+    }
+    
+    /**
+     * Returns {@code true} if the matrix has no imaginary values, {@code false} otherwise. Equivalent to the MATLAB
+     * {@code isreal} function.
+     * 
+     * @return 
+     */
+    public boolean isReal()
+    {
+        return _isReal;
     }
     
     /**
@@ -485,6 +520,16 @@ public class MatlabMatrix
     double[] getImaginaryLinearArray()
     {
         return _imaginaryValues;
+    }
+    
+    @Override
+    public String toString()
+    {
+        return "[" + this.getClass() +
+                " dimensions=" + this.getDimensions() + "," +
+                " linearLength=" + this.getLength() + "," +
+                " lengths=" + Arrays.toString(_lengths) + "," +
+                " fromMATLAB=" + _fromMatlab + "]";
     }
     
     /**
@@ -731,14 +776,6 @@ public class MatlabMatrix
                 linearize_internal(linearArray, Array.get(array, i), lengths, nextIndices);
             }
         }
-    }
-    
-    @Override
-    public String toString()
-    {
-        return "[MatlabMatrix fromMATLAB=" + _retrievedFromMatlab +
-                ", linearLength=" + getLength() +
-                ", type=" + _arrayType + "]";
     }
     
     /**
