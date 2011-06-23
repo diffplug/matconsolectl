@@ -29,7 +29,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 /**
  * Wraps around an interactor to conveniently handle casts of the data returned from MATLAB.
  * <br><br>
- * The thread-safety of this class is determined by the thread-safety of its delegate {@link MatlabInteractor}.
+ * This class is thread-safe so long as the delegate {@link MatlabInteractor} is thread-safe.
  * 
  * @since 4.0.0
  * 

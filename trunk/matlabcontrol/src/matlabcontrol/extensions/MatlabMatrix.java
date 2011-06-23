@@ -64,8 +64,7 @@ import java.util.Map;
  * MATLAB's 1-index. For instance in MATLAB indexing into {@code matrix} would be {@code matrix(3,4,7,2)} while in Java
  * it would be {@code matrix[2][3][6][1]}.
  * <br><br>
- * This class is immutable and therefore thread-safe once constructed. Problems may arise if values provided to the
- * constructor change during construction.
+ * This class is thread-safe.
  * 
  * @since 4.0.0
  * 
