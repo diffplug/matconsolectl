@@ -24,6 +24,8 @@ package matlabcontrol.extensions;
 
 /**
  * Encapsulates the data returned from MATLAB.
+ * <br><br>
+ * This class is thread-safe.
  * 
  * @since 4.0.0
  * 

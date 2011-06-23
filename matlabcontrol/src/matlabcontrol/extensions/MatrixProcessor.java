@@ -26,13 +26,12 @@ import java.io.Serializable;
 
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
  * <br><br>
- * This class is thread-safe.
+ * This class is thread-safe so long as the delegate {@link MatlabInteractor} is thread-safe.
  * 
  * @since 4.0.0
  * 
@@ -40,16 +39,18 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  */
 public class MatrixProcessor
 {
-    private final MatlabProxy _proxy;
+    private final MatlabInteractor<?> _interactor;
     
     /**
-     * Constructs the processor.
+     * Constructs the processor. For the processor to work properly the {@code interactor}'s
+     * {@link MatlabInteractor#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)} method must return the
+     * same value that {@link matlabcontrol.MatlabProxy} would.
      * 
-     * @param proxy
+     * @param interactor
      */
-    public MatrixProcessor(MatlabProxy proxy)
+    public MatrixProcessor(MatlabInteractor<?> interactor)
     {
-        _proxy = proxy;
+        _interactor = interactor;
     }
     
     /**
@@ -64,7 +65,7 @@ public class MatrixProcessor
      */
     public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException
     {
-        MatrixInfo info = _proxy.invokeAndWait(new GetMatrixCallable(matrixName));
+        MatrixInfo info = _interactor.invokeAndWait(new GetMatrixCallable(matrixName));
         
         return new MatlabMatrix(info.real, info.imaginary, info.lengths);
     }
@@ -128,7 +129,7 @@ public class MatrixProcessor
      */
     public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
     {
-        _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
+        _interactor.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
     
     private static class SetMatrixCallable implements MatlabThreadCallable<Object>, Serializable

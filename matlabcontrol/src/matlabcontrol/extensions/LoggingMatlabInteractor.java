@@ -42,7 +42,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  * {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their level is
  * too low. To configure the {@code ConsoleHandler} to show these log messages, call {@link #showInConsoleHandler()}.
  * <br><br>
- * This class is multi-thread safe so long as the delegate {@link MatlabInteractor} is multi-thread safe.
+ * This class is thread-safe so long as the delegate {@link MatlabInteractor} is thread-safe.
  * 
  * @since 4.0.0
  * 

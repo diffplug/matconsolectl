@@ -50,7 +50,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 public class MatlabCallbackInteractor<E>
 {
     /**
-     * Executor that manages the single thread used to invoke methods on the interactor. 
+     * Executor that manages the single daemon thread used to invoke methods on the interactor. 
      */
     private final ExecutorService _executor = Executors.newFixedThreadPool(1, new DaemonThreadFactory()); 
     
