@@ -84,10 +84,15 @@ public class MatrixProcessor
             //Retrieve real values
             Object realObject = interactor.returningFeval("real", new Object[] { _matrixName }, 1);
             double[] realValues = (double[]) realObject;
-
-            //Retrieve imaginary values
-            Object imaginaryObject = interactor.returningFeval("imag", new Object[] { _matrixName }, 1);
-            double[] imaginaryValues = (double[]) imaginaryObject;
+            
+            //Retrieve imaginary values if present
+            boolean isReal = ((boolean[]) interactor.returningEval("isreal(" + _matrixName + ");", 1))[0];
+            double[] imaginaryValues = null;
+            if(!isReal)
+            {
+                Object imaginaryObject = interactor.returningFeval("imag", new Object[] { _matrixName }, 1);
+                imaginaryValues = (double[]) imaginaryObject;
+            }
 
             //Retrieve lengths of array
             double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ")", 1);
@@ -143,17 +148,27 @@ public class MatrixProcessor
         @Override
         public Object call(MatlabInteractor<Object> interactor) throws Exception
         {
-            //Store real and imaginary arrays in the MATLAB environment
+            //Store real array in the MATLAB environment
             String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);
             interactor.setVariable(realArray, _realArray);
-            String imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1);
-            interactor.setVariable(imagArray, _imaginaryArray);
+            
+            //If present, store the imaginary array in the MATLAB environment
+            String imagArray = null;
+            if(_imaginaryArray != null)
+            {
+                imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1);
+                interactor.setVariable(imagArray, _imaginaryArray);
+            }
 
             //Build a statement to eval
-            // - Combine the real and imaginary arrays
+            // - If imaginar array exists, combine the real and imaginary arrays
             // - Set the proper dimension length metadata
             // - Store as matrixName
-            String evalStatement = _matrixName + " = reshape(" + realArray + " + " + imagArray + " * i";
+            String evalStatement = _matrixName + " = reshape(" + realArray;
+            if(_imaginaryArray != null)
+            {
+                evalStatement += " + " + imagArray + " * i";
+            }
             for(int length : _lengths)
             {
                 evalStatement += ", " + length;
