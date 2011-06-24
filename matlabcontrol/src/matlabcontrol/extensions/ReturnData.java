@@ -25,7 +25,7 @@ package matlabcontrol.extensions;
 /**
  * Encapsulates the data returned from MATLAB.
  * <br><br>
- * This class is thread-safe.
+ * This class is unconditionally thread-safe.
  * 
  * @since 4.0.0
  * 
@@ -142,5 +142,16 @@ public class ReturnData
     public Object[] getIfObjectArray()
     {
         return this.getIf(Object[].class);
+    }
+    
+    /**
+     * Returns a brief description. The exact details of this representation are unspecified and are subject to change.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString()
+    {
+        return "[" + this.getClass().getName() + " data=" + _data + "]";
     }
 }

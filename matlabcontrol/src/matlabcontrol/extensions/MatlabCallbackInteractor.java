@@ -28,8 +28,8 @@ import java.util.concurrent.ThreadFactory;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabInteractor.MatlabCallable;
 import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
@@ -38,10 +38,14 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  * {@link MatlabCallback} or {@link MatlabDataCallback}. Method invocations do not throw exceptions, but if the
  * interactor throws an exception it will be provided to the callback.
  * <br><br>
- * This class is thread-safe even if the interactor provided to it is not thread-safe. All interactions with the
- * interactor will be done in a single threaded manner. Because method invocations on the delegate interactor occur on
- * a separate thread from the one calling the methods in this class, it can be used from within MATLAB on the Event
- * Dispatch Thread (EDT).
+ * All interactions with the interactor will be done in a single threaded manner. Because method invocations on the
+ * delegate interactor occur on a separate thread from the one calling the methods in this class, it can be used from
+ * within MATLAB on the Event Dispatch Thread (EDT).
+ * <br><br>
+ * This class is conditionally thread-safe. If the the delegate {@link MatlabInteractor} provided to the constructor is
+ * thread-safe then this class is thread-safe. If the delegate is not thread-safe, but is not used except by a single
+ * instance of this class then this class will be thread-safe because all interactions with the delegate will occur in
+ * a single threaded manner.
  * 
  * @since 4.0.0
  * 
@@ -61,8 +65,11 @@ public class MatlabCallbackInteractor<E>
     
     /**
      * Constructs this interactor which will delegate to the provided {@code interactor}. The type returned by the
-     * delegate {@code interactor} is the same type that will be returned in the callbacks. A
-     * {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
+     * delegate {@code interactor} is the same type that will be returned in the callbacks, except for
+     * {@link #invokeAndWait(matlabcontrol.MatlabInteractor.MatlabCallable, MatlabDataCallback) invokeAndWait(...)}
+     * which is parameterized on the {@code MatlabCallable}.
+     * <br><br>
+     * A {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
      * {@code MatlabProxy}:
      * <br><br>
      * {@code
@@ -287,7 +294,7 @@ public class MatlabCallbackInteractor<E>
      * @param callable
      * @param callback 
      */
-    public <T> void invokeAndWait(final MatlabThreadCallable<T> callable, final MatlabDataCallback<T> callback)
+    public <T> void invokeAndWait(final MatlabCallable<T> callable, final MatlabDataCallback<T> callback)
     {        
         _executor.submit(new Runnable()
         {

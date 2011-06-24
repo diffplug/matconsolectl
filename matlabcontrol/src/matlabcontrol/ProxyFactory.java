@@ -35,7 +35,7 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
 interface ProxyFactory
 {
     /**
-     * Returns a {@link MatlabProxy}.  While this method blocks the calling thread until a proxy is created (or the
+     * Returns a {@link MatlabProxy}. While this method blocks the calling thread until a proxy is created (or the
      * timeout is reached), any number of threads may call {@code getProxy()} simultaneously.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
@@ -59,7 +59,8 @@ interface ProxyFactory
      * Requests a {@link MatlabProxy}. When the proxy has been created it will be provided to the {@code callback}. The
      * proxy may be provided to the callback before this method returns.
      * <br><br>
-     * This method is non-blocking. Any number of requests may be made simultaneously.
+     * This method is non-blocking. Any number of requests may be made simultaneously from the same thread or different
+     * threads.
      * <br><br>
      * <strong>Running inside MATLAB</strong><br>
      * The proxy will be provided to the callback very quickly.
@@ -69,7 +70,8 @@ interface ProxyFactory
      * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
      * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
      * <br><br>
-     * There is no timeout.
+     * There is no timeout. The returned {@link Request} instance provides information about the request and can be used
+     * to cancel the request.
      * 
      * @throws MatlabConnectionException
      * @return the request

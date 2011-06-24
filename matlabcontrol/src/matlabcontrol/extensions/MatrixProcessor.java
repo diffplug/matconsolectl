@@ -27,12 +27,12 @@ import java.io.Serializable;
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabInteractor.MatlabCallable;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
  * <br><br>
- * This class is thread-safe.
+ * This class is unconditionally thread-safe.
  * 
  * @since 4.0.0
  * 
@@ -69,7 +69,7 @@ public class MatrixProcessor
         return new MatlabMatrix(info.real, info.imaginary, info.lengths);
     }
     
-    private static class GetMatrixCallable implements MatlabThreadCallable<MatrixInfo>, Serializable
+    private static class GetMatrixCallable implements MatlabCallable<MatrixInfo>, Serializable
     {
         private final String _matrixName;
         
@@ -79,7 +79,7 @@ public class MatrixProcessor
         }
 
         @Override
-        public MatrixInfo call(MatlabInteractor<Object> interactor) throws Exception
+        public MatrixInfo call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
         {
             //Retrieve real values
             Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1);
@@ -131,7 +131,7 @@ public class MatrixProcessor
         _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
     
-    private static class SetMatrixCallable implements MatlabThreadCallable<Object>, Serializable
+    private static class SetMatrixCallable implements MatlabCallable<Object>, Serializable
     {
         private final String _matrixName;
         private final double[] _realArray, _imaginaryArray;
@@ -146,7 +146,7 @@ public class MatrixProcessor
         }
         
         @Override
-        public Object call(MatlabInteractor<Object> interactor) throws Exception
+        public Object call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
         {
             //Store real array in the MATLAB environment
             String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);
@@ -161,7 +161,7 @@ public class MatrixProcessor
             }
 
             //Build a statement to eval
-            // - If imaginar array exists, combine the real and imaginary arrays
+            // - If imaginary array exists, combine the real and imaginary arrays
             // - Set the proper dimension length metadata
             // - Store as matrixName
             String evalStatement = _matrixName + " = reshape(" + realArray;
@@ -182,5 +182,17 @@ public class MatrixProcessor
             
             return null;
         }
+    }
+    
+    /**
+     * Returns a brief description of this processor. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString()
+    {
+        return "[" + this.getClass().getName() + " proxy=" + _proxy + "]";
     }
 }
