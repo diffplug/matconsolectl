@@ -22,148 +22,125 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
-
 /**
- * Interacts with a session of MATLAB. This interface can be used to create a wrapper around another
- * {@code MatlabInteractor} such as {@link MatlabProxy}.
+ * Interacts with a session of MATLAB. This interface exists to facilitate creating wrappers around a
+ * {@link MatlabProxy} that in turn can be provided to another wrapper. The {@link matlabcontrol.extensions} package
+ * contains several classes which do exactly that. Example usage:
+ * <pre>
+ * {@code 
+ * MatlabProxy proxy = factory.getProxy();
+ * ReturnDataMatlabInteractor returnInteractor = new ReturnDataMatlabInteractor(proxy);
+ * MatlabCallbackInteractor<ReturnData> callbackInteractor = new MatlabCallbackInteractor<ReturnData>(returnInteractor);
+ * }
+ * </pre>
  * 
  * @since 4.0.0
- * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface MatlabInteractor<E>
 {    
     /**
-     * Evaluates a command in MATLAB. The result of this command will not be returned.
-     * <br><br>
-     * This is equivalent to MATLAB's {@code eval(['command'])}.
+     * Evaluates a command in MATLAB.
      * 
      * @param command the command to be evaluated in MATLAB
      * @throws MatlabInvocationException 
-     * 
      * @see #returningEval(String, int)
      */
     public void eval(String command) throws MatlabInvocationException;
 
     /**
-     * Evaluates a command in MATLAB. The result of this command can be returned.
-     * <br><br>
-     * This is equivalent to MATLAB's {@code eval(['command'])}.
-     * <br><br>
-     * In order for the result of this command to be returned the number of arguments to be returned must be specified
-     * by {@code returnCount}. If the command you are evaluating is a MATLAB function you can determine the amount of
-     * arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns
-     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
-     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
-     * differs from {@code returnCount} then either {@code null} or an empty {@code String} will be returned.
+     * Evaluates a command in MATLAB, returning the result.
      * 
      * @param command the command to be evaluated in MATLAB
      * @param returnCount the number of arguments that will be returned from evaluating the command
-     * 
      * @see #eval(String)
-     * 
-     * @return result of MATLAB eval
+     * @return result of MATLAB {@code eval}
      * @throws MatlabInvocationException 
      */
     public E returningEval(String command, int returnCount) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}. The result of this command
-     * will not be returned.
-     * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
      * @throws MatlabInvocationException 
-     * 
      * @see #returningFeval(String, Object[], int)
      * @see #returningFeval(String, Object[])
      */
     public void feval(String functionName, Object[] args) throws MatlabInvocationException;
 
     /**
-     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
-     * <br><br>
-     * The result of this function can be returned. In order for a function's return data to be returned to MATLAB it is
-     * necessary to know how many arguments will be returned. This method will attempt to determine that automatically,
-     * but in the case where a function has a variable number of arguments an exception will be thrown. To invoke the
-     * function successfully use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
-     * that will be returned for the provided arguments.
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     * 
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
+     * @see #feval(String, Object[])
+     * @see #returningFeval(String, Object[])
      */
     public E returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
     
     /**
-     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
-     * <br><br>
-     * The result of this function can be returned. In order for the result of this function to be returned the number
-     * of arguments to be returned must be specified by {@code returnCount}. You can use the {@code nargout} function in
-     * the MATLAB Command Window to determine the number of arguments that will be returned. If {@code nargout} returns
-     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
-     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
-     * differs from {@code returnCount} then either only some of the items will be returned or {@code null} will be
-     * returned.
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}. Specifies
+     * the number of arguments returned as {@code returnCount}.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
      * @param returnCount the number of arguments that will be returned from this function
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     * 
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
+     * @see #feval(String, Object[])
+     * @see #returningFeval(String, Object[])
      */
     public E returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
     
     /**
-     * Sets the variable to the given {@code value}.
+     * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
      * 
      * @param variableName
      * @param value
-     * 
      * @throws MatlabInvocationException
      */
     public void setVariable(String variableName, Object value) throws MatlabInvocationException;
     
     /**
-     * Gets the value of the variable named {@code variableName} from MATLAB.
+     * Gets the value of {@code variableName} in MATLAB.
      * 
      * @param variableName
-     * 
      * @return value
-     * 
      * @throws MatlabInvocationException
      */
     public E getVariable(String variableName) throws MatlabInvocationException;
     
     /**
-     * TODO: DOCUMENT ME!
+     * Runs the {@code callable} in MATLAB, returning the result of the {@code callable}.
      * 
      * @param <T>
      * @param callable
-     * @return
+     * @return result of the callable
      * @throws MatlabInvocationException 
      */
-    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
+    public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException;
+    
+    /**
+     * Computation performed in MATLAB.
+     * 
+     * @param <T> 
+     */
+    public static interface MatlabCallable<T>
+    {
+        /**
+         * Performs the computation in MATLAB.
+         * 
+         * @param interactor
+         * @return
+         * @throws MatlabInvocationException 
+         */
+        public T call(MatlabInteractor<Object> interactor) throws MatlabInvocationException;
+    }
 }

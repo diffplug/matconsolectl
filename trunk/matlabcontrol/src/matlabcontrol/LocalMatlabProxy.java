@@ -170,7 +170,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
     {
         if(this.isConnected())
         {

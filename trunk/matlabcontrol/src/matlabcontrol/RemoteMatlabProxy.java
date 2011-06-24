@@ -187,7 +187,7 @@ class RemoteMatlabProxy extends MatlabProxy
             {
                 if(this.isConnected())
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REASON_MSG, e);
                 }
                 else
                 {
@@ -217,7 +217,7 @@ class RemoteMatlabProxy extends MatlabProxy
             {
                 if(this.isConnected())
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REMOTE_REASON_MSG, e);
+                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REASON_MSG, e);
                 }
                 else
                 {
@@ -332,7 +332,7 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<T>()
         {

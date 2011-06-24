@@ -24,12 +24,12 @@ package matlabcontrol.extensions;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor to conveniently handle casts of the data returned from MATLAB.
  * <br><br>
- * This class is thread-safe so long as the delegate {@link MatlabInteractor} is thread-safe.
+ * This class is conditionally thread-safe. To be thread-safe the delegate {@link MatlabInteractor} provided to the
+ * constructor must be thread-safe.
  * 
  * @since 4.0.0
  * 
@@ -41,6 +41,13 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
     
     /**
      * Constructs this interactor, delegating all method calls to the {@code interactor}.
+     * <br><br>
+     * A {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
+     * {@code MatlabProxy}:
+     * <br><br>
+     * {@code
+     * ReturnDataMatlabInteractor callbackInteractor = new ReturnDataMatlabInteractor(proxy);
+     * }
      * 
      * @param interactor 
      */
@@ -153,14 +160,20 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws MatlabInvocationException 
      */
     @Override
-    public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return _delegateInteractor.invokeAndWait(callable);
     }
     
+    /**
+     * Returns a brief description of this interactor. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
     @Override
     public String toString()
     {
-        return "[ReturnDataMatlabInteractor delegate=" + _delegateInteractor + "]";
+        return "[" + this.getClass().getName() + " delegate=" + _delegateInteractor + "]";
     }
 }

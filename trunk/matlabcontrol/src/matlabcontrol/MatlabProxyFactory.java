@@ -27,20 +27,18 @@ import matlabcontrol.MatlabProxy.Identifier;
 /**
  * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with the factory.
  * <br><br>
- * This class is thread-safe. Any number of proxies may be created simultaneously.
- * 
- * {@link #requestProxy(matlabcontrol.MatlabProxyFactory.RequestCallback)}
+ * This class is unconditionally thread-safe. Any number of proxies may be created simultaneously.
  * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class MatlabProxyFactory implements ProxyFactory
+public class MatlabProxyFactory implements ProxyFactory
 {
     private final ProxyFactory _delegateFactory;
     
     /**
-     * Constructs the factory using defaults.
+     * Constructs the factory using default options.
      * 
      * @throws MatlabConnectionException 
      */
@@ -93,13 +91,13 @@ public final class MatlabProxyFactory implements ProxyFactory
      * Provides the requested proxy.
      * 
      * @since 4.0.0
-     * 
      * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
     public static interface RequestCallback
     {
         /**
-         * Called when the proxy has been created.
+         * Called when the proxy has been created. Because requests have no timeout, there is no guarantee that this
+         * method will ever be called.
          * 
          * @param proxy 
          */
@@ -113,14 +111,14 @@ public final class MatlabProxyFactory implements ProxyFactory
      * This interface is not intended to be implemented by users of matlabcontrol.
      * 
      * @since 4.0.0
-     * 
      * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
     public static interface Request
     {
         /**
          * The identifier of the proxy associated with this request. If the proxy is created, then its identifier
-         * accessible via {@link MatlabProxy#getIdentifier()} will match the identifier returned by this method.
+         * accessible via {@link MatlabProxy#getIdentifier()} will return {@code true} when tested for equivalence with
+         * the identifier returned by this method using {@link Identifier#equals(java.lang.Object)} 
          * 
          * @return proxy's identifier
          */
@@ -155,13 +153,12 @@ public final class MatlabProxyFactory implements ProxyFactory
      * unset, if so then a default will be used. Whether a given property will be used depends on if the code is running
      * inside MATLAB or outside MATLAB. Currently all properties are used only when running outside MATLAB.
      * <br><br>
-     * This class is thread-safe.
+     * This class is unconditionally thread-safe.
      * 
      * @since 4.0.0
-     * 
      * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
-    public static final class Options
+    public static class Options
     {
         private String _matlabLocation = null;
         private boolean _hidden = false;
@@ -169,7 +166,8 @@ public final class MatlabProxyFactory implements ProxyFactory
         private long _proxyTimeout = 90000L;
 
         /**
-         * Sets the location of the MATLAB executable or script that will launch MATLAB.
+         * Sets the location of the MATLAB executable or script that will launch MATLAB. If the value set cannot be
+         * successfully used to launch MATLAB, an exception will be thrown when attempting to create a proxy.
          * <br><br>
          * The absolute path to the MATLAB executable can be determined by running MATLAB. On OS X or Linux, evaluate
          * {@code [matlabroot '/bin/matlab']} in the Command Window. On Windows, evaluate
@@ -209,7 +207,7 @@ public final class MatlabProxyFactory implements ProxyFactory
          * 
          * @param matlabLocation
          */
-        public synchronized void setMatlabLocation(String matlabLocation)
+        public final synchronized void setMatlabLocation(String matlabLocation)
         {
             _matlabLocation = matlabLocation;
         }
@@ -229,7 +227,7 @@ public final class MatlabProxyFactory implements ProxyFactory
          * 
          * @param hidden 
          */
-        public synchronized void setHidden(boolean hidden)
+        public final synchronized void setHidden(boolean hidden)
         {
             _hidden = hidden;
         }
@@ -239,26 +237,28 @@ public final class MatlabProxyFactory implements ProxyFactory
          * By default this property is set to {@code true}.
          * <br><br>
          * In order for the factory to connect to the session of MATLAB, it must know about the session. This will be
-         * the case if any factory launched the session of MATLAB or {@link MatlabBroadcaster#broadcast()} was called
-         * from inside a session of MATLAB. The factory will only connect to a session that does not currently have a
-         * proxy controlling it from outside of MATLAB.
+         * the case if any factory launched the session of MATLAB. The factory will only connect to a session that does
+         * not currently have a proxy controlling it from outside of MATLAB.
+         * <br><br>
+         * If a running session is available for connection and this property is {@code true} then other properties that
+         * effect how MATLAB is launched, such as MATLAB location and if it is hidden, will be ignored.
          * 
          * @param useRunning 
          */
-        public synchronized void setUseRunningSession(boolean useRunning)
+        public final synchronized void setUseRunningSession(boolean useRunning)
         {
             _useRunning = useRunning;
         }
 
         /**
          * The amount of time in milliseconds to wait for a proxy to be created when requested via the blocking method
-         * {@link MatlabProxyFactory#getProxy()}. By default this property is {@code 90000} milliseconds.
+         * {@link MatlabProxyFactory#getProxy()}. By default this property is set to {@code 90000} milliseconds.
          * 
          * @param timeout
          * 
          * @throws IllegalArgumentException if timeout is negative
          */
-        public synchronized void setProxyTimeout(long timeout)
+        public final synchronized void setProxyTimeout(long timeout)
         {
             if(timeout < 0L)
             {

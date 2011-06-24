@@ -92,7 +92,7 @@ class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemo
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabProxy.MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return JMIWrapper.invokeAndWait(callable);
     }

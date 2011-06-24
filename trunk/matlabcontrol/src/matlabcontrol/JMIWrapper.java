@@ -27,10 +27,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabInteractor.MatlabCallable;
 
 /**
  * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
@@ -46,6 +44,8 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  */
 class JMIWrapper
 {
+    private static final MatlabThreadInteractor THREAD_INTERACTOR = new MatlabThreadInteractor();
+    
     private JMIWrapper() { }
     
     /**
@@ -64,7 +64,9 @@ class JMIWrapper
                 {
                     Matlab.mtFevalConsoleOutput("exit", null, 0);
                 }
-                catch (Exception e) { }
+                //This should never fail, and if it does there is no way to consistently report it back to the caller
+                //because this method does not block
+                catch(Exception e) { }
             }
         };
         
@@ -83,10 +85,10 @@ class JMIWrapper
     
     static void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {
-        invokeAndWait(new MatlabThreadCallable<Object>()
+        invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 proxy.setVariable(variableName, value);
                 
@@ -97,10 +99,10 @@ class JMIWrapper
     
     static Object getVariable(final String variableName) throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabThreadCallable<Object>()
+        return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 return proxy.getVariable(variableName);
             }
@@ -109,10 +111,10 @@ class JMIWrapper
     
     static void eval(final String command) throws MatlabInvocationException
     {           
-        invokeAndWait(new MatlabThreadCallable<Object>()
+        invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 proxy.eval(command);
                 
@@ -123,10 +125,10 @@ class JMIWrapper
     
     static Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabThreadCallable<Object>()
+        return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 return proxy.returningEval(command, returnCount);
             }
@@ -135,10 +137,10 @@ class JMIWrapper
 
     static void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {   
-        invokeAndWait(new MatlabThreadCallable<Object>()
+        invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 proxy.feval(functionName, args);
                 
@@ -150,10 +152,10 @@ class JMIWrapper
     static Object returningFeval(final String functionName, final Object[] args, final int returnCount)
             throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabThreadCallable<Object>()
+        return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 return proxy.returningFeval(functionName, args, returnCount);
             }      
@@ -162,10 +164,10 @@ class JMIWrapper
 
     static Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabThreadCallable<Object>()
+        return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws Exception
+            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
             {
                 return proxy.returningFeval(functionName, args);
             }      
@@ -180,7 +182,7 @@ class JMIWrapper
      * @return
      * @throws MatlabInvocationException 
      */
-    static <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    static <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
     {
         T result;
         
@@ -190,24 +192,14 @@ class JMIWrapper
         }
         else if(NativeMatlab.nativeIsMatlabThread())
         {
-            MatlabThreadInteractor proxy = new MatlabThreadInteractor();
-            
             try
             {
-                result = callable.call(proxy);
+                result = callable.call(THREAD_INTERACTOR);
             }
-            catch(Exception ex)
+            catch(RuntimeException e)
             {
-                //If the exception was thrown by a proxy method
-                if(proxy.isExceptionThrown())
-                {
-                    throw proxy.getThrownException();
-                }
-                //If the exception was thrown by user code
-                else
-                {
-                    throw new MatlabInvocationException(MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
-                }
+                ThrowableWrapper cause = new ThrowableWrapper(e);
+                throw new MatlabInvocationException( MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
             }
         }
         else
@@ -220,27 +212,22 @@ class JMIWrapper
                 @Override
                 public void run()
                 {
-                    MatlabThreadInteractor proxy = new MatlabThreadInteractor();
                     MatlabReturn matlabReturn;
                     
                     try
                     {
-                        matlabReturn = new MatlabReturn<T>(callable.call(proxy));
+                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_INTERACTOR));
                     }
-                    catch(Exception ex)
+                    catch(MatlabInvocationException e)
                     {
-                        //If the exception was thrown by a proxy method
-                        if(proxy.isExceptionThrown())
-                        {
-                            matlabReturn = new MatlabReturn<T>(proxy.getThrownException());
-                        }
-                        //If the exception was thrown by user code
-                        else
-                        {
-                            MatlabInvocationException userCausedException = new MatlabInvocationException(
-                                    MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
-                            matlabReturn = new MatlabReturn<T>(userCausedException);
-                        }
+                        matlabReturn = new MatlabReturn<T>(e);
+                    }
+                    catch(RuntimeException e)
+                    {
+                        ThrowableWrapper cause = new ThrowableWrapper(e);
+                        MatlabInvocationException userCausedException = new MatlabInvocationException(
+                                    MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
+                        matlabReturn = new MatlabReturn<T>(userCausedException);
                     }
                     
                     returnQueue.add(matlabReturn);
@@ -273,7 +260,7 @@ class JMIWrapper
     }
     
     /**
-     * Data returned from MATLAB or exception thrown. The two different constructs are needed as opposed to using
+     * Data returned from MATLAB or exception thrown. The two different constructors are needed as opposed to using
      * {@code instanceof} because it is possible the user would want to <strong>return</strong> an exception. The
      * appropriate constructor will always be used because determining which overloaded constructor (or method) is done
      * at compile time, not run time.
@@ -297,16 +284,10 @@ class JMIWrapper
     }
     /**
      * Interacts with MATLAB on MATLAB's main thread. Interacting on MATLAB's main thread is not enforced by this class,
-     * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)}.
+     * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabCallable)}.
      */
     private static class MatlabThreadInteractor implements MatlabInteractor<Object>
     {   
-        /**
-         * Keeps track of if an exception is thrown, to be able to distinguish between an exception thrown by
-         * interacting with MATLAB vs. in the rest of a MatlabThreadCallback
-         */
-        private MatlabInvocationException _exception = null;
-        
         @Override
         public void setVariable(String variableName, Object value) throws MatlabInvocationException
         {
@@ -350,17 +331,15 @@ class JMIWrapper
             }
             catch(Exception e)
             {
-                _exception = new MatlabInvocationException("Unable to parse nargout information", e);
-                throw _exception;
+                throw new MatlabInvocationException("Unable to parse nargout information", e);
             }
 
             //If a variable number of return arguments (represented by -1), throw an exception
             if(nargout == -1)
             {
-                _exception = new MatlabInvocationException(functionName + " has a variable number of return "
+                throw new MatlabInvocationException(functionName + " has a variable number of return "
                         + "arguments. Instead use returningFeval(String, Object[], int) with the return count "
                         + "specified.");
-                return _exception;
             }
 
             return this.returningFeval(functionName, args, nargout);
@@ -376,45 +355,16 @@ class JMIWrapper
             catch(Exception ex)
             {
                 Throwable cause = new ThrowableWrapper(ex);
-                _exception = new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
-                throw _exception;
+                throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
             }
         }
 
         @Override
-        public <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException
+        public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
         {
-            //Invoking this from inside a MatlabThreadCallable does not make a lot of sense, but it can be done without
+            //Invoking this from inside a MatlabCallable does not make a lot of sense, but it can be done without
             //issue by invoking it right away as this is code is running on the MATLAB thread
-            MatlabThreadInteractor interactor = new MatlabThreadInteractor();
-            try
-            {
-                return callable.call(interactor);
-            }
-            catch(Exception ex)
-            {
-                //If the exception was thrown by a proxy method
-                if(interactor.isExceptionThrown())
-                {
-                    _exception = interactor.getThrownException();
-                }
-                //If the exception was thrown by user code
-                else
-                {
-                    _exception = new MatlabInvocationException(MatlabInvocationException.USER_EXCEPTION_CALLABLE_MSG, ex);
-                }
-                throw _exception;
-            }
-        }
-        
-        public boolean isExceptionThrown()
-        {
-            return _exception != null;
-        }
-        
-        public MatlabInvocationException getThrownException()
-        {
-            return _exception;
+            return callable.call(this);
         }
     }
 }

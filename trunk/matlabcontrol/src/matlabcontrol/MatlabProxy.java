@@ -27,9 +27,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Allows for Java to communicate with a running MATLAB session. This class cannot be instantiated, it may be created
- * with a {@link MatlabProxyFactory}. The primary methods used to communicate with MATLAB are defined in the
- * {@link MatlabInteractor} interface which this class implements. Interaction with MATLAB occurs as if calling
- * {@code eval} and {@code feval} in the MATLAB Command Window.
+ * with a {@link MatlabProxyFactory}. Interaction with MATLAB occurs as if calling {@code eval} and {@code feval} in the
+ * MATLAB Command Window.
  * <h3>Communicating with MATLAB</h3>
  * Methods which interact with MATLAB may provide any objects as function arguments and those methods return any
  * object. (When <strong>running outside MATLAB</strong> there are further restrictions, documented below.) As such the
@@ -64,17 +63,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Method Invocation</a>. Properly using RMI is non-trivial, if you plan to make use of {@code Remote} objects you
  * should take care to understand how RMI operates.)
  * <h3>Thread Safety</h3>
- * This proxy is thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} may be called
- * concurrently; however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given
- * thread will be executed in the order they were invoked. No guarantees are made about the relative ordering of calls
- * made from different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One proxy
- * running outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If MATLAB is
- * not hidden from user interaction then a user may also be making use of MATLAB's main thread. This means that two
- * sequential calls to the proxy from the same thread that interact with MATLAB will execute in that order, but
+ * This proxy is unconditionally thread-safe. Methods defined in {@code MatlabInteractor} as well as {@link #exit()} may
+ * be called concurrently; however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a
+ * given thread will be executed in the order they were invoked. No guarantees are made about the relative ordering of
+ * calls made from different threads. This proxy may not be the only thing interacting with MATLAB's main thread. One
+ * proxy running outside MATLAB and any number of proxies running inside MATLAB may be simultaneously connected. If
+ * MATLAB is not hidden from user interaction then a user may also be making use of MATLAB's main thread. This means
+ * that two sequential calls to the proxy from the same thread that interact with MATLAB will execute in that order, but
  * interactions with MATLAB may occur between the two calls. In typical use it is unlikely this behavior will pose a
  * problem. However, in some multi-threaded uses cases it may be necessary to guarantee that several interactions with
  * MATLAB occur without interruption. Uninterrupted access to MATLAB's main thread may be obtained by use of
- * {@link #invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)}.
+ * {@link #invokeAndWait(matlabcontrol.MatlabInteractor.MatlabCallable) invokeAndWait(...)}.
  * <h3>Threads</h3>
  * When <strong>running outside MATLAB</strong>, the proxy makes use of multiple internally managed threads. When the
  * proxy becomes disconnected from MATLAB it notifies its disconnection listeners and then terminates all threads it was
@@ -238,6 +237,143 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      */
     public abstract void exit() throws MatlabInvocationException;
     
+   /**
+     * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.
+     * 
+     * @param command the command to be evaluated in MATLAB
+     * @throws MatlabInvocationException 
+     * @see #returningEval(String, int)
+     */
+    @Override
+    public abstract void eval(String command) throws MatlabInvocationException;
+
+    /**
+     * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
+     * <br><br>
+     * In order for the result of this command to be returned the number of arguments to be returned must be specified
+     * by {@code returnCount}. If the command you are evaluating is a MATLAB function you can determine the amount of
+     * arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns
+     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
+     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
+     * differs from {@code returnCount} then either {@code null} or an empty {@code String} will be returned.
+     * 
+     * @param command the command to be evaluated in MATLAB
+     * @param returnCount the number of arguments that will be returned from evaluating the command
+     * @see #eval(String)
+     * @return result of MATLAB {@code eval}
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public abstract Object returningEval(String command, int returnCount) throws MatlabInvocationException;
+    
+    /**
+     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
+     * {@code args}, if you wish to call the function with no arguments pass in {@code null}. The result of this
+     * function will not be returned.
+     * <br><br>
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * 
+     * @param functionName name of the MATLAB function to call
+     * @param args the arguments to the function, {@code null} if none
+     * @throws MatlabInvocationException 
+     * @see #returningFeval(String, Object[], int)
+     * @see #returningFeval(String, Object[])
+     */
+    @Override
+    public abstract void feval(String functionName, Object[] args) throws MatlabInvocationException;
+
+    /**
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
+     * <br><br>
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * <br><br>
+     * The result of this function can be returned. In order for a function's return data to be returned to MATLAB it is
+     * necessary to know how many arguments will be returned. This method will attempt to determine that automatically,
+     * but in the case where a function has a variable number of arguments an exception will be thrown. To invoke the
+     * function successfully use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
+     * that will be returned for the provided arguments.
+     * 
+     * @param functionName name of the MATLAB function to call
+     * @param args the arguments to the function, {@code null} if none
+     * @return result of MATLAB function
+     * @throws MatlabInvocationException 
+     * @see #feval(String, Object[])
+     * @see #returningFeval(String, Object[])
+     */
+    @Override
+    public abstract Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
+    
+    /**
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
+     * <br><br>
+     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
+     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * <br><br>
+     * The result of this function can be returned. In order for the result of this function to be returned the number
+     * of arguments to be returned must be specified by {@code returnCount}. You can use the {@code nargout} function in
+     * the MATLAB Command Window to determine the number of arguments that will be returned. If {@code nargout} returns
+     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
+     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
+     * differs from {@code returnCount} then either only some of the items will be returned or {@code null} will be
+     * returned.
+     * 
+     * @param functionName name of the MATLAB function to call
+     * @param args the arguments to the function, {@code null} if none
+     * @param returnCount the number of arguments that will be returned from this function
+     * @return result of MATLAB function
+     * @throws MatlabInvocationException 
+     * @see #feval(String, Object[])
+     * @see #returningFeval(String, Object[])
+     */
+    @Override
+    public abstract Object returningFeval(String functionName, Object[] args, int returnCount)
+            throws MatlabInvocationException;
+    
+    /**
+     * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
+     * 
+     * @param variableName
+     * @param value
+     * @throws MatlabInvocationException
+     */
+    @Override
+    public abstract void setVariable(String variableName, Object value) throws MatlabInvocationException;
+    
+    /**
+     * Gets the value of {@code variableName} in MATLAB.
+     * 
+     * @param variableName
+     * @return value
+     * @throws MatlabInvocationException
+     */
+    @Override
+    public abstract Object getVariable(String variableName) throws MatlabInvocationException;
+    
+    /**
+     * Runs the {@code callable} on MATLAB's main thread and waits for it to return its result. This method allows for
+     * uninterrupted access to MATLAB's main thread between two or more interactions with MATLAB.
+     * <br><br>
+     * The {@link MatlabInteractor} provided to the {@code callable} will invoke its methods directly on MATLAB's main
+     * thread without delay. This interactor should be used to interact with MATLAB, not a {@code MatlabProxy} (or any
+     * class delegating to it).
+     * <br><br>
+     * All restrictions that apply to arguments passed to other methods that interact with MATLAB also apply to this
+     * method. In particular, this means that if <strong>running outside MATLAB</strong> the {@code callable} must be
+     * either {@link java.io.Serializable} or {@link java.rmi.Remote} and must be either defined in MATLAB's Java
+     * Virtual Machine or remote class loading must be allowed by the virtual machine's {@link SecurityManager}.
+     * 
+     * @param <T>
+     * @param callable
+     * @return result of the callable
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public abstract <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException;
+    
     /**
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
      * 
@@ -274,22 +410,5 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
          */
         @Override
         public boolean equals(Object other);
-    }
-    
-    /**
-     * TODO: DOCUMENT ME
-     * 
-     * @param <T> 
-     */
-    public static interface MatlabThreadCallable<T>
-    {
-        /**
-         * TODO: DOCUMENT ME
-         * 
-         * @param proxy
-         * @return
-         * @throws Exception 
-         */
-        public T call(MatlabInteractor<Object> interactor) throws Exception;
     }
 }

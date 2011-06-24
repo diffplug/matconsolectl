@@ -30,7 +30,6 @@ import java.util.logging.Logger;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
 /**
  * Wraps around an interactor to provide a log of interactions. The data is not altered. This interactor is very
@@ -42,7 +41,8 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  * {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their level is
  * too low. To configure the {@code ConsoleHandler} to show these log messages, call {@link #showInConsoleHandler()}.
  * <br><br>
- * This class is thread-safe so long as the delegate {@link MatlabInteractor} is thread-safe.
+ * This class is conditionally thread-safe. To be thread-safe the delegate {@link MatlabInteractor} provided to the
+ * constructor must be thread-safe.
  * 
  * @since 4.0.0
  * 
@@ -60,9 +60,16 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
     private final boolean _exploreArrays;
     
     /**
-     * Constructs the interactor. If (@code exploreArrays} is {@code true} then when the returned value is an array
+     * Constructs the interactor. If {@code exploreArrays} is {@code true} then when the returned value is an array
      * it will be recursively explored and the complete contents of that array will be logged. Exploring very large
      * arrays can be considerably expensive.
+     * <br><br>
+     * A {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
+     * {@code MatlabProxy}:
+     * <br><br>
+     * {@code
+     * LoggingMatlabInteractor<Object> loggingInteractor = new LoggingMatlabInteractor<Object>(proxy);
+     * }
      * 
      * @param interactor 
      * @param exploreArrays 
@@ -348,7 +355,7 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * @throws MatlabInvocationException 
      */
     @Override
-    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return this.invoke(new ReturningInvocation<T>(callable)
         {
@@ -365,7 +372,13 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
             }
         });
     }
-    
+        
+    /**
+     * Returns a brief description of this proxy. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
     @Override
     public String toString()
     {

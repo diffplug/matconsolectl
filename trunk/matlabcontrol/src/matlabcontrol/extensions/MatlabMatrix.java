@@ -42,8 +42,8 @@ import java.util.Map;
  * dimension have the same length, then the array is known as as a jagged array (also known as a ragged array).
  * <br><br>
  * When a matrix is retrieved from MATLAB the resulting Java array is never jagged. When a {@code MatlabMatrix} is
- * constructed from Java arrays, the arrays provided may be jagged; see
- * {@link #MatlabMatrix(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType, java.lang.Object, java.lang.Object) the
+ * constructed from Java arrays, the arrays provided may be jagged; see the
+ * {@link #MatlabMatrix(matlabcontrol.extensions.MatlabMatrix.DoubleArrayType, java.lang.Object, java.lang.Object) main
  * constructor} for details.
  * <br><br> 
  * Each instance knows the number of dimensions it represents and can create the corresponding multidimensional Java
@@ -64,13 +64,14 @@ import java.util.Map;
  * MATLAB's 1-index. For instance in MATLAB indexing into {@code matrix} would be {@code matrix(3,4,7,2)} while in Java
  * it would be {@code matrix[2][3][6][1]}.
  * <br><br>
- * This class is thread-safe.
+ * Once constructed, this class is unconditionally thread-safe. If the data provided to a constructor is modified while
+ * construction is occurring, problems may occur.
  * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabMatrix
+public final class MatlabMatrix
 {   
     /**
      * Linear array of real values.
