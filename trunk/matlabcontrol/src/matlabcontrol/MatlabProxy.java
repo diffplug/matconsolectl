@@ -358,8 +358,9 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * uninterrupted access to MATLAB's main thread between two or more interactions with MATLAB.
      * <br><br>
      * The {@link MatlabInteractor} provided to the {@code callable} will invoke its methods directly on MATLAB's main
-     * thread without delay. This interactor should be used to interact with MATLAB, not a {@code MatlabProxy} (or any
-     * class delegating to it).
+     * thread without delay. The interactor will behave identically to a {@code MatlabProxy} running inside MATLAB which
+     * is being used on MATLAB's main thread. This interactor should be used to interact with MATLAB, not a
+     * {@code MatlabProxy} (or any class delegating to it).
      * <br><br>
      * All restrictions that apply to arguments passed to other methods that interact with MATLAB also apply to this
      * method. In particular, this means that if <strong>running outside MATLAB</strong> the {@code callable} must be
