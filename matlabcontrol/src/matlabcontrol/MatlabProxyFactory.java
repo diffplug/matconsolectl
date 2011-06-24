@@ -51,13 +51,17 @@ public class MatlabProxyFactory implements ProxyFactory
      * Constructs the factory with the specified {@code options}. Depending on the whether the factory is running inside
      * MATLAB or outside MATLAB will determine if a given option is used.
      * <br><br>
-     * Modifying the options after they have been provided to this constructor will have no effect; they may be modified
-     * and used to construct another factory.
+     * Modifying the options after they have been provided to this constructor will have no effect on how this factory
+     * operates.
      * 
      * @param options
      */
     public MatlabProxyFactory(Options options)
     {
+        //Technically these options could be modified after being provided to this constructor but before getting an
+        //immutable copy. Using the builder pattern on either the options, or the factory itself (and not having a 
+        //separate options object) would prevent this.) This tradeoff was chosen for the simplicity and what is in
+        //practice not expected to be an issue.
         ImmutableOptions immutableOptions = options.getImmutableCopy();
                 
         if(Configuration.isRunningInsideMatlab())
@@ -265,6 +269,7 @@ public class MatlabProxyFactory implements ProxyFactory
                 throw new IllegalArgumentException("timeout may not be negative");
             }
 
+            //It is particularly crucial this value be assigned synchronously as longs are not written to atomically
             _proxyTimeout = timeout;
         }
 
