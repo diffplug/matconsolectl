@@ -31,7 +31,7 @@ package matlabcontrol;
  */
 public class MatlabConnectionException extends Exception
 {
-    private static final long serialVersionUID = 2463872677611859435L;
+    private static final long serialVersionUID = 0xA400L;
 
     MatlabConnectionException(String msg)
     {

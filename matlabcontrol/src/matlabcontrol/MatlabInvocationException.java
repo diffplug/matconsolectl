@@ -32,7 +32,7 @@ package matlabcontrol;
  */
 public class MatlabInvocationException extends Exception
 {    
-    private static final long serialVersionUID = -1567632755416541619L;
+    private static final long serialVersionUID = 0xB400L;
     
     //Messages
     static final String INTERRUPTED_MSG = "Method could not be completed because the thread was interrupted before MATLAB returned",

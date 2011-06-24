@@ -334,7 +334,7 @@ public final class MatlabMatrix
         }
         else
         {
-            throw new MatrixDimensionException(this, _arrayType.getDimensions(), indices.length);
+            throw new MatrixDimensionException(_arrayType.getDimensions(), indices.length);
         }
         
         return value;
@@ -380,7 +380,7 @@ public final class MatlabMatrix
     {
         if(type.getDimensions() != _arrayType.getDimensions())
         {
-            throw new MatrixDimensionException(this, _arrayType.getDimensions(), type.getDimensions());
+            throw new MatrixDimensionException(_arrayType.getDimensions(), type.getDimensions());
         }
         
         return multidimensionalize(values, type._arrayClass, _lengths);
@@ -783,28 +783,18 @@ public final class MatlabMatrix
      */
     public static class MatrixDimensionException extends RuntimeException
     {
-        private final MatlabMatrix _matrix;
+        private static final long serialVersionUID = 0xC400L;
+    
         private final int _actualNumberOfDimensions;
         private final int _usedAsNumberOfDimensions; 
         
-        MatrixDimensionException(MatlabMatrix matrix, int actualNumDim, int usedAsNumDim)
+        MatrixDimensionException(int actualNumDim, int usedAsNumDim)
         {
             super("Matrix has " + actualNumDim + " dimension(s), it cannot be used as if it had " + usedAsNumDim +
                     " dimension(s).");
             
-            _matrix = matrix;
             _actualNumberOfDimensions = actualNumDim;
             _usedAsNumberOfDimensions = usedAsNumDim;
-        }
-        
-        /**
-         * The matrix that was incorrectly accessed.
-         * 
-         * @return 
-         */
-        public MatlabMatrix getMatrix()
-        {
-            return _matrix;
         }
         
         /**
