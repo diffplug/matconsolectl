@@ -37,7 +37,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import matlabcontrol.MatlabProxy.Identifier;
 import matlabcontrol.MatlabProxyFactory.Request;
 import matlabcontrol.MatlabProxyFactory.RequestCallback;
-import matlabcontrol.MatlabProxyFactory.ImmutableOptions;
 
 /**
  * Creates remote instances of {@link MatlabProxy}. Creating a proxy will either connect to an existing session of
@@ -52,7 +51,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * The options that configure this instance of the factory.
      */
-    private final ImmutableOptions _options;
+    private final MatlabProxyFactoryOptions _options;
     
     /**
      * {@link Receiver} instances. They need to be stored because the RMI registry only holds weak references to
@@ -67,7 +66,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      */
     private static Registry _registry = null;
     
-    public RemoteMatlabProxyFactory(ImmutableOptions options)
+    public RemoteMatlabProxyFactory(MatlabProxyFactoryOptions options)
     {
         _options = options;
     }
@@ -127,7 +126,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Launch a new session of MATLAB
             else
             {
-                Process process = createProcess(proxyID, receiver);
+                Process process = createProcess(receiver);
                 request = new RemoteRequest(proxyID, process, receiver);
             }
         }
@@ -248,12 +247,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * Uses the {@link #_options} and the arguments to create a {@link Process} that will launch MATLAB and
      * connect it to this JVM.
      * 
-     * @param proxyID
      * @param receiver
      * @return
      * @throws MatlabConnectionException 
      */
-    private Process createProcess(RemoteIdentifier proxyID, Receiver receiver) throws MatlabConnectionException
+    private Process createProcess(Receiver receiver) throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
         
@@ -304,6 +302,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         {
             processArguments.add("-jdb");
             processArguments.add(_options.getJavaDebugger().toString());
+        }
+        
+        if(_options.getUseSingleComputationalThread())
+        {
+            processArguments.add("-singleCompThread");
         }
         
         //Code to run on startup
