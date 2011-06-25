@@ -55,10 +55,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final ImmutableOptions _options;
     
     /**
-     * {@link ProxyReceiver} instances. They need to be stored because the RMI registry only holds weak references to
+     * {@link Receiver} instances. They need to be stored because the RMI registry only holds weak references to
      * exported objects.
      */
-    private final CopyOnWriteArrayList<ProxyReceiver> _receivers = new CopyOnWriteArrayList<ProxyReceiver>();
+    private final CopyOnWriteArrayList<Receiver> _receivers = new CopyOnWriteArrayList<Receiver>();
     
     /**
      * The RMI registry used to communicate between JVMs. There is only ever one registry actually running on a given
@@ -84,7 +84,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         initRegistry();
         
         //Create and bind the receiver
-        ProxyReceiver receiver = new ProxyReceiver(requestCallback, proxyID);
+        Receiver receiver = new Receiver(requestCallback, proxyID);
         _receivers.add(receiver);
         try
         {
@@ -116,7 +116,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             {
                 try
                 {
-                    session.connectFromRMI(receiver.getReceiverID(), proxyID.getUUIDString());
+                    session.connectFromRMI(receiver.getReceiverID());
                     request = new RemoteRequest(proxyID, null, receiver);
                 }
                 catch(RemoteException e)
@@ -127,16 +127,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Launch a new session of MATLAB
             else
             {
-                ProcessBuilder builder = buildProcess(proxyID, receiver); 
-                try
-                {   
-                    Process process = builder.start();
-                    request = new RemoteRequest(proxyID, process, receiver);
-                }
-                catch(IOException e)
-                {
-                    throw new MatlabConnectionException("Could not launch MATLAB. Command: " + builder.command(), e);
-                }
+                Process process = createProcess(proxyID, receiver);
+                request = new RemoteRequest(proxyID, process, receiver);
             }
         }
         catch(MatlabConnectionException e)
@@ -253,7 +245,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Uses the {@link #_options} and the arguments to create a {@link ProcessBuilder} that will launch MATLAB and
+     * Uses the {@link #_options} and the arguments to create a {@link Process} that will launch MATLAB and
      * connect it to this JVM.
      * 
      * @param proxyID
@@ -261,7 +253,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * @return
      * @throws MatlabConnectionException 
      */
-    private ProcessBuilder buildProcess(RemoteIdentifier proxyID, ProxyReceiver receiver) throws MatlabConnectionException
+    private Process createProcess(RemoteIdentifier proxyID, Receiver receiver) throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
         
@@ -296,6 +288,24 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             }
         }
         
+        if(_options.getLicenseFile() != null)
+        {
+            processArguments.add("-c");
+            processArguments.add(_options.getLicenseFile());
+        }
+        
+        if(_options.getLogFile() != null)
+        {
+            processArguments.add("-logfile");
+            processArguments.add(_options.getLogFile());
+        }
+        
+        if(_options.getJavaDebugger() != null)
+        {
+            processArguments.add("-jdb");
+            processArguments.add(_options.getJavaDebugger().toString());
+        }
+        
         //Code to run on startup
         processArguments.add("-r");
         
@@ -307,38 +317,47 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
                         MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
                         "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
-                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + 
-                        "', '" + proxyID.getUUIDString() + "');";
+                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "');";
         processArguments.add(runArg);
         
-        return new ProcessBuilder(processArguments);
+        //Create process
+        ProcessBuilder builder = new ProcessBuilder(processArguments);
+        try
+        {
+            return builder.start();
+        }
+        catch(IOException e)
+        {
+            throw new MatlabConnectionException("Could not launch MATLAB. Command: " + builder.command(), e);
+        }
     }
     
     /**
      * Receives the wrapper around JMI from MATLAB.
      */
-    private class ProxyReceiver implements JMIWrapperRemoteReceiver
+    private class Receiver implements JMIWrapperRemoteReceiver
     {
         private final RequestCallback _requestCallback;
         private final String _receiverID;
+        private final RemoteIdentifier _proxyID;
         private volatile boolean _receivedJMIWrapper = false;
         
-        public ProxyReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID)
+        public Receiver(RequestCallback requestCallback, RemoteIdentifier proxyID)
         {
             _requestCallback = requestCallback;
+            _proxyID = proxyID;
             
             _receiverID = "PROXY_RECEIVER_" + proxyID.getUUIDString();
         }
         
         @Override
-        public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession)
+        public void receiveJMIWrapper(JMIWrapperRemote jmiWrapper, boolean existingSession)
         {   
             //Remove self from the list of receivers
             _receivers.remove(this); 
             
-            //Create proxy, store it
-            RemoteIdentifier identifier = new RemoteIdentifier(proxyID);
-            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, identifier, existingSession);
+            //Create proxy
+            RemoteMatlabProxy proxy = new RemoteMatlabProxy(jmiWrapper, this, _proxyID, existingSession);
             proxy.init();
             
             //Record wrapper has been received
@@ -454,10 +473,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {
         private final Identifier _proxyID;
         private final Process _process;
-        private final ProxyReceiver _receiver;
+        private final Receiver _receiver;
         private boolean _isCancelled = false;
         
-        private RemoteRequest(Identifier proxyID, Process process, ProxyReceiver receiver)
+        private RemoteRequest(Identifier proxyID, Process process, Receiver receiver)
         {
             _proxyID = proxyID;
             _process = process;

@@ -35,17 +35,15 @@ import java.rmi.RemoteException;
 interface JMIWrapperRemoteReceiver extends Remote
 {
     /**
-     * Receives an incoming wrapper around the JMI functonality inside of MATLAB. Includes the {@code proxyID} that
-     * was used to request the connection.
+     * Receives an incoming wrapper around the JMI functionality inside of MATLAB.
      * <br><br>
      * This method is to be called by {@link MatlabConnector} running inside of MATLAB's JVM.
      * 
-     * @param proxyID
      * @param jmiWrapper
      * @param existingSession if the session sending the jmiWrapper was running prior to the request to create the proxy
      * @throws RemoteException 
      */
-    public void registerControl(String proxyID, JMIWrapperRemote jmiWrapper, boolean existingSession) throws RemoteException;
+    public void receiveJMIWrapper(JMIWrapperRemote jmiWrapper, boolean existingSession) throws RemoteException;
     
     /**
      * The identifier of the receiver.

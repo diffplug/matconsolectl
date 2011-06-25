@@ -53,22 +53,21 @@ class MatlabConnector
     private MatlabConnector() { }
     
     /**
-     * Called from MATLAB to create a proxy. Creates the proxy and then sends it over RMI to the Java program running in
-     * a separate JVM.
+     * Called from MATLAB to create a proxy. Creates the JMI wrapper and then sends it over RMI to the Java program
+     * running in a separate JVM.
      * 
      * @param receiverID the key that binds the receiver in the registry
-     * @param proxyID the unique identifier of the proxy being created
      */
-    public static void connectFromMatlab(String receiverID, String proxyID)
+    public static void connectFromMatlab(String receiverID)
     {
-        connect(receiverID, proxyID, false);
+        connect(receiverID, false);
     }
     
-    static void connect(String receiverID, String proxyID, boolean existingSession)
+    static void connect(String receiverID, boolean existingSession)
     {
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
-        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, proxyID, existingSession));
+        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, existingSession));
     }
     
     /**
@@ -77,13 +76,11 @@ class MatlabConnector
     private static class EstablishConnectionRunnable implements Runnable
     {
         private final String _receiverID;
-        private final String _proxyID;
         private final boolean _existingSession;
         
-        private EstablishConnectionRunnable(String receiverID, String proxyID, boolean existingSession)
+        private EstablishConnectionRunnable(String receiverID, boolean existingSession)
         {
             _receiverID = receiverID;
-            _proxyID = proxyID;
             _existingSession = existingSession;
         }
 
@@ -129,7 +126,7 @@ class MatlabConnector
                 MatlabBroadcaster.addReceiver(receiver);
 
                 //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
-                receiver.registerControl(_proxyID, new JMIWrapperRemoteImpl(), _existingSession);
+                receiver.receiveJMIWrapper(new JMIWrapperRemoteImpl(), _existingSession);
             }
             catch(RemoteException ex)
             {
