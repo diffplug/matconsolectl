@@ -57,9 +57,9 @@ class MatlabSessionImpl implements MatlabSession
     }
 
     @Override
-    public synchronized void connectFromRMI(String receiverID, String proxyID)
+    public synchronized void connectFromRMI(String receiverID)
     {
-        MatlabConnector.connect(receiverID, proxyID, true);
+        MatlabConnector.connect(receiverID, true);
     }
 
     /**
