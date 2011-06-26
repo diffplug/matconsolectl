@@ -30,8 +30,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * This class is used only from inside of the MATLAB JVM. It is responsible for creating proxies and sending them to
- * the receiver over RMI.
+ * This class is used only from inside of the MATLAB JVM. It is responsible for creating instances of
+ * {@link JMIWrapperRemote} and sending them to a waiting receiver over RMI.
  * <br><br>
  * While this class is package private, it can be seen by MATLAB, which does not respect the package privateness of the
  * class. The public methods in this class can be accessed from inside the MATLAB environment.
@@ -53,8 +53,8 @@ class MatlabConnector
     private MatlabConnector() { }
     
     /**
-     * Called from MATLAB to create a proxy. Creates the JMI wrapper and then sends it over RMI to the Java program
-     * running in a separate JVM.
+     * Called from MATLAB at launch. Creates the JMI wrapper and then sends it over RMI to the Java program running in a
+     * separate JVM.
      * 
      * @param receiverID the key that binds the receiver in the registry
      */
@@ -63,6 +63,13 @@ class MatlabConnector
         connect(receiverID, false);
     }
     
+    /**
+     * Retrieves the receiver and sends over the {@link JMIWrapperRemote} on a separate thread so that MATLAB can
+     * continue to initialize.
+     * 
+     * @param receiverID
+     * @param existingSession 
+     */
     static void connect(String receiverID, boolean existingSession)
     {
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
@@ -100,17 +107,17 @@ class MatlabConnector
                     System.err.println("Unable to wait for MATLAB to initialize, problems may occur");
                     ex.printStackTrace();
                 }
-
-                //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
-                try
-                {
-                    MatlabBroadcaster.broadcast();
-                }
-                catch(MatlabConnectionException ex)
-                {
-                    System.err.println("Reconnecting to this session of MATLAB will not be possible");
-                    ex.printStackTrace();
-                }
+            }
+            
+            //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
+            try
+            {
+                MatlabBroadcaster.broadcast();
+            }
+            catch(MatlabConnectionException ex)
+            {
+                System.err.println("Reconnecting to this session of MATLAB will not be possible");
+                ex.printStackTrace();
             }
 
             //Send the remote JMI wrapper
