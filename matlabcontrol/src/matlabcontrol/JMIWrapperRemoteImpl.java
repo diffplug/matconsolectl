@@ -23,7 +23,6 @@ package matlabcontrol;
  */
 
 import java.rmi.RemoteException;
-import java.rmi.server.UnicastRemoteObject;
 
 /**
  * Passes method calls off to {@link JMIWrapper}.
@@ -37,7 +36,7 @@ import java.rmi.server.UnicastRemoteObject;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class JMIWrapperRemoteImpl extends UnicastRemoteObject implements JMIWrapperRemote
+class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject implements JMIWrapperRemote
 {
     private static final long serialVersionUID = 1L;
     

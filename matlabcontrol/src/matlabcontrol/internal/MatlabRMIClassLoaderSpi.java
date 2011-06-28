@@ -1,5 +1,26 @@
 package matlabcontrol.internal;
 
+/*
+ * Copyright (c) 2011, Joshua Kaplan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ *  - Neither the name of matlabcontrol nor the names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 import java.net.MalformedURLException;
 import java.rmi.server.RMIClassLoader;
@@ -10,8 +31,8 @@ import java.rmi.server.RMIClassLoaderSpi;
  * <br><br>
  * This class must be public so that it can be created via reflection by {@link RemoteClassLoader}. If it were package
  * private it would result in an {@link IllegalAccessError} because only classes in the same package as a package
- * private class may construct it (even via reflection). Place in the {@code matlabcontrol.internal} package to make it
- * clear it is not intended to be used.
+ * private class may construct it (even via reflection). It has been placed in the {@code matlabcontrol.internal}
+ * package to make it clear it is not intended for use by users of matlabcontrol.
  * <br><br>
  * A custom service provider for the RMI class loader. Allows for loading classes sent from the external JVM and
  * providing annotations so that the external JVM may load classes defined only in the MATLAB JVM. Loading classes from
@@ -20,6 +41,11 @@ import java.rmi.server.RMIClassLoaderSpi;
  * annotations without this custom rmi class loader spi. While the {@code java.rmi.server.codebase} property could be
  * set in the MATLAB JVM, the property is checked only at load time. This would mean that class definitions added
  * dynamically with {@code javaaddpath} could not be sent.
+ * 
+ * @since 4.0.0
+ * 
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+ * 
  */
 public class MatlabRMIClassLoaderSpi extends RMIClassLoaderSpi
 {

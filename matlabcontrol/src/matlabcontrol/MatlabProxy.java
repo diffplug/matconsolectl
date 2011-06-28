@@ -93,20 +93,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <br><strong>Running outside MATLAB</strong>
  * <li>Communication between this JVM and the one that MATLAB is running in is disrupted (likely due to closing
  *     MATLAB).</li>
- * <li>The class of the object to be sent or returned is not {@link java.io.Serializable} (unless it is {@code Remote}).
- *     Java primitives and arrays are {@code Serializable}.</li>
- * <li>The class of the object to be sent or returned is not defined in the Java Virtual Machine receiving the
- *     object.*</li>
+ * <li>The class of the object to be sent or returned is not {@link java.io.Serializable} or {@link java.rmi.Remote}).
+ *     Java primitives and arrays behave as if they were {@code Serializable}.</li>
+ * <li>The class of the object to be returned from MATLAB is not defined in your application and no
+ *     {@link SecurityManager} has been installed.*</li>
  * <br><strong>Running inside MATLAB</strong>
  * <li>The method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components.✝ (To get around
  *     this limitation a {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.) This does not apply to
  *     {@code exit()} which may be called from the EDT.</li>
  * </ul>
- * * This limitation is due in part to Java prohibiting loading arbitrary classes from remote Java Virtual Machines
- * unless a {@link SecurityManager} has been set.
- * 
- * TODO - DOCUMENT THIS MORE
- * 
+ * * This limitation is due to Remote Method Invocation (RMI) prohibiting loading classes defined in remote Java Virtual
+ * Machines unless a {@code SecurityManager} has been set. {@link PermissiveSecurityManager} exists to provide an easy
+ * way to set a security manager without restricting permissions. Please consult {@code PermissiveSecurityManager}'s
+ * documentation before using it.
  * <br><br>
  * ✝ This is done to prevent MATLAB from hanging indefinitely. In order to properly interact with MATLAB the calling
  * thread (unless it is the main MATLAB thread) is paused until MATLAB completes the requested operation. When a thread

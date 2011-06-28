@@ -22,14 +22,15 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import matlabcontrol.internal.MatlabRMIClassLoaderSpi;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.rmi.server.RMIClassLoaderSpi;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+
+import matlabcontrol.internal.MatlabRMIClassLoaderSpi;
 
 /**
  * This class is used only from inside of the MATLAB JVM. It is responsible for creating instances of
@@ -50,22 +51,67 @@ class MatlabConnector
     private static final ExecutorService CONNECTION_EXECUTOR = Executors.newSingleThreadExecutor();
     
     /**
+     * The most recently connected receiver retrieved from a Java program running outside of MATLAB.
+     */
+    private static final AtomicReference<JMIWrapperRemoteReceiver> _receiverRef =
+            new AtomicReference<JMIWrapperRemoteReceiver>();
+    
+    /**
+     * If a connection is currently in progress.
+     */
+    private static final AtomicBoolean _connectionInProgress = new AtomicBoolean(false);
+    
+    /**
      * Private constructor so this class cannot be constructed.
      */
     private MatlabConnector() { }
+    
+    /**
+     * If this session of MATLAB is available to be connected to from an external Java program. It will be available
+     * if it is not currently connected to and there is no connection in progress.
+     * 
+     * @return 
+     */
+    static boolean isAvailableForConnection()
+    {
+        boolean available;
+        
+        if(_connectionInProgress.get())
+        {
+            available = false;
+        }
+        else
+        {
+            JMIWrapperRemoteReceiver receiver = _receiverRef.get();
+
+            boolean connected = false;
+            if(receiver != null)
+            {
+                try
+                {
+                    receiver.getReceiverID();
+                    connected = true;
+                }
+                catch(RemoteException e) { }
+            }
+            
+            available = !connected;
+        }
+        
+        return available;
+    }
     
     /**
      * Called from MATLAB at launch. Creates the JMI wrapper and then sends it over RMI to the Java program running in a
      * separate JVM.
      * 
      * @param receiverID the key that binds the receiver in the registry
+     * @param receiverPort the port the registry is running on
+     * @param broadcastPort the port for the registry MATLAB will use to broadcast its existence 
      */
-    public static void connectFromMatlab(String receiverID)
+    public static void connectFromMatlab(String receiverID, int receiverPort, int broadcastPort)
     {
-        //Set the RMI class loader
-        System.setProperty("java.rmi.server.RMIClassLoaderSpi", MatlabRMIClassLoaderSpi.class.getName());
-        
-        connect(receiverID, false);
+        connect(receiverID, receiverPort, broadcastPort, false);
     }
     
     /**
@@ -75,11 +121,14 @@ class MatlabConnector
      * @param receiverID
      * @param existingSession 
      */
-    static void connect(String receiverID, boolean existingSession)
+    static void connect(String receiverID, int receiverPort, int broadcastPort, boolean existingSession)
     {
+        _connectionInProgress.set(true);
+        
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
-        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, existingSession));
+        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, receiverPort,  broadcastPort,
+                existingSession));
     }
     
     /**
@@ -88,20 +137,28 @@ class MatlabConnector
     private static class EstablishConnectionRunnable implements Runnable
     {
         private final String _receiverID;
+        private final int _receiverPort;
+        private final int _broadcastPort;
         private final boolean _existingSession;
         
-        private EstablishConnectionRunnable(String receiverID, boolean existingSession)
+        private EstablishConnectionRunnable(String receiverID, int receiverPort, int broadcastPort,
+                boolean existingSession)
         {
             _receiverID = receiverID;
+            _receiverPort = receiverPort;
+            _broadcastPort = broadcastPort; //This means nothing if an existing session
             _existingSession = existingSession;
         }
 
         @Override
         public void run()
         {
-            //If MATLAB was just launched, wait for it to initialize and make it available for reconnection
+            //If MATLAB was just launched
             if(!_existingSession)
             {
+                //Set the RMI class loader service provider
+                System.setProperty("java.rmi.server.RMIClassLoaderSpi", MatlabRMIClassLoaderSpi.class.getName());
+        
                 //Attempt to wait for MATLAB to initialize, if not still proceed
                 try
                 {
@@ -112,30 +169,30 @@ class MatlabConnector
                     System.err.println("Unable to wait for MATLAB to initialize, problems may occur");
                     ex.printStackTrace();
                 }
-            }
-            
-            //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
-            try
-            {
-                MatlabBroadcaster.broadcast();
-            }
-            catch(MatlabConnectionException ex)
-            {
-                System.err.println("Reconnecting to this session of MATLAB will not be possible");
-                ex.printStackTrace();
+                
+                //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
+                try
+                {
+                    MatlabBroadcaster.broadcast(_broadcastPort);
+                }
+                catch(MatlabConnectionException ex)
+                {
+                    System.err.println("Reconnecting to this session of MATLAB will not be possible");
+                    ex.printStackTrace();
+                }
             }
 
             //Send the remote JMI wrapper
             try
             {
                 //Get registry
-                Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+                Registry registry = LocalHostRMIHelper.getRegistry(_receiverPort);
 
                 //Get the receiver from the registry
                 JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(_receiverID);
 
-                 //Register the receiver with the broadcaster
-                MatlabBroadcaster.addReceiver(receiver);
+                 //Hold on the to receiver
+                _receiverRef.set(receiver);
                 
                 //Load a security manager so that remote class loading can occur
                 if(System.getSecurityManager() == null)
@@ -161,7 +218,7 @@ class MatlabConnector
                 ex.printStackTrace();
             }
             
-            MatlabBroadcaster.getSession().connectionAttempted();
+            _connectionInProgress.set(false);
         }
     }
 }

@@ -21,6 +21,8 @@ public class MatlabProxyFactoryOptions
     private final Integer _jdbPort;
     private final String _licenseFile;
     private final boolean _useSingleCompThread;
+    private final int _rmiExternalPort;
+    private final int _rmiMatlabPort;
         
     private MatlabProxyFactoryOptions(Builder options)
     {
@@ -32,6 +34,8 @@ public class MatlabProxyFactoryOptions
         _jdbPort = options._jdbPort;
         _licenseFile = options._licenseFile;
         _useSingleCompThread = options._useSingleCompThread;
+        _rmiExternalPort = options._rmiExternalPort;
+        _rmiMatlabPort = options._rmiMatlabPort;
     }
 
     String getMatlabLocation()
@@ -74,6 +78,16 @@ public class MatlabProxyFactoryOptions
         return _useSingleCompThread;
     }
     
+    int getRMIExternalJVMPort()
+    {
+        return _rmiExternalPort;
+    }
+    
+    int getRMIMatlabPort()
+    {
+        return _rmiMatlabPort;
+    }
+    
     /**
      * Builds instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
      * then a default will be used. Depending on how the factory operates, not all properties may be used. Currently all
@@ -102,6 +116,8 @@ public class MatlabProxyFactoryOptions
         private volatile Integer _jdbPort = null;
         private volatile String _licenseFile = null;
         private volatile boolean _useSingleCompThread = false;
+        private volatile int _rmiExternalPort = 2100;
+        private volatile int _rmiMatlabPort = 2101;
         
         //Assigning to a long is not atomic, so use an AtomicLong to allow thread safety
         private final AtomicLong _proxyTimeout = new AtomicLong(90000L);
@@ -247,8 +263,8 @@ public class MatlabProxyFactoryOptions
         }
 
         /**
-         * The amount of time in milliseconds to wait for a proxy to be created when requested via the blocking method
-         * {@link MatlabProxyFactory#getProxy()}. By default this property is set to {@code 90000} milliseconds.
+         * Sets the amount of time in milliseconds to wait for a proxy to be created when requested via the blocking
+         * method {@link MatlabProxyFactory#getProxy()}. By default this property is set to {@code 90000} milliseconds.
          * 
          * @param timeout
          * 
@@ -275,6 +291,40 @@ public class MatlabProxyFactoryOptions
         public final Builder setUseSingleComputationalThread(boolean useSingleCompThread)
         {
             _useSingleCompThread = useSingleCompThread;
+            
+            return this;
+        }
+        
+        /**
+         * Sets the ports matlabcontrol uses to communicate with MATLAB. By default ports {@code 2100} and {@code 2101}
+         * are used. The two port values must be positive and must not be the same. The ports should not be otherwise
+         * in use on the system; however, any number of MatlabProxyFactory instances (even those running in completely
+         * separate applications) may use the same ports. It is recommended the ports be in the range of {@code 1024} to
+         * {@code 49151}, but this is not enforced.
+         * 
+         * @param port1
+         * @param port2
+         * @throws IllegalArgumentException if port conditions are not met
+         */
+        public final Builder setPorts(int port1, int port2)
+        {
+            if(port1 < 1)
+            {
+                throw new IllegalArgumentException("port [" + port1 + "] must be positive");
+            }
+            
+            if(port2 < 1)
+            {
+                throw new IllegalArgumentException("port [" + port2 + "] must be positive");
+            }
+            
+            if(port1 == port2)
+            {
+                throw new IllegalArgumentException("port values [" + port1 + "] may not be the same");
+            }
+            
+            _rmiExternalPort = port1;
+            _rmiMatlabPort = port2;
             
             return this;
         }

@@ -22,6 +22,9 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.rmi.registry.Registry;
+import java.util.UUID;
+
 /**
  * Implementation of {@link MatlabSession}. Split into interface and implementation to work properly with RMI.
  * 
@@ -31,43 +34,72 @@ package matlabcontrol;
  */
 class MatlabSessionImpl implements MatlabSession
 {   
-    private boolean _expectingConnection = false;
-    
-    @Override
-    public synchronized boolean isAvailableForConnection()
-    {   
-        boolean isAvailable;
-        
-        if(_expectingConnection)
-        {
-            isAvailable = false;
-        }
-        else if(MatlabBroadcaster.areAnyReceiversConnected())
-        {
-            isAvailable = false;
-        }
-        //If there is no current connection, then a request to create a proxy will come next
-        else
-        {
-            isAvailable = true;
-            _expectingConnection = true;
-        }
-        
-        return isAvailable;
-    }
-
-    @Override
-    public synchronized void connectFromRMI(String receiverID)
-    {
-        MatlabConnector.connect(receiverID, true);
-    }
-
     /**
-     * Called to notify the broadcaster that an attempt to establish a connection has been completed. Does not
-     * communicate if a connection was established successfully, only that the attempt is now done.
+     * The prefix for all RMI names of bound instances of {@link MatlabSession}.
      */
-    synchronized void connectionAttempted()
+    private static final String MATLAB_SESSION_PREFIX = "MATLAB_SESSION_";
+    
+    /**
+     * The bound name in the RMI registry for this instance.
+     */
+    private final String SESSION_ID = MATLAB_SESSION_PREFIX + UUID.randomUUID().toString();
+
+    @Override
+    public synchronized boolean connectFromRMI(String receiverID, int receiverPort)
     {
-        _expectingConnection = false;
+        boolean success = false;
+        if(MatlabConnector.isAvailableForConnection())
+        {
+            MatlabConnector.connect(receiverID, receiverPort, -1, true);
+            success = true;
+        }
+        
+        return success;
+    }
+    
+    /**
+     * The unique identifier for this session.
+     * 
+     * @return 
+     */
+    String getSessionID()
+    {
+        return SESSION_ID;
+    }
+    
+    /**
+     * Attempts to connect to a running instance of MATLAB. Returns {@code true} if a connection was made,
+     * {@code false} otherwise.
+     * 
+     * @param receiverID
+     * @param receiverPort
+     * @param broadcastPort
+     * @return if connection was made
+     */
+    static boolean connectToRunningSession(String receiverID, int receiverPort, int broadcastPort)
+    {
+        boolean establishedConnection = false;
+        
+        try
+        {
+            Registry registry = LocalHostRMIHelper.getRegistry(broadcastPort);
+            
+            String[] remoteNames = registry.list();
+            for(String name : remoteNames)
+            {
+                if(name.startsWith(MATLAB_SESSION_PREFIX))
+                {
+                    MatlabSession session = (MatlabSession) registry.lookup(name);
+                    if(session.connectFromRMI(receiverID, receiverPort))
+                    {
+                        establishedConnection = true;
+                        break;
+                    }
+                }
+            }
+        }
+        catch(Exception e) { }
+        
+        return establishedConnection;
     }
 }
