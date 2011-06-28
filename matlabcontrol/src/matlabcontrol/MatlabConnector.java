@@ -106,12 +106,11 @@ class MatlabConnector
      * separate JVM.
      * 
      * @param receiverID the key that binds the receiver in the registry
-     * @param receiverPort the port the registry is running on
-     * @param broadcastPort the port for the registry MATLAB will use to broadcast its existence 
+     * @param port the port the registry is running on
      */
-    public static void connectFromMatlab(String receiverID, int receiverPort, int broadcastPort)
+    public static void connectFromMatlab(String receiverID, int port)
     {
-        connect(receiverID, receiverPort, broadcastPort, false);
+        connect(receiverID, port, false);
     }
     
     /**
@@ -121,14 +120,13 @@ class MatlabConnector
      * @param receiverID
      * @param existingSession 
      */
-    static void connect(String receiverID, int receiverPort, int broadcastPort, boolean existingSession)
+    static void connect(String receiverID, int port, boolean existingSession)
     {
         _connectionInProgress.set(true);
         
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
-        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, receiverPort,  broadcastPort,
-                existingSession));
+        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, port, existingSession));
     }
     
     /**
@@ -137,16 +135,13 @@ class MatlabConnector
     private static class EstablishConnectionRunnable implements Runnable
     {
         private final String _receiverID;
-        private final int _receiverPort;
-        private final int _broadcastPort;
+        private final int _port;
         private final boolean _existingSession;
         
-        private EstablishConnectionRunnable(String receiverID, int receiverPort, int broadcastPort,
-                boolean existingSession)
+        private EstablishConnectionRunnable(String receiverID, int port, boolean existingSession)
         {
             _receiverID = receiverID;
-            _receiverPort = receiverPort;
-            _broadcastPort = broadcastPort; //This means nothing if an existing session
+            _port = port;
             _existingSession = existingSession;
         }
 
@@ -173,7 +168,7 @@ class MatlabConnector
                 //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
                 try
                 {
-                    MatlabBroadcaster.broadcast(_broadcastPort);
+                    MatlabBroadcaster.broadcast(_port);
                 }
                 catch(MatlabConnectionException ex)
                 {
@@ -186,7 +181,7 @@ class MatlabConnector
             try
             {
                 //Get registry
-                Registry registry = LocalHostRMIHelper.getRegistry(_receiverPort);
+                Registry registry = LocalHostRMIHelper.getRegistry(_port);
 
                 //Get the receiver from the registry
                 JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(_receiverID);

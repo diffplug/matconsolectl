@@ -21,8 +21,7 @@ public class MatlabProxyFactoryOptions
     private final Integer _jdbPort;
     private final String _licenseFile;
     private final boolean _useSingleCompThread;
-    private final int _rmiExternalPort;
-    private final int _rmiMatlabPort;
+    private final int _rmiPort;
         
     private MatlabProxyFactoryOptions(Builder options)
     {
@@ -34,8 +33,7 @@ public class MatlabProxyFactoryOptions
         _jdbPort = options._jdbPort;
         _licenseFile = options._licenseFile;
         _useSingleCompThread = options._useSingleCompThread;
-        _rmiExternalPort = options._rmiExternalPort;
-        _rmiMatlabPort = options._rmiMatlabPort;
+        _rmiPort = options._rmiPort;
     }
 
     String getMatlabLocation()
@@ -78,14 +76,9 @@ public class MatlabProxyFactoryOptions
         return _useSingleCompThread;
     }
     
-    int getRMIExternalJVMPort()
+    int getRMIPort()
     {
-        return _rmiExternalPort;
-    }
-    
-    int getRMIMatlabPort()
-    {
-        return _rmiMatlabPort;
+        return _rmiPort;
     }
     
     /**
@@ -116,8 +109,7 @@ public class MatlabProxyFactoryOptions
         private volatile Integer _jdbPort = null;
         private volatile String _licenseFile = null;
         private volatile boolean _useSingleCompThread = false;
-        private volatile int _rmiExternalPort = 2100;
-        private volatile int _rmiMatlabPort = 2101;
+        private volatile int _rmiPort = 2100;
         
         //Assigning to a long is not atomic, so use an AtomicLong to allow thread safety
         private final AtomicLong _proxyTimeout = new AtomicLong(90000L);
@@ -296,35 +288,24 @@ public class MatlabProxyFactoryOptions
         }
         
         /**
-         * Sets the ports matlabcontrol uses to communicate with MATLAB. By default ports {@code 2100} and {@code 2101}
-         * are used. The two port values must be positive and must not be the same. The ports should not be otherwise
-         * in use on the system; however, any number of MatlabProxyFactory instances (even those running in completely
-         * separate applications) may use the same ports. It is recommended the ports be in the range of {@code 1024} to
-         * {@code 49151}, but this is not enforced.
+         * Sets the port matlabcontrol uses to communicate with MATLAB. By default port {@code 2100} is used. The port
+         * value must be positive. It is recommended to be in the range of {@code 1024} to {@code 49151}, but this range
+         * is not enforced. The port should be otherwise unused; however, and number of MatlabProxyFactory instances
+         * (even those running in completely separate applications) may use the same port. A MatlabProxyFactory will
+         * only be able to connect to a previously controlled running session that was launched by a factory using the
+         * same {@code port}.
          * 
-         * @param port1
-         * @param port2
-         * @throws IllegalArgumentException if port conditions are not met
+         * @param port
+         * @throws IllegalArgumentException if port is not positive
          */
-        public final Builder setPorts(int port1, int port2)
+        public final Builder setPorts(int port)
         {
-            if(port1 < 1)
+            if(port < 1)
             {
-                throw new IllegalArgumentException("port [" + port1 + "] must be positive");
+                throw new IllegalArgumentException("port [" + port + "] must be positive");
             }
             
-            if(port2 < 1)
-            {
-                throw new IllegalArgumentException("port [" + port2 + "] must be positive");
-            }
-            
-            if(port1 == port2)
-            {
-                throw new IllegalArgumentException("port values [" + port1 + "] may not be the same");
-            }
-            
-            _rmiExternalPort = port1;
-            _rmiMatlabPort = port2;
+            _rmiPort = port;
             
             return this;
         }

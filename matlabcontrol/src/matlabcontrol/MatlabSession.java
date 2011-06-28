@@ -40,9 +40,9 @@ interface MatlabSession extends Remote
      * returned and no other action will be taken.
      * 
      * @param receiverID
-     * @param receiverPort
+     * @param port
      * @throws RemoteException
      * @return if connection was established
      */
-    public boolean connectFromRMI(String receiverID, int receiverPort) throws RemoteException;
+    public boolean connectFromRMI(String receiverID, int port) throws RemoteException;
 }
