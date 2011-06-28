@@ -195,40 +195,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Returns a session that is available for connection. If no session is available, {@code null} will be returned.
-     * 
-     * @return 
-     */
-    /*
-    private MatlabSession getRunningSession()
-    {
-        MatlabSession availableSession = null;
-        
-        try
-        {
-            Registry registry = LocalHostRMIHelper.getRegistry(_options.getRMIMatlabPort());
-            
-            String[] remoteNames = registry.list();
-            for(String name : remoteNames)
-            {
-                if(name.startsWith(MatlabBroadcaster.MATLAB_SESSION_PREFIX))
-                {
-                    MatlabSession session = (MatlabSession) registry.lookup(name);
-                    if(session.isAvailableForConnection())
-                    {
-                        availableSession = session;
-                        break;
-                    }
-                }
-            }
-        }
-        catch(Exception e) { }
-        
-        return availableSession;
-    }
-     */
-    
-    /**
      * Uses the {@link #_options} and the arguments to create a {@link Process} that will launch MATLAB and
      * connect it to this JVM.
      * 
