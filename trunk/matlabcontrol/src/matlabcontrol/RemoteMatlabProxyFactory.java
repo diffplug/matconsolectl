@@ -47,7 +47,7 @@ import matlabcontrol.MatlabProxyFactory.RequestCallback;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class RemoteMatlabProxyFactory implements ProxyFactory
-{
+{   
     /**
      * The options that configure this instance of the factory.
      */
@@ -83,7 +83,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         initRegistry();
         
         //Create and bind the receiver
-        Receiver receiver = new Receiver(requestCallback, proxyID);
+        Receiver receiver = new Receiver(requestCallback, proxyID, Configuration.getClassPathAsRMICodebase());
         _receivers.add(receiver);
         try
         {
@@ -336,19 +336,23 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * Receives the wrapper around JMI from MATLAB.
+     * Receives a wrapper around JMI from MATLAB.
      */
     private class Receiver implements JMIWrapperRemoteReceiver
     {
         private final RequestCallback _requestCallback;
-        private final String _receiverID;
         private final RemoteIdentifier _proxyID;
+        private final String _codebase;
+        
+        private final String _receiverID;
+        
         private volatile boolean _receivedJMIWrapper = false;
         
-        public Receiver(RequestCallback requestCallback, RemoteIdentifier proxyID)
+        public Receiver(RequestCallback requestCallback, RemoteIdentifier proxyID, String codebase)
         {
             _requestCallback = requestCallback;
             _proxyID = proxyID;
+            _codebase = codebase;
             
             _receiverID = "PROXY_RECEIVER_" + proxyID.getUUIDString();
         }
@@ -396,6 +400,12 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         public boolean hasReceivedJMIWrapper()
         {
             return _receivedJMIWrapper;
+        }
+
+        @Override
+        public String getRMICodebase() throws RemoteException
+        {
+            return _codebase;
         }
     }
     

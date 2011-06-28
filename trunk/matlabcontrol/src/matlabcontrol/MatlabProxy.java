@@ -33,12 +33,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Methods which interact with MATLAB may provide any objects as function arguments and those methods return any
  * object. (When <strong>running outside MATLAB</strong> there are further restrictions, documented below.) As such the
  * return type of all methods that interact with MATLAB and return a value is {@code Object}. Primitives will be
- * autoboxed appropriately. Certain Java types will be converted into MATLAB types as
+ * autoboxed appropriately. 
+ * 
+ * 
+ * TODO - Improve this, this is not particularly accurate
+ * Certain Java types will be converted into MATLAB types as
  * <a href="http://www.mathworks.com/help/techdoc/matlab_external/f6671.html">documented</a> by MathWorks. Similarly
  * MATLAB types are converted into Java types as
  * <a href="http://www.mathworks.com/help/techdoc/matlab_external/f6425.html">documented</a> by MathWorks. The
  * documentation provides the information from the perspective of MATLAB code calling Java code, which is officially
  * supported. For matlabcontrol, the <i>opposite</i> is occurring with Java calling MATLAB code.
+ * END TODO
+ * 
  * <br><br>
  * The {@link matlabcontrol.extensions.LoggingMatlabInteractor} exists to help determine what is being returned by
  * MATLAB. {@link matlabcontrol.extensions.ReturnDataMatlabInteractor} simplifies casting the returned data. MATLAB
@@ -96,10 +102,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *     this limitation a {@link matlabcontrol.extensions.MatlabCallbackInteractor} can be used.) This does not apply to
  *     {@code exit()} which may be called from the EDT.</li>
  * </ul>
- * * This limitation is due to Java prohibiting loading arbitrary classes from remote Java Virtual Machines unless a
- * {@link SecurityManager} has been set that will allow this behavior. matlabcontrol intentionally does not set a
- * {@code SecurityManager}, but you may do so. A {@link java.rmi.RMISecurityManager} is configured to allow this
- * behavior. You must set the security manager before constructing a {@code MatlabProxyFactory}.
+ * * This limitation is due in part to Java prohibiting loading arbitrary classes from remote Java Virtual Machines
+ * unless a {@link SecurityManager} has been set.
+ * 
+ * TODO - DOCUMENT THIS MORE
+ * 
  * <br><br>
  * ✝ This is done to prevent MATLAB from hanging indefinitely. In order to properly interact with MATLAB the calling
  * thread (unless it is the main MATLAB thread) is paused until MATLAB completes the requested operation. When a thread

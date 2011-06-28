@@ -48,6 +48,7 @@ import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
+import matlabcontrol.PermissiveSecurityManager;
 import matlabcontrol.extensions.MatlabCallbackInteractor;
 import matlabcontrol.extensions.MatlabCallbackInteractor.MatlabCallback;
 import matlabcontrol.extensions.MatlabCallbackInteractor.MatlabDataCallback;
@@ -103,6 +104,8 @@ public class DemoFrame extends JFrame
     public DemoFrame(String title)
     {
         super(title);
+        
+        System.setSecurityManager(new PermissiveSecurityManager());
         
         try
         {

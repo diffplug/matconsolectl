@@ -66,9 +66,8 @@ class Configuration
      * If running on OS X.
      * 
      * @return 
-     * @throws MatlabConnectionException
      */
-    static boolean isOSX() throws MatlabConnectionException
+    static boolean isOSX()
     {
         return getOperatingSystem().startsWith("Mac OS X");
     }
@@ -77,9 +76,8 @@ class Configuration
      * If running on Windows.
      * 
      * @return 
-     * @throws MatlabConnectionException
      */
-    static boolean isWindows() throws MatlabConnectionException
+    static boolean isWindows()
     {
         return getOperatingSystem().startsWith("Windows");
     }
@@ -88,31 +86,22 @@ class Configuration
      * If running on Linux.
      * 
      * @return 
-     * @throws MatlabConnectionException
+     * @throws
      */
-    static boolean isLinux() throws MatlabConnectionException
+    static boolean isLinux()
     {
-        return getOperatingSystem().toLowerCase().startsWith("linux");
+        return getOperatingSystem().startsWith("Linux");
     }
     
     /**
      * Gets a string naming the operating system.
      * 
      * @return 
-     * @throws MatlabConnectionException
      */
-    private static String getOperatingSystem() throws MatlabConnectionException
+    private static String getOperatingSystem()
     {
-        try
-        {
-            return System.getProperty("os.name");
-        }
-        catch(SecurityException e)
-        {
-            throw new MatlabConnectionException("Operating system information cannot be determined", e);
-        }
+        return System.getProperty("os.name");
     }
-
 
     /**
      * Returns the location or alias of MATLAB on an operating system specific basis.
@@ -194,7 +183,43 @@ class Configuration
         
         return matlabLocation;
     }
+    
+    /**
+     * The codebase format is a list of URL formatted strings separated by spaces. What would normally be a space is
+     * instead represented as {@code %20}. While not explicitly specified, directories must be terminated with a
+     * {@code /} or it is treated as if it were a JAR. This is because the default RMI class loader internally uses a
+     * {@link java.net.URLClassLoader}. The normal classpath format does not have this requirement.
+     * 
+     * @return codebase
+     */
+    static String getClassPathAsRMICodebase()
+    {
+        String classpath = System.getProperty("java.class.path", "");
+        
+        StringBuilder codebaseBuilder = new StringBuilder();
+            
+        String[] paths = classpath.split(":");
+        for(String path : paths)
+        {
+            codebaseBuilder.append("file://");
 
+            String formatedPath = path;
+            formatedPath = formatedPath.replace(" ", "%20");
+            codebaseBuilder.append(formatedPath);
+            
+            if(!formatedPath.endsWith("/") && new File(path).isDirectory())
+            {
+                codebaseBuilder.append("/");
+            }
+
+            codebaseBuilder.append(" ");
+        }
+
+        String codebase = codebaseBuilder.toString();
+        
+        return codebase;
+    }
+    
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. The

@@ -22,10 +22,12 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import matlabcontrol.internal.MatlabRMIClassLoaderSpi;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.RMIClassLoaderSpi;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -60,6 +62,9 @@ class MatlabConnector
      */
     public static void connectFromMatlab(String receiverID)
     {
+        //Set the RMI class loader
+        System.setProperty("java.rmi.server.RMIClassLoaderSpi", MatlabRMIClassLoaderSpi.class.getName());
+        
         connect(receiverID, false);
     }
     
@@ -131,6 +136,16 @@ class MatlabConnector
 
                  //Register the receiver with the broadcaster
                 MatlabBroadcaster.addReceiver(receiver);
+                
+                //Load a security manager so that remote class loading can occur
+                if(System.getSecurityManager() == null)
+                {
+                    System.setSecurityManager(new PermissiveSecurityManager());
+                }
+            
+                //Tell the RMI class loader of the codebase where the receiver is from, this will allow MATLAB to load
+                //classes defined in the remote JVM, but not in this one
+                MatlabRMIClassLoaderSpi.setCodebase(receiver.getRMICodebase());
 
                 //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
                 receiver.receiveJMIWrapper(new JMIWrapperRemoteImpl(), _existingSession);
