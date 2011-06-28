@@ -102,7 +102,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         {
             //If allowed to connect to a running session and a connection could be made
             if(_options.getUseRunningSession() && MatlabSessionImpl.connectToRunningSession(receiver.getReceiverID(),
-                    _options.getRMIExternalJVMPort(), _options.getRMIMatlabPort()))
+                    _options.getRMIPort()))
             {
                 request = new RemoteRequest(proxyID, null, receiver);
             }
@@ -177,14 +177,14 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Create a RMI registry
             try
             {
-                _registry = LocalHostRMIHelper.createRegistry(_options.getRMIExternalJVMPort());
+                _registry = LocalHostRMIHelper.createRegistry(_options.getRMIPort());
             }
             //If we can't create one, try to retrieve an existing one
             catch(Exception e)
             {
                 try
                 {
-                    _registry = LocalHostRMIHelper.getRegistry(_options.getRMIExternalJVMPort());
+                    _registry = LocalHostRMIHelper.getRegistry(_options.getRMIPort());
                 }
                 catch(Exception ex)
                 {
@@ -306,7 +306,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                         MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
                         "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
                         MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
-                            _options.getRMIExternalJVMPort() + ", " + _options.getRMIMatlabPort() + ");";
+                            _options.getRMIPort() + ");";
         processArguments.add(runArg);
         
         //Create process

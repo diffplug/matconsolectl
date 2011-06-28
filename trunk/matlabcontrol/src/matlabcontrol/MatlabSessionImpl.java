@@ -45,12 +45,12 @@ class MatlabSessionImpl implements MatlabSession
     private final String SESSION_ID = MATLAB_SESSION_PREFIX + UUID.randomUUID().toString();
 
     @Override
-    public synchronized boolean connectFromRMI(String receiverID, int receiverPort)
+    public synchronized boolean connectFromRMI(String receiverID, int port)
     {
         boolean success = false;
         if(MatlabConnector.isAvailableForConnection())
         {
-            MatlabConnector.connect(receiverID, receiverPort, -1, true);
+            MatlabConnector.connect(receiverID, port, true);
             success = true;
         }
         
@@ -72,17 +72,16 @@ class MatlabSessionImpl implements MatlabSession
      * {@code false} otherwise.
      * 
      * @param receiverID
-     * @param receiverPort
-     * @param broadcastPort
+     * @param port
      * @return if connection was made
      */
-    static boolean connectToRunningSession(String receiverID, int receiverPort, int broadcastPort)
+    static boolean connectToRunningSession(String receiverID, int port)
     {
         boolean establishedConnection = false;
         
         try
         {
-            Registry registry = LocalHostRMIHelper.getRegistry(broadcastPort);
+            Registry registry = LocalHostRMIHelper.getRegistry(port);
             
             String[] remoteNames = registry.list();
             for(String name : remoteNames)
@@ -90,7 +89,7 @@ class MatlabSessionImpl implements MatlabSession
                 if(name.startsWith(MATLAB_SESSION_PREFIX))
                 {
                     MatlabSession session = (MatlabSession) registry.lookup(name);
-                    if(session.connectFromRMI(receiverID, receiverPort))
+                    if(session.connectFromRMI(receiverID, port))
                     {
                         establishedConnection = true;
                         break;
