@@ -52,4 +52,12 @@ interface JMIWrapperRemoteReceiver extends Remote
      * @throws RemoteException 
      */
     public String getReceiverID() throws RemoteException;
+    
+    /**
+     * The codebase of the virtual machine the receiver was created in.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
+    public String getRMICodebase() throws RemoteException;
 }

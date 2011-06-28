@@ -471,7 +471,8 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
             {
                 Object[] array = (Object[]) result;
                 
-                builder.append("Object array, length = ");
+                builder.append(array.getClass().getComponentType().getName());
+                builder.append(" array, length = ");
                 builder.append(array.length);
                 builder.append("\n");
                 
