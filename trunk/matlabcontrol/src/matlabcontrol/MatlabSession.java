@@ -26,7 +26,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * An implementation of this interface is bound to the RMI registry, representing this session of MATLAB.
+ * An implementation of this interface is bound to a RMI registry, representing this session of MATLAB.
  *
  * @since 4.0.0
  * 
@@ -35,19 +35,14 @@ import java.rmi.RemoteException;
 interface MatlabSession extends Remote
 {
     /**
-     * If this session is available to receive a connection to create a remote proxy.
-     * 
-     * @return
-     * @throws RemoteException 
-     */
-    public boolean isAvailableForConnection() throws RemoteException;
-    
-    /**
-     * Causes matlabcontrol to execute the same code that occurs when launching MATLAB with matlabcontrol but instead
-     * initiates it over RMI.
+     * Attempts a connection to this session of MATLAB. If this session is available for connection it will send a
+     * {@link JMIWrapperRemote} to the receiver and {@code true} will be returned. Otherwise {@code false} will be
+     * returned and no other action will be taken.
      * 
      * @param receiverID
+     * @param receiverPort
      * @throws RemoteException
+     * @return if connection was established
      */
-    public void connectFromRMI(String receiverID) throws RemoteException;
+    public boolean connectFromRMI(String receiverID, int receiverPort) throws RemoteException;
 }
