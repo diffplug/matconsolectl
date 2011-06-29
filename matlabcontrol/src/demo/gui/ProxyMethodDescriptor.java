@@ -97,7 +97,7 @@ public enum ProxyMethodDescriptor
         "<br><br>" +
         "In order for the result of this command to be returned the number of arguments to be returned must be specified " +
         "by <tt>returnCount</tt>. If the command you are evaluating is a MATLAB function you can determine the amount of " +
-        "arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns " +
+        "arguments it returns by using the <tt>nargout</tt> function in the MATLAB Command Window. If it returns " +
         "<tt>-1</tt> that means the function returns a variable number of arguments. In that case, you will need to " +
         "manually determine the appropriate number of arguments returned for your use. If the number of arguments MATLAB " +
         "attempts to return differs <tt>returnCount</tt> an undefined behavior will occur. Among the behaviors possible " +
