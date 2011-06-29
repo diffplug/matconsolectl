@@ -31,7 +31,7 @@ import java.security.Permission;
  * loading classes that are defined in the other Java Virtual Machine, but not its own. This is for good reason, because
  * allowing arbitrary code to be loaded into an application has the potential for a security exploit. By default RMI
  * allows connections from any external machine unless otherwise configured (or blocked by a firewall). matlabcontrol
- * is configured to prohibit any external connections over the ports it uses.
+ * is configured to prohibit any external connections on the port it is using.
  * <br><br>
  * When matlabcontrol launches a session of MATLAB it installs this security manager so that MATLAB may load classes
  * defined in your application. matlabcontrol does not install this security manager in your program. Installing any
@@ -39,7 +39,7 @@ import java.security.Permission;
  * but not in your application. Using this security manager is convenient when your application does not need any
  * security beyond the default of having no security manager installed.
  * <br><br>
- * This security manager can be installed as follows:
+ * To install this security manager:
  * <pre>
  * {@code
  * System.setSecurityManager(new PermissiveSecurityManager());
@@ -52,9 +52,20 @@ import java.security.Permission;
  */
 public class PermissiveSecurityManager extends SecurityManager
 {
+    /**
+     * Always accepts permission request.
+     * 
+     * @param perm 
+     */
     @Override
     public void checkPermission(Permission perm) { }
 
+    /**
+     * Always accepts permission request.
+     * 
+     * @param perm
+     * @param context 
+     */
     @Override
     public void checkPermission(Permission perm, Object context) { }
 }

@@ -38,10 +38,10 @@ interface ProxyFactory
      * Returns a {@link MatlabProxy}. While this method blocks the calling thread until a proxy is created (or the
      * timeout is reached), any number of threads may call {@code getProxy()} simultaneously.
      * <br><br>
-     * <strong>Running inside MATLAB</strong><br>
+     * <i>Running inside MATLAB</i><br>
      * The proxy will be returned very quickly.
      * <br><br>
-     * <strong>Running outside MATLAB</strong><br>
+     * <i>Running outside MATLAB</i><br>
      * This proxy will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
      * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
      * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
@@ -62,10 +62,10 @@ interface ProxyFactory
      * This method is non-blocking. Any number of requests may be made simultaneously from the same thread or different
      * threads.
      * <br><br>
-     * <strong>Running inside MATLAB</strong><br>
+     * <i>Running inside MATLAB</i><br>
      * The proxy will be provided to the callback very quickly.
      * <br><br>
-     * <strong>Running outside MATLAB</strong><br>
+     * <i>Running outside MATLAB</i><br>
      * The proxy will either connect to an existing session of MATLAB or launch a new session of MATLAB. The proxy
      * will only be connected to an existing session of MATLAB if no proxy running outside MATLAB is currently
      * connected to it. Connecting to an existing session of MATLAB can be entirely disabled with the factory options.
@@ -74,7 +74,7 @@ interface ProxyFactory
      * to cancel the request.
      * 
      * @throws MatlabConnectionException
-     * @return the request
+     * @return request
      */
     public Request requestProxy(RequestCallback callback) throws MatlabConnectionException;
 }

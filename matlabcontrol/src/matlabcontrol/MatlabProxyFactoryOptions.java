@@ -3,8 +3,8 @@ package matlabcontrol;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Options that configure how {@link MatlabProxyFactory} operates. Use the {@link Builder} to create an instance of
- * {@code MatlabProxyFactoryOptions}.
+ * Options that configure how {@link MatlabProxyFactory} operates. Use a {@link Builder} to create an instance of this
+ * class.
  * <br><br>
  * This class is unconditionally thread-safe.
  * 
@@ -289,20 +289,20 @@ public class MatlabProxyFactoryOptions
         
         /**
          * Sets the port matlabcontrol uses to communicate with MATLAB. By default port {@code 2100} is used. The port
-         * value must be positive. It is recommended to be in the range of {@code 1024} to {@code 49151}, but this range
-         * is not enforced. The port should be otherwise unused; however, and number of MatlabProxyFactory instances
-         * (even those running in completely separate applications) may use the same port. A MatlabProxyFactory will
-         * only be able to connect to a previously controlled running session that was launched by a factory using the
-         * same {@code port}.
+         * value must be non-negative. It is recommended to be in the range of {@code 1024} to {@code 49151}, but this
+         * range is not enforced. The port should be otherwise unused; however, any number of {@link MatlabProxyFactory}
+         * instances (even those running in completely separate applications) may use the same port. A 
+         * {@code MatlabProxyFactory} will only be able to connect to a previously controlled running session that was
+         * started by a factory using the same {@code port}.
          * 
          * @param port
-         * @throws IllegalArgumentException if port is not positive
+         * @throws IllegalArgumentException if port is not non-negative
          */
-        public final Builder setPorts(int port)
+        public final Builder setPort(int port)
         {
-            if(port < 1)
+            if(port < 0)
             {
-                throw new IllegalArgumentException("port [" + port + "] must be positive");
+                throw new IllegalArgumentException("port [" + port + "] must be non-negative");
             }
             
             _rmiPort = port;
