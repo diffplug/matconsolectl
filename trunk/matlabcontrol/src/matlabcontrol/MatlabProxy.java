@@ -421,9 +421,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * {@code MatlabProxy} (or any class delegating to it).
      * <br><br>
      * All restrictions that apply to arguments passed to other methods that interact with MATLAB also apply to this
-     * method. In particular, this means that if <strong>running outside MATLAB</strong> the {@code callable} must be
-     * either {@link java.io.Serializable} or {@link java.rmi.Remote} and must be either defined in MATLAB's Java
-     * Virtual Machine or remote class loading must be allowed by the virtual machine's {@link SecurityManager}.
+     * method. In particular, this means that if <i>running outside MATLAB</i> the {@code callable} must be either
+     * {@link java.io.Serializable} or {@link java.rmi.Remote}.
      * 
      * @param <T>
      * @param callable
