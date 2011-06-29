@@ -24,8 +24,8 @@ package matlabcontrol.extensions;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Acts as a MATLAB matrix of doubles. Supports both the real and imaginary components of the matrix. If the matrix
@@ -120,7 +120,7 @@ public final class MatlabMatrix
         _isReal = (imaginary == null);
         
         _lengths = lengths;
-        _arrayType = DoubleArrayType.get(lengths.length);
+        _arrayType = DoubleArrayType.getInstance(lengths.length);
     }
     
     /**
@@ -694,7 +694,7 @@ public final class MatlabMatrix
      */
     private static int[] computeBoundingLengths(Object array)
     {   
-        DoubleArrayType<?> type = DoubleArrayType.get(array.getClass());
+        DoubleArrayType<?> type = DoubleArrayType.getInstance(array.getClass());
         int[] maxLengths = new int[type.getDimensions()];
 
         //The length of this array
@@ -821,6 +821,8 @@ public final class MatlabMatrix
     /**
      * An array type of any dimension that holds {@code double}s. Instances for dimensions 2 through 9 are available as
      * public static fields.
+     * <br><br>
+     * This class is unconditionally thread-safe.
      * 
      * @param <T> an array of 1 or more dimensions which holds {@code double}s
      */
@@ -829,47 +831,48 @@ public final class MatlabMatrix
         /**
          * Caches loaded {@code DoubleArrayType}s.
          */
-        private static final Map<Class, DoubleArrayType> CLASS_TO_ARRAY_TYPE = new HashMap<Class, DoubleArrayType>();
+        private static final Map<Class, DoubleArrayType> CLASS_TO_ARRAY_TYPE =
+                new ConcurrentHashMap<Class, DoubleArrayType>();
         
         /**
          * Representation of {@code double[][]} class.
          */
-        public static final DoubleArrayType<double[][]> DIM_2 = get(double[][].class);
+        public static final DoubleArrayType<double[][]> DIM_2 = getInstance(double[][].class);
         
         /**
          * Representation of {@code double[][][]} class.
          */
-        public static final DoubleArrayType<double[][][]> DIM_3 = get(double[][][].class);
+        public static final DoubleArrayType<double[][][]> DIM_3 = getInstance(double[][][].class);
         
         /**
          * Representation of {@code double[][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][]> DIM_4 = get(double[][][][].class);
+        public static final DoubleArrayType<double[][][][]> DIM_4 = getInstance(double[][][][].class);
                 
         /**
          * Representation of {@code double[][][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][][]> DIM_5 = get(double[][][][][].class);
+        public static final DoubleArrayType<double[][][][][]> DIM_5 = getInstance(double[][][][][].class);
                 
         /**
          * Representation of {@code double[][][][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][][][]> DIM_6 = get(double[][][][][][].class);
+        public static final DoubleArrayType<double[][][][][][]> DIM_6 = getInstance(double[][][][][][].class);
                         
         /**
          * Representation of {@code double[][][][][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][][][][]> DIM_7 = get(double[][][][][][][].class);
+        public static final DoubleArrayType<double[][][][][][][]> DIM_7 = getInstance(double[][][][][][][].class);
         
         /**
          * Representation of {@code double[][][][][][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][][][][][]> DIM_8 = get(double[][][][][][][][].class);
+        public static final DoubleArrayType<double[][][][][][][][]> DIM_8 = getInstance(double[][][][][][][][].class);
         
         /**
          * Representation of {@code double[][][][][][][][][]} class.
          */
-        public static final DoubleArrayType<double[][][][][][][][][]> DIM_9 = get(double[][][][][][][][][].class);
+        public static final DoubleArrayType<double[][][][][][][][][]> DIM_9 = getInstance(double[][][][][][][][][].class);
         
         /**
          * The array class represented.
@@ -901,11 +904,11 @@ public final class MatlabMatrix
         
         /**
          * Gets an instance of {@code DoubleArrayType<T>} where {@code T} is the type of {@code arrayType}. {@code T}
-         * must be an array of 1 or more dimensions that holds {@code double}s. This intended for getting array types
+         * must be an array of 1 or more dimensions that holds {@code double}s. This is intended for getting array types
          * in excess of 9 dimensions, as dimensions 2 through 9 are represented by constants {@code DIM_2 ... DIM_9}.
          * <br><br>
-         * Example usage:<br>
-         * {@code DoubleArrayType<double[][][]> type3D = DoubleArrayType.get(double[][][].class)}
+         * Contrived example usage:<br>
+         * {@code DoubleArrayType<double[][][]> type3D = DoubleArrayType.getInstance(double[][][].class);}
          * 
          * @param <T>
          * @param arrayType
@@ -914,7 +917,7 @@ public final class MatlabMatrix
          * 
          * @throws IllegalArgumentException if the type is not an array holding {@code double}s
          */
-        public static <T> DoubleArrayType<T> get(Class<T> arrayType)
+        public static <T> DoubleArrayType<T> getInstance(Class<T> arrayType)
         {
             if(!CLASS_TO_ARRAY_TYPE.containsKey(arrayType))
             {
@@ -925,7 +928,7 @@ public final class MatlabMatrix
             return CLASS_TO_ARRAY_TYPE.get(arrayType);
         }
         
-        static DoubleArrayType<?> get(int dimensions)
+        static DoubleArrayType<?> getInstance(int dimensions)
         {
             DoubleArrayType<?> type;
             
@@ -937,10 +940,10 @@ public final class MatlabMatrix
             }
             className += "D";
 
-            //Retrieve the class, and then get the corresponding DoubleArrayType
+            //Retrieve the class, and then getInstance the corresponding DoubleArrayType
             try
             {
-                type = get(Class.forName(className));
+                type = getInstance(Class.forName(className));
             }
             catch(ClassNotFoundException e)
             {
