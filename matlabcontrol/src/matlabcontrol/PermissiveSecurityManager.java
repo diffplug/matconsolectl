@@ -27,8 +27,9 @@ import java.security.Permission;
 /**
  * A {@code SecurityManager} that always permits an action to take place. By default a Java application has no
  * {@code SecurityManager} set (although Java applets do). This security manager acts as if there was no security
- * manager in place. However, Remote Method Invocation (RMI) requires a security manager be set in order to allow
- * loading classes that are defined in the other Java Virtual Machine, but not its own. This is for good reason, because
+ * manager in place. matlabcontrol uses Remote Method Invocation (RMI) to communicate with MATLAB when it is used in an
+ * application that is not running inside MATLAB. RMI requires a security manager be set in order to allow loading
+ * classes that are defined in the other Java Virtual Machine, but not its own. This is for good reason, because
  * allowing arbitrary code to be loaded into an application has the potential for a security exploit. By default RMI
  * allows connections from any external machine unless otherwise configured (or blocked by a firewall). matlabcontrol
  * is configured to prohibit any external connections on the port it is using.

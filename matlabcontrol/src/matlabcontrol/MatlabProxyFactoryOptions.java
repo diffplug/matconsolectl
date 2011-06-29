@@ -120,10 +120,10 @@ public class MatlabProxyFactoryOptions
          * <br><br>
          * The absolute path to the MATLAB executable can be determined by running MATLAB. On OS X or Linux, evaluate
          * {@code [matlabroot '/bin/matlab']} in the Command Window. On Windows, evaluate
-         * {@code [matlabroot '/bin/matlab.exe']} in the Command Window.
+         * {@code [matlabroot '/bin/matlab.exe']} in the Command Window. The location provided does not have to be an
+         * absolute path so long as the operating system can resolve the path.
          * <br><br>
          * <strong>Windows</strong><br>
-         * The location does not have to be an absolute path so long as the operating system can resolve the path.
          * Locations relative to the following will be understood:
          * <ul>
          * <li>The current working directory</li>
@@ -252,19 +252,20 @@ public class MatlabProxyFactoryOptions
          * <br><br>
          * If a running session of MATLAB previously loaded classes defined in the controlling application, problems
          * can arise. MATLAB sessions launched by matlabcontrol are able to load classes defined in the controlling
-         * application. When an existing session of MATLAB is connected to by a new controlling application it will now
-         * be able to load classes defined by the new controlling application but not the previous one. Two different
-         * problems may arise due to this behavior. If an attempt to use a class defined in a previously controlling
-         * session that was not loaded while the application was controlling MATLAB is made then it will fail with a
-         * {@code ClassNotFoundException} if it is not also defined in the newly controlling application. If the class
-         * is defined it may fail to load it if serializable definition is not compatible. A similar issue is if the
-         * newly controlling application attempts to send to MATLAB an instance of a class that was also defined by the
-         * previously controlling application but the serializable definition is not compatible. These above issues can
-         * easily be encountered when developing an application while changing {@link java.io.Serializable} or
-         * {@link java.rmi.Remote} classes and using the same session of MATLAB repeatedly. This will particularly be
-         * the case if the classes do not define a {@code serialVersionUID}. If multiple instances of the same
-         * application do not vary in their definition of {@code Serializable} and {@code Remote} objects then
-         * connecting to a previously controlled session of MATLAB will not cause any issues.
+         * application. When an existing session of MATLAB is connected to by a newly controlling application it will
+         * now be able to load classes defined by the newly controlling application but not the previous one. Several
+         * problems may arise due to this behavior. If an attempt is made to use a class defined in a
+         * previously controlling session that was not loaded while the application was controlling MATLAB then it will
+         * fail with a {@code ClassNotFoundException} if it is not also defined in the newly controlling application. If
+         * the class is defined it will fail to load it if the serializable definition is not compatible. A similar
+         * issue is if the newly controlling application attempts to send to MATLAB an instance of a class that was also
+         * defined by the previously controlling application but the serializable definition is not compatible. These
+         * above issues can easily be encountered when developing an application while changing
+         * {@link java.io.Serializable} or {@link java.rmi.Remote} classes and using the same session of MATLAB
+         * repeatedly. This will particularly be the case if the classes do not define a {@code serialVersionUID}. If
+         * multiple instances of the same application do not vary in their definition of {@code Serializable} and
+         * {@code Remote} classes then connecting to a previously controlled session of MATLAB will not cause any issues
+         * in this regard.
          * 
          * @param usePreviouslyControlled 
          */

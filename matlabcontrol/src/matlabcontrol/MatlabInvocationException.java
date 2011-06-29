@@ -23,8 +23,7 @@ package matlabcontrol;
  */
 
 /**
- * Represents a failure to invoke a method on the MATLAB session. This will most likely occur if the MATLAB session
- * being controlled is no longer open or MATLAB experiences an internal error.
+ * Represents a failure to invoke a method on the MATLAB session.
  * 
  * @since 3.0.0
  * 

@@ -113,6 +113,8 @@ public class MatlabProxyFactory implements ProxyFactory
      * A request for a {@link MatlabProxy}. Because requests have no timeout, a {@code Request} has no concept of
      * failure.
      * <br><br>
+     * Implementations of this class are unconditionally thread-safe.
+     * <br><br>
      * This interface is not intended to be implemented by users of matlabcontrol.
      * 
      * @since 4.0.0
@@ -123,7 +125,7 @@ public class MatlabProxyFactory implements ProxyFactory
         /**
          * The identifier of the proxy associated with this request. If the proxy is created, then its identifier
          * accessible via {@link MatlabProxy#getIdentifier()} will return {@code true} when tested for equivalence with
-         * the identifier returned by this method using {@link Identifier#equals(java.lang.Object)} 
+         * the identifier returned by this method using {@link Identifier#equals(java.lang.Object)}.
          * 
          * @return proxy's identifier
          */
