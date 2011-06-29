@@ -22,13 +22,16 @@
  */
 
 import demo.gui.DemoFrame;
+
+import java.awt.EventQueue;
+
 import javax.swing.WindowConstants;
 
 /**
  * This class exists solely as a entry point to the demo when running it from inside of MATLAB. By placing it in the
- * default package and giving it the name that it has, it means that once the code is added to the Java classpath then
- * the demo can be launched just by typing {@code matlabcontroldemo}. Typing that will cause the constructor of this
- * class to be called.
+ * default package and giving it the name that it has, it means that once the code is added to MATLAB's Java classpath
+ * then the demo can be launched just by typing {@code matlabcontroldemo}. Typing that will cause the constructor of
+ * this class to be called.
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
@@ -39,9 +42,16 @@ class matlabcontroldemo
      */
     public matlabcontroldemo()
     {
-        DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Inside MATLAB");
-        frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
-        frame.setVisible(true);
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Inside MATLAB");
+                frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
+                frame.setVisible(true);
+            }
+        });
     }
     
     /**
