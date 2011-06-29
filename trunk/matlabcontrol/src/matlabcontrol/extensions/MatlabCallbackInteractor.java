@@ -96,7 +96,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param command
      * @param callback 
@@ -122,7 +123,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param command
      * @param returnCount
@@ -149,7 +151,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param functionName
      * @param args
@@ -176,7 +179,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param functionName
      * @param args
@@ -203,7 +207,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param functionName
      * @param args
@@ -232,7 +237,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param variableName
      * @param value
@@ -259,7 +265,8 @@ public class MatlabCallbackInteractor<E>
     }
 
     /**
-     * Delegates to the interactor, calling the {@code callback} when the method has been executed.
+     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
+     * completed.
      * 
      * @param variableName
      * @param callback 
@@ -286,10 +293,10 @@ public class MatlabCallbackInteractor<E>
     
     /**
      * Delegates to the interactor, calling the {@code callback} when the method has been executed.
-     * The name of this method has been retained for consistency with {@code MatlabInteractor}, but not that while the
-     * code in the callable will be invoked on the MATLAB thread and it will wait until completion so as to return a
-     * result, this method - like all others in this class, will not wait for completion. Instead, the result will be
-     * provided to the {@code callback}.
+     * The name of this method has been retained for consistency with {@code MatlabInteractor}, but note that while the
+     * code in the {@code callable} will be invoked on the MATLAB thread and it will wait until completion so as to
+     * return a result, this method - like all others in this class, will not wait for completion. Instead, the result
+     * will be provided to the {@code callback}.
      * 
      * @param callable
      * @param callback 

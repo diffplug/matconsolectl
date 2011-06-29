@@ -40,7 +40,7 @@ public class MatlabInvocationException extends Exception
                         UNMARSHALLING_MSG = "Object attempting to be sent or returned cannot be sent between Java Virtual Machines",
                         INTERNAL_EXCEPTION_MSG = "Method did not return properly because of an internal MATLAB exception",
                         EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread",
-                        RUNTIME_CALLABLE_MSG = "RuntimeException in MatlabThreadCallable, see cause for more information";
+                        RUNTIME_CALLABLE_MSG = "Exception occurred in MatlabThreadCallable, see cause for more information";
     
     MatlabInvocationException(String msg)
     {
