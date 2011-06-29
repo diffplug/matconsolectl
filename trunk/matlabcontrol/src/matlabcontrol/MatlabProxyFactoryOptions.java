@@ -250,22 +250,24 @@ public class MatlabProxyFactoryOptions
          * {@link MatlabProxy#isExistingSession()}. You may wish to clear MATLAB's environment using {@code clear}.
          * Doing so will not in anyway interfere with matlabcontrol (including executing {@code clear java}).
          * <br><br>
-         * If a running session of MATLAB previously loaded classes defined in the controlling application, problems
-         * can arise. MATLAB sessions launched by matlabcontrol are able to load classes defined in the controlling
-         * application. When an existing session of MATLAB is connected to by a newly controlling application it will
-         * now be able to load classes defined by the newly controlling application but not the previous one. Several
-         * problems may arise due to this behavior. If an attempt is made to use a class defined in a
-         * previously controlling session that was not loaded while the application was controlling MATLAB then it will
-         * fail with a {@code ClassNotFoundException} if it is not also defined in the newly controlling application. If
-         * the class is defined it will fail to load it if the serializable definition is not compatible. A similar
-         * issue is if the newly controlling application attempts to send to MATLAB an instance of a class that was also
-         * defined by the previously controlling application but the serializable definition is not compatible. These
-         * above issues can easily be encountered when developing an application while changing
-         * {@link java.io.Serializable} or {@link java.rmi.Remote} classes and using the same session of MATLAB
-         * repeatedly. This will particularly be the case if the classes do not define a {@code serialVersionUID}. If
-         * multiple instances of the same application do not vary in their definition of {@code Serializable} and
-         * {@code Remote} classes then connecting to a previously controlled session of MATLAB will not cause any issues
-         * in this regard.
+         * If a running session of MATLAB previously loaded classes defined in the controlling application, issues
+         * can arise. If your application does send to MATLAB or retrieve from MATLAB custom
+         * {@link java.io.Serializable} or {@link java.rmi.Remote} classes then these issues do not apply.
+         * <br><br>
+         * MATLAB sessions launched by matlabcontrol are able to load classes defined in the controlling application.
+         * When an existing session of MATLAB is connected to by a newly controlling application it will now be able to
+         * load classes defined by the newly controlling application but not the previous one. Several problems may
+         * arise due to this behavior. If an attempt is made to use a class defined in a previously controlling session
+         * that was not loaded while the application was controlling MATLAB then it will fail with a
+         * {@code ClassNotFoundException} if it is not also defined in the newly controlling application. If the class
+         * is defined it will fail to load it if the serializable definition is not compatible. A similar issue is if
+         * the newly controlling application attempts to send to MATLAB an instance of a class that was also defined by
+         * the previously controlling application but the serializable definition is not compatible. These above issues
+         * can easily be encountered when developing an application while changing {@code Serializable} or
+         * {@code Remote} classes and using the same session of MATLAB repeatedly. This will particularly be the case if
+         * the classes do not define a {@code serialVersionUID}. If multiple instances of the same application do not
+         * vary in their definition of {@code Serializable} and {@code Remote} classes then connecting to a previously
+         * controlled session of MATLAB will not cause any issues in this regard.
          * 
          * @param usePreviouslyControlled 
          */
