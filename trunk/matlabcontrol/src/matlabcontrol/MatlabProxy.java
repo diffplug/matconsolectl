@@ -281,7 +281,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     
     /**
      * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
-     * throw an exception. A proxy cannot be reconnected. Returns {@code true} if the proxy is now disconnected.
+     * throw an exception. A proxy cannot be reconnected. Returns {@code true} if the proxy is now disconnected,
+     * {@code false} otherwise.
      * 
      * @return if disconnected
      */
@@ -311,9 +312,10 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * In order for the result of this command to be returned the number of arguments to be returned must be specified
      * by {@code returnCount}. If the command you are evaluating is a MATLAB function you can determine the amount of
      * arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns
-     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
-     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
-     * differs from {@code returnCount} then either {@code null} or an empty {@code String} will be returned.
+     * {@code -1} that means the function returns a variable number of arguments. In that case, you will need to
+     * manually determine the appropriate number of arguments returned for your use. If the number of arguments MATLAB
+     * attempts to return differs {@code returnCount} an undefined behavior will occur. Among the behaviors possible
+     * is an exception being thrown, {@code null} being returned, or an empty {@code String} being returned.
      * 
      * @param command the command to be evaluated in MATLAB
      * @param returnCount the number of arguments that will be returned from evaluating the command
@@ -326,11 +328,10 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}. The result of this
-     * function will not be returned.
+     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * <br><br>
      * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
@@ -346,13 +347,12 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * <br><br>
      * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
      * <br><br>
-     * The result of this function can be returned. In order for a function's return data to be returned to MATLAB it is
-     * necessary to know how many arguments will be returned. This method will attempt to determine that automatically,
-     * but in the case where a function has a variable number of arguments an exception will be thrown. To invoke the
-     * function successfully use {@link #returningFeval(String, Object[], int)} and specify the number of arguments
-     * that will be returned for the provided arguments.
+     * This method may only be used for if {@code functionName} returns a fixed number of arguments. If 
+     * {@code functionName} returns a variable number of arguments an exception will be thrown. To successfully call
+     * {@code functionName} use {@link #returningFeval(java.lang.String, java.lang.Object[], int)} and specify the
+     * number of returned arguments.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
@@ -369,15 +369,15 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
      * <br><br>
      * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB char array, not a variable name.
+     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
      * <br><br>
-     * The result of this function can be returned. In order for the result of this function to be returned the number
-     * of arguments to be returned must be specified by {@code returnCount}. You can use the {@code nargout} function in
-     * the MATLAB Command Window to determine the number of arguments that will be returned. If {@code nargout} returns
-     * {@code -1} that means the function returns a variable number of arguments based on what you pass in. In that
-     * case, you will need to manually determine the number of arguments returned. If the number of arguments returned
-     * differs from {@code returnCount} then either only some of the items will be returned or {@code null} will be
-     * returned.
+     * In order for the result of this function to be returned the number of arguments to be returned must be specified
+     * by {@code returnCount}. You can use the {@code nargout} function in the MATLAB Command Window to determine the
+     * number of arguments that will be returned. If {@code nargout} returns {@code -1} that means the function returns
+     * a variable number of arguments. In that case, you will need to manually determine the appropriate number of
+     * arguments returned for your use. If the number of arguments MATLAB attempts to return differs {@code returnCount}
+     * an undefined behavior will occur. Among the behaviors possible is an exception being thrown, {@code null} being
+     * returned, or an empty {@code String} being returned.
      * 
      * @param functionName name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
@@ -436,6 +436,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
      * 
      * @see MatlabProxy#addDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener)
+     * @see MatlabProxy#removeDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener) 
      * @since 4.0.0
      * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
      */
@@ -443,8 +444,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     {
         /**
          * Called when the proxy becomes disconnected from MATLAB. The proxy passed in will always be the proxy that
-         * the listener was added to. The proxy is provided so that a single implementation of this interface may be
-         * used for multiple proxies.
+         * the listener was added to. The proxy is provided so that if desired a single implementation of this
+         * interface may easily be used for multiple proxies.
          * 
          * @param proxy disconnected proxy
          */
@@ -453,6 +454,10 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
     
     /**
      * Uniquely identifies a proxy.
+     * <br><br>
+     * Implementations of this class are unconditionally thread-safe.
+     * <br><br>
+     * This interface is not intended to be implemented by users of matlabcontrol.
      * 
      * @since 4.0.0
      * 
