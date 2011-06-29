@@ -26,16 +26,19 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.text.NumberFormat;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
+import javax.swing.JEditorPane;
 import javax.swing.JFormattedTextField;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -288,7 +291,7 @@ public class DemoFrame extends JFrame
         methodPanel.add(methodLowerPanel, BorderLayout.SOUTH);
         
         //Method choice
-        final JComboBox methodBox = new JComboBox(MethodDescriptor.METHODS);
+        final JComboBox methodBox = new JComboBox(ProxyMethodDescriptor.values());
         methodUpperPanel.add(methodBox);
         
         //Invoke button
@@ -314,13 +317,13 @@ public class DemoFrame extends JFrame
         methodLowerPanel.add(arrayPanel);
         
         //Method description
-        final JTextArea descriptionArea = new JTextArea();
+        final JEditorPane descriptionArea = new JEditorPane("text/html", "");
+        descriptionArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
         JScrollPane descriptionPane  = new JScrollPane(descriptionArea);
         descriptionPane.setBackground(Color.WHITE);
+        descriptionArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
         descriptionPane.setBorder(BorderFactory.createTitledBorder("Method description"));
         descriptionPane.setPreferredSize(DESCRIPTION_PANE_SIZE);
-        descriptionArea.setWrapStyleWord(true);
-        descriptionArea.setLineWrap(true);
         descriptionArea.setEditable(false);
         commandPanel.add(descriptionPane, BorderLayout.SOUTH);
         
@@ -331,7 +334,7 @@ public class DemoFrame extends JFrame
             public void actionPerformed(ActionEvent e)
             {
                 //Get selected method
-                MethodDescriptor method = (MethodDescriptor) methodBox.getSelectedItem();
+                ProxyMethodDescriptor method = (ProxyMethodDescriptor) methodBox.getSelectedItem();
                 
                 //Update box titles
                 field.setBorder(BorderFactory.createTitledBorder(method.stringInputName));
@@ -371,8 +374,10 @@ public class DemoFrame extends JFrame
             @Override
             public void actionPerformed(ActionEvent e)
             {
+                ProxyMethodDescriptor descriptor = (ProxyMethodDescriptor) methodBox.getSelectedItem();
+                
                 //eval(String command)
-                if(methodBox.getSelectedIndex() == MethodDescriptor.EVAL_INDEX)
+                if(descriptor == ProxyMethodDescriptor.EVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
@@ -394,7 +399,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //returningEval(String command, int returnCount)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.RETURNING_EVAL_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.RETURNING_EVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
@@ -423,7 +428,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //feval(String functionName, Object[] args)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.FEVAL_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.FEVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
@@ -445,7 +450,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //returningFeval(String functionName, Object[] args)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.RETURNING_AUTO_FEVAL_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.RETURNING_AUTO_FEVAL)
                 {
                     _invokeButton.setEnabled(false);
                             
@@ -467,7 +472,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //returningFeval(String functionName, Object[] args, int returnCount)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.RETURNING_FEVAL_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.RETURNING_FEVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
@@ -496,7 +501,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //setVariable(String variableName, Object value)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.SET_VARIABLE_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.SET_VARIABLE)
                 {
                     _invokeButton.setEnabled(false);
                     
@@ -518,7 +523,7 @@ public class DemoFrame extends JFrame
                     });
                 }
                 //getVariable(String variableName)
-                else if(methodBox.getSelectedIndex() == MethodDescriptor.GET_VARIABLE_INDEX)
+                else if(descriptor == ProxyMethodDescriptor.GET_VARIABLE)
                 {
                     _invokeButton.setEnabled(false);
                             
