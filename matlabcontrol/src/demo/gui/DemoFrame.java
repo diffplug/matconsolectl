@@ -48,6 +48,7 @@ import matlabcontrol.MatlabConnectionException;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
+import matlabcontrol.MatlabProxyFactoryOptions;
 import matlabcontrol.PermissiveSecurityManager;
 import matlabcontrol.extensions.MatlabCallbackInteractor;
 import matlabcontrol.extensions.MatlabCallbackInteractor.MatlabCallback;
@@ -155,7 +156,10 @@ public class DemoFrame extends JFrame
         this.pack();
         
         //Create proxy factory
-        _factory = new MatlabProxyFactory();
+        MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
+                .setUsePreviouslyControlledSession(true)
+                .build();
+        _factory = new MatlabProxyFactory(options);
 
         //Connect to MATLAB when the Connect button is pressed
         connectionButton.addActionListener(new ActionListener()

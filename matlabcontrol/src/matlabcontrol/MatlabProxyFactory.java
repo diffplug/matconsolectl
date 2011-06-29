@@ -25,7 +25,17 @@ package matlabcontrol;
 import matlabcontrol.MatlabProxy.Identifier;
 
 /**
- * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with the factory.
+ * Creates instances of {@link MatlabProxy}. Any number of proxies may be created with a factory.
+ * <br><br>
+ * How the proxies will connect to a session of MATLAB depends on whether the factory is running inside or outside
+ * MATLAB:
+ * <br><br>
+ * <i>Running inside MATLAB</i><br>
+ * The proxy will connect to the session of MATLAB this factory is running in.
+ * <br><br>
+ * <i>Running outside MATLAB</i><br>
+ * By default a new session of MATLAB will be started and connected to, but the factory may be configured via the
+ * options provided to this factory to connect to a previously controlled session.
  * <br><br>
  * This class is unconditionally thread-safe. Any number of proxies may be created simultaneously.
  * 

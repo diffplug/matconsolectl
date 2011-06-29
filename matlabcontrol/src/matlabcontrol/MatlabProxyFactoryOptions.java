@@ -15,25 +15,25 @@ public class MatlabProxyFactoryOptions
 {
     private final String _matlabLocation;
     private final boolean _hidden;
-    private final boolean _useRunning;
+    private final boolean _usePreviouslyControlled;
     private final long _proxyTimeout;
     private final String _logFile;
     private final Integer _jdbPort;
     private final String _licenseFile;
     private final boolean _useSingleCompThread;
-    private final int _rmiPort;
+    private final int _port;
         
     private MatlabProxyFactoryOptions(Builder options)
     {
         _matlabLocation = options._matlabLocation;
         _hidden = options._hidden;
-        _useRunning = options._useRunning;
+        _usePreviouslyControlled = options._usePreviouslyControlled;
         _proxyTimeout = options._proxyTimeout.get();
         _logFile = options._logFile;
         _jdbPort = options._jdbPort;
         _licenseFile = options._licenseFile;
         _useSingleCompThread = options._useSingleCompThread;
-        _rmiPort = options._rmiPort;
+        _port = options._port;
     }
 
     String getMatlabLocation()
@@ -46,9 +46,9 @@ public class MatlabProxyFactoryOptions
         return _hidden;
     }
 
-    boolean getUseRunningSession()
+    boolean getUsePreviouslyControlledSession()
     {
-        return _useRunning;
+        return _usePreviouslyControlled;
     }
 
     long getProxyTimeout()
@@ -76,9 +76,9 @@ public class MatlabProxyFactoryOptions
         return _useSingleCompThread;
     }
     
-    int getRMIPort()
+    int getPort()
     {
-        return _rmiPort;
+        return _port;
     }
     
     /**
@@ -104,14 +104,14 @@ public class MatlabProxyFactoryOptions
     {
         private volatile String _matlabLocation = null;
         private volatile boolean _hidden = false;
-        private volatile boolean _useRunning = true;
+        private volatile boolean _usePreviouslyControlled = false;
         private volatile String _logFile = null;
         private volatile Integer _jdbPort = null;
         private volatile String _licenseFile = null;
         private volatile boolean _useSingleCompThread = false;
-        private volatile int _rmiPort = 2100;
+        private volatile int _port = 2100;
         
-        //Assigning to a long is not atomic, so use an AtomicLong to allow thread safety
+        //Assigning to a long is not atomic, so use an AtomicLong so that a thread always sees an intended value
         private final AtomicLong _proxyTimeout = new AtomicLong(90000L);
 
         /**
@@ -237,19 +237,40 @@ public class MatlabProxyFactoryOptions
 
         /**
          * Sets whether the factory should attempt to create a proxy that is connected to a running session of MATLAB.
-         * By default this property is set to {@code true}.
+         * By default this property is set to {@code false}.
          * <br><br>
          * When this property is {@code true} all options which configure MATLAB such as being hidden or logging are
          * ignored. The only criterion used is whether a session of MATLAB is available for connection. In order for the
-         * factory to connect to the session of MATLAB, it must know about the session. This will be the case if any
-         * factory launched the session of MATLAB. The factory will only connect to a session that does not currently
-         * have a proxy controlling it from outside of MATLAB.
+         * factory to connect to the session of MATLAB, it must know about the session. This will be the case if a
+         * factory started the session of MATLAB and that factory was configured to use the same port as specified by
+         * {@link #setPort(int)} (or both are using the default port). The factory will only connect to a session that
+         * does not currently have a proxy controlling it from outside of MATLAB.
+         * <br><br>
+         * To determine if the proxy created is connected to an existing session of MATLAB call
+         * {@link MatlabProxy#isExistingSession()}. You may wish to clear MATLAB's environment using {@code clear}.
+         * Doing so will not in anyway interfere with matlabcontrol (including executing {@code clear java}).
+         * <br><br>
+         * If a running session of MATLAB previously loaded classes defined in the controlling application, problems
+         * can arise. MATLAB sessions launched by matlabcontrol are able to load classes defined in the controlling
+         * application. When an existing session of MATLAB is connected to by a new controlling application it will now
+         * be able to load classes defined by the new controlling application but not the previous one. Two different
+         * problems may arise due to this behavior. If an attempt to use a class defined in a previously controlling
+         * session that was not loaded while the application was controlling MATLAB is made then it will fail with a
+         * {@code ClassNotFoundException} if it is not also defined in the newly controlling application. If the class
+         * is defined it may fail to load it if serializable definition is not compatible. A similar issue is if the
+         * newly controlling application attempts to send to MATLAB an instance of a class that was also defined by the
+         * previously controlling application but the serializable definition is not compatible. These above issues can
+         * easily be encountered when developing an application while changing {@link java.io.Serializable} or
+         * {@link java.rmi.Remote} classes and using the same session of MATLAB repeatedly. This will particularly be
+         * the case if the classes do not define a {@code serialVersionUID}. If multiple instances of the same
+         * application do not vary in their definition of {@code Serializable} and {@code Remote} objects then
+         * connecting to a previously controlled session of MATLAB will not cause any issues.
          * 
-         * @param useRunning 
+         * @param usePreviouslyControlled 
          */
-        public final Builder setUseRunningSession(boolean useRunning)
+        public final Builder setUsePreviouslyControlledSession(boolean usePreviouslyControlled)
         {
-            _useRunning = useRunning;
+            _usePreviouslyControlled = usePreviouslyControlled;
             
             return this;
         }
@@ -305,7 +326,7 @@ public class MatlabProxyFactoryOptions
                 throw new IllegalArgumentException("port [" + port + "] must be non-negative");
             }
             
-            _rmiPort = port;
+            _port = port;
             
             return this;
         }

@@ -100,9 +100,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         //Connect to MATLAB
         try
         {
-            //If allowed to connect to a running session and a connection could be made
-            if(_options.getUseRunningSession() && MatlabSessionImpl.connectToRunningSession(receiver.getReceiverID(),
-                    _options.getRMIPort()))
+            //If allowed to connect to a previously controlled session and a connection could be made
+            if(_options.getUsePreviouslyControlledSession() &&
+               MatlabSessionImpl.connectToRunningSession(receiver.getReceiverID(), _options.getPort()))
             {
                 request = new RemoteRequest(proxyID, null, receiver);
             }
@@ -177,14 +177,14 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             //Create a RMI registry
             try
             {
-                _registry = LocalHostRMIHelper.createRegistry(_options.getRMIPort());
+                _registry = LocalHostRMIHelper.createRegistry(_options.getPort());
             }
             //If we can't create one, try to retrieve an existing one
             catch(Exception e)
             {
                 try
                 {
-                    _registry = LocalHostRMIHelper.getRegistry(_options.getRMIPort());
+                    _registry = LocalHostRMIHelper.getRegistry(_options.getPort());
                 }
                 catch(Exception ex)
                 {
@@ -272,7 +272,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                         MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
                         "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
                         MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
-                            _options.getRMIPort() + ");";
+                            _options.getPort() + ");";
         processArguments.add(runArg);
         
         //Create process
