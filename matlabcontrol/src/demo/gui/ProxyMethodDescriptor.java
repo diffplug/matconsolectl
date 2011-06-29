@@ -27,9 +27,8 @@ package demo.gui;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public enum ProxyMethodDescriptor
-{
-    
+enum ProxyMethodDescriptor
+{   
     EVAL("void eval(String command)", Documentation.EVAL, "command", "args (disabled)", false, 0),
     RETURNING_EVAL("Object returningEval(String command, int returnCount)", Documentation.RETURNING_EVAL, "comamnd", "args (disabled)", true, 0),
     FEVAL("void feval(String functionName, Object[] args)", Documentation.FEVAL, "functionName", "args", false, ArrayPanel.NUM_ENTRIES),

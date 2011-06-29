@@ -31,7 +31,7 @@ import javax.swing.WindowConstants;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class RemoteMain
+public class RemoteMain
 {
     public static void main(String[] args)
     {   
