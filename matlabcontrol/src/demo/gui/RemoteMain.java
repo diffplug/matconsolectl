@@ -22,6 +22,8 @@ package demo.gui;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.awt.EventQueue;
+
 import javax.swing.WindowConstants;
 
 /**
@@ -34,8 +36,16 @@ class RemoteMain
     public static void main(String[] args)
     {   
         OSXAppearance.applyIfApplicable();
-        DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB");
-        frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        frame.setVisible(true);
+        
+        EventQueue.invokeLater(new Runnable()
+        {
+            @Override
+            public void run()
+            {
+                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB");
+                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+                frame.setVisible(true);
+            }
+        });
     }
 }
