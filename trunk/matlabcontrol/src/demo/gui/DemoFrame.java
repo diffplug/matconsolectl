@@ -321,7 +321,7 @@ public class DemoFrame extends JFrame
         descriptionArea.putClientProperty(JEditorPane.HONOR_DISPLAY_PROPERTIES, Boolean.TRUE);
         JScrollPane descriptionPane  = new JScrollPane(descriptionArea);
         descriptionPane.setBackground(Color.WHITE);
-        descriptionArea.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        descriptionArea.setFont(new Font("SansSerif", Font.PLAIN, 13));
         descriptionPane.setBorder(BorderFactory.createTitledBorder("Method description"));
         descriptionPane.setPreferredSize(DESCRIPTION_PANE_SIZE);
         descriptionArea.setEditable(false);
