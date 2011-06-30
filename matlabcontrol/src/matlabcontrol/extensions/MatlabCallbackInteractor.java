@@ -35,8 +35,9 @@ import matlabcontrol.MatlabProxy;
  * Wraps around an interactor making the method calls operate with callbacks instead of return values. Due to this
  * difference this class does not implement {@link MatlabInteractor}, but it closely matches the methods. For each
  * method in {@code MatlabInteractor} the same method exists but has one additional parameter that is either
- * {@link MatlabCallback} or {@link MatlabDataCallback}. Method invocations do not throw exceptions, but if the
- * interactor throws an exception it will be provided to the callback.
+ * {@link MatlabCallback} or {@link MatlabDataCallback}. Method invocations do not throw
+ * {@link MatlabInvocationException}s, but if the interactor throws a {@code MatlabInvocationException} it will be
+ * provided to the callback.
  * <br><br>
  * All interactions with the interactor will be done in a single threaded manner. Because method invocations on the
  * delegate interactor occur on a separate thread from the one calling the methods in this class, it can be used from
@@ -51,7 +52,7 @@ import matlabcontrol.MatlabProxy;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabCallbackInteractor<E>
+public class MatlabCallbackInteractor<T>
 {
     /**
      * Executor that manages the single daemon thread used to invoke methods on the interactor. 
@@ -61,7 +62,7 @@ public class MatlabCallbackInteractor<E>
     /**
      * The interactor delegated to.
      */
-    private final MatlabInteractor<E> _delegateInteractor;
+    private final MatlabInteractor<T> _delegateInteractor;
     
     /**
      * Constructs this interactor which will delegate to the provided {@code interactor}. The type returned by the
@@ -78,7 +79,7 @@ public class MatlabCallbackInteractor<E>
      * 
      * @param interactor 
      */
-    public MatlabCallbackInteractor(MatlabInteractor<E> interactor)
+    public MatlabCallbackInteractor(MatlabInteractor<T> interactor)
     {
         _delegateInteractor = interactor;
     }
@@ -130,7 +131,7 @@ public class MatlabCallbackInteractor<E>
      * @param returnCount
      * @param callback 
      */
-    public void returningEval(final String command, final int returnCount, final MatlabDataCallback<E> callback)
+    public void returningEval(final String command, final int returnCount, final MatlabDataCallback<T> callback)
     {
         _executor.submit(new Runnable()
         {
@@ -139,7 +140,7 @@ public class MatlabCallbackInteractor<E>
             {
                 try
                 {
-                    E data = _delegateInteractor.returningEval(command, returnCount);
+                    T data = _delegateInteractor.returningEval(command, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -186,7 +187,7 @@ public class MatlabCallbackInteractor<E>
      * @param args
      * @param callback 
      */
-    public void returningFeval(final String functionName, final Object[] args, final MatlabDataCallback<E> callback)
+    public void returningFeval(final String functionName, final Object[] args, final MatlabDataCallback<T> callback)
     {        
         _executor.submit(new Runnable()
         {
@@ -195,7 +196,7 @@ public class MatlabCallbackInteractor<E>
             {
                 try
                 {
-                    E data = _delegateInteractor.returningFeval(functionName, args);
+                    T data = _delegateInteractor.returningFeval(functionName, args);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -216,7 +217,7 @@ public class MatlabCallbackInteractor<E>
      * @param callback 
      */
     public void returningFeval(final String functionName, final Object[] args, final int returnCount,
-            final MatlabDataCallback<E> callback)
+            final MatlabDataCallback<T> callback)
     {
         _executor.submit(new Runnable()
         {
@@ -225,7 +226,7 @@ public class MatlabCallbackInteractor<E>
             {
                 try
                 {
-                    E data = _delegateInteractor.returningFeval(functionName, args, returnCount);
+                    T data = _delegateInteractor.returningFeval(functionName, args, returnCount);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -271,7 +272,7 @@ public class MatlabCallbackInteractor<E>
      * @param variableName
      * @param callback 
      */
-    public void getVariable(final String variableName, final MatlabDataCallback<E> callback)
+    public void getVariable(final String variableName, final MatlabDataCallback<T> callback)
     {        
         _executor.submit(new Runnable()
         {
@@ -280,7 +281,7 @@ public class MatlabCallbackInteractor<E>
             {
                 try
                 {
-                    E data = _delegateInteractor.getVariable(variableName);
+                    T data = _delegateInteractor.getVariable(variableName);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -301,7 +302,7 @@ public class MatlabCallbackInteractor<E>
      * @param callable
      * @param callback 
      */
-    public <T> void invokeAndWait(final MatlabCallable<T> callable, final MatlabDataCallback<T> callback)
+    public <U> void invokeAndWait(final MatlabCallable<U> callable, final MatlabDataCallback<U> callback)
     {        
         _executor.submit(new Runnable()
         {
@@ -310,7 +311,7 @@ public class MatlabCallbackInteractor<E>
             {
                 try
                 {
-                    T data = _delegateInteractor.invokeAndWait(callable);
+                    U data = _delegateInteractor.invokeAndWait(callable);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -324,16 +325,16 @@ public class MatlabCallbackInteractor<E>
     /**
      * A callback that supplies the results of the invocation or the raised exception.
      * 
-     * @param <E> 
+     * @param <V> 
      */
-    public static interface MatlabDataCallback<E>
+    public static interface MatlabDataCallback<V>
     {
         /**
          * Called when the method successfully completed.
          * 
          * @param data the data returned from MATLAB
          */
-        public void invocationSucceeded(E data);
+        public void invocationSucceeded(V data);
         
         /**
          * Called when the method failed.

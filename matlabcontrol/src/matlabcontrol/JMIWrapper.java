@@ -31,12 +31,23 @@ import com.mathworks.jmi.NativeMatlab;
 import matlabcontrol.MatlabInteractor.MatlabCallable;
 
 /**
- * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
- * <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">MatlabControl</a>.
+ * Interacts with MATLAB via the undocumented Java MATLAB Interface (JMI).
  * <br><br>
- * This class runs inside of MATLAB's Java Virtual Machine and relies upon the {@code jmi.jar} which is distributed
- * with MATLAB in order to send commands to MATLAB and receive results. This is the only class in matlabcontrol which
- * directly interacts with any code in {@code jmi.jar}.
+ * This code is inspired by <a href="mailto:whitehouse@virginia.edu">Kamin Whitehouse</a>'s
+ * <a href="http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html">MatlabControl</a>. Fixes to concurrency
+ * bugs in this class have been aided by the feedback of several matlabcontrol users, thank you for your feedback!
+ * <br><br>
+ * This class runs inside of MATLAB's Java Virtual Machine and relies upon the Java MATLAB Interface which is
+ * distributed by MathWorks as {@code jmi.jar}. It allows for Java to send {@code eval} and {@code feval} statements to
+ * MATLAB and receive results. {@code jmi.jar} is <b>not</b> distributed with matlabcontrol as it is the property of
+ * MathWorks. If you wish to compile the source code you will need to reference the version of {@code jmi.jar} that is
+ * distributed with your copy of MATLAB. It is located at {@code matlabroot/java/jar/jmi.jar} where {@code matlabroot}
+ * is the location of your MATLAB installation. The location of {@code matlabroot} can be determined by executing the
+ * {@code matlabroot} command in the MATLAB Command Window.
+ * <br><br>
+ * This is the only class in matlabcontrol which directly links against code in {@code jmi.jar}. (And therefore also the
+ * only class that needs {@code jmi.jar} to be on the classpath in order to compile.) {@link Configuration} also uses
+ * code in {@code jmi.jar} but uses reflection to interact with it.
  *
  * @since 3.0.0
  * 
@@ -81,14 +92,15 @@ class JMIWrapper
     }
     
     //The following functions wait for MATLAB to complete the computation before returning
-    //See MatlabInteractor for the method documentation
+    //See MatlabProxy for the method documentation, acts as if running inside MATLAB
+    //(A LocalMatlabProxy is just a thin wrapper around these methods)
     
-    static void setVariable(final String variableName, final Object value) throws MatlabInvocationException
+    static void setVariable(final String variableName, final Object value)
     {
         invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 proxy.setVariable(variableName, value);
                 
@@ -97,24 +109,24 @@ class JMIWrapper
         });
     }
     
-    static Object getVariable(final String variableName) throws MatlabInvocationException
+    static Object getVariable(final String variableName)
     {
         return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 return proxy.getVariable(variableName);
             }
         });
     }
     
-    static void eval(final String command) throws MatlabInvocationException
+    static void eval(final String command)
     {           
         invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 proxy.eval(command);
                 
@@ -123,24 +135,24 @@ class JMIWrapper
         });
     }
     
-    static Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    static Object returningEval(final String command, final int returnCount)
     {
         return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 return proxy.returningEval(command, returnCount);
             }
         });
     }
 
-    static void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    static void feval(final String functionName, final Object[] args)
     {   
         invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 proxy.feval(functionName, args);
                 
@@ -150,24 +162,23 @@ class JMIWrapper
     }
 
     static Object returningFeval(final String functionName, final Object[] args, final int returnCount)
-            throws MatlabInvocationException
     {
         return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 return proxy.returningFeval(functionName, args, returnCount);
             }      
         });
     }
 
-    static Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
+    static Object returningFeval(final String functionName, final Object[] args)
     {
         return invokeAndWait(new MatlabCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor<Object> proxy) throws MatlabInvocationException
+            public Object call(MatlabInteractor<Object> proxy)
             {
                 return proxy.returningFeval(functionName, args);
             }      
@@ -182,7 +193,7 @@ class JMIWrapper
      * @return
      * @throws MatlabInvocationException 
      */
-    static <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
+    static <T> T invokeAndWait(final MatlabCallable<T> callable)
     {
         T result;
         
@@ -199,7 +210,7 @@ class JMIWrapper
             catch(RuntimeException e)
             {
                 ThrowableWrapper cause = new ThrowableWrapper(e);
-                throw new MatlabInvocationException( MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
+                throw new MatlabInvocationException(MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
             }
         }
         else
@@ -289,37 +300,37 @@ class JMIWrapper
     private static class MatlabThreadInteractor implements MatlabInteractor<Object>
     {   
         @Override
-        public void setVariable(String variableName, Object value) throws MatlabInvocationException
+        public void setVariable(String variableName, Object value)
         {
             this.returningFeval("assignin", new Object[]{ "base", variableName, value }, 0);
         }
 
         @Override
-        public Object getVariable(String variableName) throws MatlabInvocationException
+        public Object getVariable(String variableName)
         {
             return this.returningFeval("eval", new Object[] { variableName }, 1);
         }
 
         @Override
-        public void eval(String command) throws MatlabInvocationException
+        public void eval(String command)
         {
             this.returningFeval("eval", new Object[]{ command }, 0);
         }
 
         @Override
-        public Object returningEval(String command, int returnCount) throws MatlabInvocationException
+        public Object returningEval(String command, int returnCount)
         {
             return this.returningFeval("eval", new Object[]{ command }, returnCount);
         }
 
         @Override
-        public void feval(String functionName, Object[] args) throws MatlabInvocationException
+        public void feval(String functionName, Object[] args)
         {
             this.returningFeval(functionName, args, 0);
         }
         
         @Override
-        public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+        public Object returningFeval(String functionName, Object[] args)
         {
             //Get the number of arguments that will be returned
             int nargout = 0;
@@ -346,7 +357,7 @@ class JMIWrapper
         }
 
         @Override
-        public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+        public Object returningFeval(String functionName, Object[] args, int returnCount)
         {
             try
             {
@@ -360,7 +371,7 @@ class JMIWrapper
         }
 
         @Override
-        public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
+        public <T> T invokeAndWait(MatlabCallable<T> callable)
         {
             //Invoking this from inside a MatlabCallable does not make a lot of sense, but it can be done without
             //issue by invoking it right away as this is code is running on the MATLAB thread

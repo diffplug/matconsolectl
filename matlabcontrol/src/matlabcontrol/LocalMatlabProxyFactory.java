@@ -56,9 +56,9 @@ class LocalMatlabProxyFactory implements ProxyFactory
     
     private static final class LocalIdentifier implements Identifier
     {
-        private static final AtomicInteger PROXY_CREATION_COUNT = new AtomicInteger();
+        private static final AtomicInteger PROXY_CREATION_COUNTER = new AtomicInteger();
         
-        private final int _id = PROXY_CREATION_COUNT.getAndIncrement();
+        private final int _id = PROXY_CREATION_COUNTER.getAndIncrement();
         
         @Override
         public boolean equals(Object other)

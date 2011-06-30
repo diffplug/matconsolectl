@@ -64,7 +64,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
         
     @Override
-    public void exit() throws MatlabInvocationException
+    public void exit()
     {
         if(this.isConnected())
         {
@@ -79,7 +79,7 @@ class LocalMatlabProxy extends MatlabProxy
     // Methods defined in MatlabInteractor
 
     @Override
-    public void eval(String command) throws MatlabInvocationException
+    public void eval(String command)
     {
         if(this.isConnected())
         {
@@ -92,7 +92,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
+    public Object returningEval(String command, int returnCount)
     {
         if(this.isConnected())
         {
@@ -105,7 +105,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void feval(String functionName, Object[] args) throws MatlabInvocationException
+    public void feval(String functionName, Object[] args)
     {
         if(this.isConnected())
         {
@@ -118,7 +118,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
+    public Object returningFeval(String functionName, Object[] args)
     {
         if(this.isConnected())
         {
@@ -131,7 +131,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+    public Object returningFeval(String functionName, Object[] args, int returnCount)
     {
         if(this.isConnected())
         {
@@ -144,7 +144,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
+    public void setVariable(String variableName, Object value)
     {
         if(this.isConnected())
         {
@@ -157,7 +157,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object getVariable(String variableName) throws MatlabInvocationException
+    public Object getVariable(String variableName)
     {
         if(this.isConnected())
         {
@@ -170,7 +170,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabCallable<T> callable)
     {
         if(this.isConnected())
         {

@@ -522,6 +522,12 @@ public final class MatlabMatrix
         return _imaginaryValues;
     }
     
+    /**
+     * Returns a brief description of this matrix. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
     @Override
     public String toString()
     {
@@ -1019,10 +1025,16 @@ public final class MatlabMatrix
             return numDim;
         }
         
+        /**
+         * Returns a brief description of this double array type. The exact details of this representation are
+         * unspecified and are subject to change.
+         * 
+         * @return 
+         */
         @Override
         public String toString()
         {
-            return "[DoubleArrayType class=" + _arrayClass + ", dimensions=" + _numDimensions + "]";
+            return "[" + this.getClass().getName() + " class=" + _arrayClass + ", dimensions=" + _numDimensions + "]";
         }
     }
 }
