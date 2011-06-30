@@ -199,7 +199,7 @@ class JMIWrapper
         
         if(EventQueue.isDispatchThread())
         {
-            throw new MatlabInvocationException(MatlabInvocationException.EVENT_DISPATCH_THREAD_MSG);
+            throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException();
         }
         else if(NativeMatlab.nativeIsMatlabThread())
         {
@@ -210,7 +210,7 @@ class JMIWrapper
             catch(RuntimeException e)
             {
                 ThrowableWrapper cause = new ThrowableWrapper(e);
-                throw new MatlabInvocationException(MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
+                throw MatlabInvocationException.Reason.RUNTIME_CALLABLE.asException(cause);
             }
         }
         else
@@ -236,8 +236,8 @@ class JMIWrapper
                     catch(RuntimeException e)
                     {
                         ThrowableWrapper cause = new ThrowableWrapper(e);
-                        MatlabInvocationException userCausedException = new MatlabInvocationException(
-                                    MatlabInvocationException.RUNTIME_CALLABLE_MSG, cause);
+                        MatlabInvocationException userCausedException =
+                                MatlabInvocationException.Reason.RUNTIME_CALLABLE.asException(cause);
                         matlabReturn = new MatlabReturn<T>(userCausedException);
                     }
                     
@@ -263,7 +263,7 @@ class JMIWrapper
             }
             catch(InterruptedException e)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.INTERRUPTED_MSG, e);
+                throw MatlabInvocationException.Reason.INTERRRUPTED.asException(e);
             }
         }
         
@@ -342,15 +342,15 @@ class JMIWrapper
             }
             catch(Exception e)
             {
-                throw new MatlabInvocationException("Unable to parse nargout information", e);
+                throw MatlabInvocationException.Reason.AUTO_FEVAL_FAILURE.asException("unable to parse nargout info", e);
             }
 
             //If a variable number of return arguments (represented by -1), throw an exception
             if(nargout == -1)
             {
-                throw new MatlabInvocationException(functionName + " has a variable number of return "
-                        + "arguments. Instead use returningFeval(String, Object[], int) with the return count "
-                        + "specified.");
+                String msg = functionName + " has a variable number of return  arguments. Instead use "
+                        + "returningFeval(String, Object[], int) with the return count  specified.";
+                throw MatlabInvocationException.Reason.AUTO_FEVAL_FAILURE.asException(msg);
             }
 
             return this.returningFeval(functionName, args, nargout);
@@ -365,8 +365,7 @@ class JMIWrapper
             }
             catch(Exception ex)
             {
-                Throwable cause = new ThrowableWrapper(ex);
-                throw new MatlabInvocationException(MatlabInvocationException.INTERNAL_EXCEPTION_MSG, cause);
+                throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(new ThrowableWrapper(ex));
             }
         }
 

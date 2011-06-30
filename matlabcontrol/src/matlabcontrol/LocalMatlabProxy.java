@@ -72,7 +72,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -87,7 +87,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -100,7 +100,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -113,7 +113,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -126,7 +126,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
 
@@ -139,7 +139,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
 
@@ -152,7 +152,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -165,7 +165,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
     
@@ -178,7 +178,7 @@ class LocalMatlabProxy extends MatlabProxy
         }
         else
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
 }

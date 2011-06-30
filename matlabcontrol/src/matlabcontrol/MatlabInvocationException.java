@@ -33,21 +33,52 @@ public class MatlabInvocationException extends RuntimeException
 {    
     private static final long serialVersionUID = 0xB400L;
     
-    //Messages
-    static final String INTERRUPTED_MSG = "Method could not be completed because the thread was interrupted before MATLAB returned",
-                        PROXY_NOT_CONNECTED_MSG = "This proxy is no longer connected to MATLAB",
-                        UNKNOWN_REASON_MSG = "Method could not be invoked for an unknown reason",
-                        UNMARSHALLING_MSG = "Object attempting to be sent or returned cannot be sent between Java Virtual Machines",
-                        INTERNAL_EXCEPTION_MSG = "Method did not return properly because of an internal MATLAB exception",
-                        EVENT_DISPATCH_THREAD_MSG = "Method cannot be executed on the Event Dispatch Thread",
-                        RUNTIME_CALLABLE_MSG = "Exception occurred in MatlabThreadCallable, see cause for more information";
+    static enum Reason
+    {
+        INTERRRUPTED("Method could not be completed because the MATLAB thread was interrupted before MATLAB returned"),
+        PROXY_NOT_CONNECTED("This proxy is no longer connected to MATLAB"),
+        UNMARSHALLING("Object attempting to be received cannot be transferred between Java Virtual Machines"),
+        MARSHALLING("Object attempting to be sent cannot be transferred between Java Virtual Machines"),
+        INTERNAL_EXCEPTION("Method did not return properly because of an internal MATLAB exception"),
+        EVENT_DISPATCH_THREAD("Method cannot be executed on the Event Dispatch Thread"),
+        RUNTIME_CALLABLE("RuntimeException occurred in MatlabThreadCallable, see cause for more information"),
+        AUTO_FEVAL_FAILURE("returningFeval(String, Object[]) could not determine the number of return arguments"),
+        UNKNOWN("Method could not be invoked for an unknown reason");
+        
+        private final String _message;
+        
+        private Reason(String msg)
+        {
+            _message = msg;
+        }
+        
+        MatlabInvocationException asException()
+        {
+            return new MatlabInvocationException(_message);
+        }
+        
+        MatlabInvocationException asException(Throwable cause)
+        {
+            return new MatlabInvocationException(_message, cause);
+        }
+        
+        MatlabInvocationException asException(String additionalInfo)
+        {
+            return new MatlabInvocationException(_message + ": " + additionalInfo);
+        }
+        
+        MatlabInvocationException asException(String additionalInfo, Throwable cause)
+        {
+            return new MatlabInvocationException(_message + ": " + additionalInfo, cause);
+        }
+    }
     
-    MatlabInvocationException(String msg)
+    private MatlabInvocationException(String msg)
     {
         super(msg);
     }
     
-    MatlabInvocationException(String msg, Throwable cause)
+    private MatlabInvocationException(String msg, Throwable cause)
     {
         super(msg, cause);
     }

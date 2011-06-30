@@ -22,6 +22,7 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.rmi.MarshalException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
 import java.rmi.UnmarshalException;
@@ -171,7 +172,7 @@ class RemoteMatlabProxy extends MatlabProxy
     {
         if(!_isConnected)
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
         else
         {
@@ -181,17 +182,21 @@ class RemoteMatlabProxy extends MatlabProxy
             }
             catch(UnmarshalException e)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
+                throw MatlabInvocationException.Reason.UNMARSHALLING.asException(e);
+            }            
+            catch(MarshalException e)
+            {
+                throw MatlabInvocationException.Reason.MARSHALLING.asException(e);
             }
             catch(RemoteException e)
             {
                 if(this.isConnected())
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REASON_MSG, e);
+                    throw MatlabInvocationException.Reason.UNKNOWN.asException(e);
                 }
                 else
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                    throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException(e);
                 }
             }
         }
@@ -201,7 +206,7 @@ class RemoteMatlabProxy extends MatlabProxy
     {
         if(!_isConnected)
         {
-            throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG);
+            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
         else
         {
@@ -211,17 +216,21 @@ class RemoteMatlabProxy extends MatlabProxy
             }
             catch(UnmarshalException e)
             {
-                throw new MatlabInvocationException(MatlabInvocationException.UNMARSHALLING_MSG, e);
+                throw MatlabInvocationException.Reason.UNMARSHALLING.asException(e);
+            }
+            catch(MarshalException e)
+            {
+                throw MatlabInvocationException.Reason.MARSHALLING.asException(e);
             }
             catch(RemoteException e)
             {
                 if(this.isConnected())
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.UNKNOWN_REASON_MSG, e);
+                    throw MatlabInvocationException.Reason.UNKNOWN.asException(e);
                 }
                 else
                 {
-                    throw new MatlabInvocationException(MatlabInvocationException.PROXY_NOT_CONNECTED_MSG, e);
+                    throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException(e);
                 }
             }
         }
