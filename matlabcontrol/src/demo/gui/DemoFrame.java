@@ -80,7 +80,7 @@ public class DemoFrame extends JFrame
                                 RETURNED_EXCEPTION = "Java Exception";
     
     //Panel/Pane sizes
-    private static final int PANEL_WIDTH = 600;
+    private static final int PANEL_WIDTH = 660;
     private static final Dimension CONNECTION_PANEL_SIZE = new Dimension(PANEL_WIDTH, 70),
                                    RETURN_PANEL_SIZE = new Dimension(PANEL_WIDTH, 250),
                                    METHOD_PANEL_SIZE = new Dimension(PANEL_WIDTH, 110 + 28 * ArrayPanel.NUM_ENTRIES),

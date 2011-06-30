@@ -53,8 +53,8 @@ class MatlabConnector
     /**
      * The most recently connected receiver retrieved from a Java program running outside of MATLAB.
      */
-    private static final AtomicReference<JMIWrapperRemoteReceiver> _receiverRef =
-            new AtomicReference<JMIWrapperRemoteReceiver>();
+    private static final AtomicReference<RequestReceiver> _receiverRef =
+            new AtomicReference<RequestReceiver>();
     
     /**
      * If a connection is currently in progress.
@@ -82,7 +82,7 @@ class MatlabConnector
         }
         else
         {
-            JMIWrapperRemoteReceiver receiver = _receiverRef.get();
+            RequestReceiver receiver = _receiverRef.get();
 
             boolean connected = false;
             if(receiver != null)
@@ -184,7 +184,7 @@ class MatlabConnector
                 Registry registry = LocalHostRMIHelper.getRegistry(_port);
 
                 //Get the receiver from the registry
-                JMIWrapperRemoteReceiver receiver = (JMIWrapperRemoteReceiver) registry.lookup(_receiverID);
+                RequestReceiver receiver = (RequestReceiver) registry.lookup(_receiverID);
 
                  //Hold on the to receiver
                 _receiverRef.set(receiver);
