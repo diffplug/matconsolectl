@@ -26,13 +26,14 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 /**
- * Implementers of this interface can receive a {@link JMIWrapperRemote}. Necessary to have this interface for RMI.
+ * Represents a receiver for a request to create a proxy. The receiver must be bound to an RMI registry, it will be
+ * bound with the RMI identifier {@link #getReceiverID()}. Necessary to have this interface for RMI.
  * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface JMIWrapperRemoteReceiver extends Remote
+interface RequestReceiver extends Remote
 {
     /**
      * Receives an incoming wrapper around the JMI functionality inside of MATLAB.

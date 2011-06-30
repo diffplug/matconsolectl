@@ -49,7 +49,7 @@ class RemoteMatlabProxy extends MatlabProxy
      * (the RMI registry uses weak references), the connection to MATLAB's JVM will remain active. The JMI wrapper,
      * while a remote object, is not bound to the registry, and will not keep the RMI thread running.
      */
-    private final JMIWrapperRemoteReceiver _receiver;
+    private final RequestReceiver _receiver;
     
     /**
      * A timer that periodically checks if still connected.
@@ -77,7 +77,7 @@ class RemoteMatlabProxy extends MatlabProxy
      * @param id
      * @param existingSession
      */
-    RemoteMatlabProxy(JMIWrapperRemote internalProxy, JMIWrapperRemoteReceiver receiver, Identifier id,
+    RemoteMatlabProxy(JMIWrapperRemote internalProxy, RequestReceiver receiver, Identifier id,
             boolean existingSession)
     {
         super(id, existingSession);

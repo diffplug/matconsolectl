@@ -37,9 +37,7 @@ import java.rmi.RemoteException;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject implements JMIWrapperRemote
-{
-    private static final long serialVersionUID = 1L;
-    
+{   
     public JMIWrapperRemoteImpl() throws RemoteException { }
     
     @Override

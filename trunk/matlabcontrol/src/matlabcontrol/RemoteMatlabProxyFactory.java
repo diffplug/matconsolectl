@@ -53,10 +53,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final MatlabProxyFactoryOptions _options;
     
     /**
-     * {@link Receiver} instances. They need to be stored because the RMI registry only holds weak references to
+     * {@link RemoteRequestReceiver} instances. They need to be stored because the RMI registry only holds weak references to
      * exported objects.
      */
-    private final CopyOnWriteArrayList<Receiver> _receivers = new CopyOnWriteArrayList<Receiver>();
+    private final CopyOnWriteArrayList<RemoteRequestReceiver> _receivers = new CopyOnWriteArrayList<RemoteRequestReceiver>();
     
     /**
      * The RMI registry used to communicate between JVMs.
@@ -80,7 +80,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         initRegistry();
         
         //Create and bind the receiver
-        Receiver receiver = new Receiver(requestCallback, proxyID, Configuration.getClassPathAsRMICodebase());
+        RemoteRequestReceiver receiver = new RemoteRequestReceiver(requestCallback, proxyID, Configuration.getClassPathAsRMICodebase());
         _receivers.add(receiver);
         try
         {
@@ -202,7 +202,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
      * @return
      * @throws MatlabConnectionException 
      */
-    private Process createProcess(Receiver receiver) throws MatlabConnectionException
+    private Process createProcess(RemoteRequestReceiver receiver) throws MatlabConnectionException
     {
         List<String> processArguments = new ArrayList<String>();
         
@@ -290,7 +290,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * Receives a wrapper around JMI from MATLAB.
      */
-    private class Receiver implements JMIWrapperRemoteReceiver
+    private class RemoteRequestReceiver implements RequestReceiver
     {
         private final RequestCallback _requestCallback;
         private final RemoteIdentifier _proxyID;
@@ -300,7 +300,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         private volatile boolean _receivedJMIWrapper = false;
         
-        public Receiver(RequestCallback requestCallback, RemoteIdentifier proxyID, String codebase)
+        public RemoteRequestReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID, String codebase)
         {
             _requestCallback = requestCallback;
             _proxyID = proxyID;
@@ -433,10 +433,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     {
         private final Identifier _proxyID;
         private final Process _process;
-        private final Receiver _receiver;
+        private final RemoteRequestReceiver _receiver;
         private boolean _isCancelled = false;
         
-        private RemoteRequest(Identifier proxyID, Process process, Receiver receiver)
+        private RemoteRequest(Identifier proxyID, Process process, RemoteRequestReceiver receiver)
         {
             _proxyID = proxyID;
             _process = process;
