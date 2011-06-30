@@ -25,7 +25,6 @@ package matlabcontrol.extensions;
 import java.io.Serializable;
 
 import matlabcontrol.MatlabInteractor;
-import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabInteractor.MatlabCallable;
 
@@ -60,9 +59,9 @@ public class MatrixProcessor
      * 
      * @param matrixName
      * @return the retrieved matrix
-     * @throws MatlabInvocationException 
+     * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException
+    public MatlabMatrix getMatrix(String matrixName)
     {
         MatrixInfo info = _proxy.invokeAndWait(new GetMatrixCallable(matrixName));
         
@@ -79,7 +78,7 @@ public class MatrixProcessor
         }
 
         @Override
-        public MatrixInfo call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
+        public MatrixInfo call(MatlabInteractor<Object> interactor)
         {
             //Retrieve real values
             Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1);
@@ -124,9 +123,9 @@ public class MatrixProcessor
      * 
      * @param matrixName the variable name
      * @param matrix
-     * @throws MatlabInvocationException
+     * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
+    public void setMatrix(String matrixName, MatlabMatrix matrix)
     {
         _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
@@ -146,7 +145,7 @@ public class MatrixProcessor
         }
         
         @Override
-        public Object call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
+        public Object call(MatlabInteractor<Object> interactor)
         {
             //Store real array in the MATLAB environment
             String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);

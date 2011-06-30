@@ -32,9 +32,6 @@ import java.rmi.RemoteException;
  * communication between this JVM and the one MATLAB is running in. For instance, closing MATLAB will terminate its
  * JVM and then all method calls on this proxy will throw exceptions.
  * <br><br>
- * Additionally, many of these methods throw InterruptedException. This occurs if while waiting for MATLAB to return
- * from a method called on it, the thread waiting is interrupted.
- * <br><br>
  * For descriptions of what these methods do see the corresponding methods in {@link MatlabProxy}.
  * 
  * @since 4.0.0
@@ -45,24 +42,25 @@ interface JMIWrapperRemote extends Remote
 {
     public void exit() throws RemoteException;
     
-    public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException;
+    public void setVariable(String variableName, Object value) throws RemoteException;
 
-    public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException;
+    public Object getVariable(String variableName) throws RemoteException;
     
-    public void eval(String command) throws RemoteException, MatlabInvocationException;
+    public void eval(String command) throws RemoteException;
     
-    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
+    public Object returningEval(String command, int returnCount) throws RemoteException;
     
-    public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+    public void feval(String command, Object[] args) throws RemoteException;
     
-    public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+    public Object returningFeval(String command, Object[] args) throws RemoteException;
     
-    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException;
+    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException;
     
-    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws RemoteException, MatlabInvocationException;
+    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws RemoteException;
     
     /**
-     * This method does nothing. It is used internally to check if a connection is still active.
+     * This method does nothing. It is used internally to check if a connection is still active via calling this method
+     * and seeing if it throws a {@code RemoteException} (if it does, the connection is no longer active).
      * 
      * @throws RemoteException
      */

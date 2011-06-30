@@ -28,7 +28,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabInteractor;
 
 /**
@@ -48,7 +47,7 @@ import matlabcontrol.MatlabInteractor;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
+public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
 {
     private static final Logger LOGGER = Logger.getLogger(LoggingMatlabInteractor.class.getName());
     static
@@ -56,7 +55,7 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
         LOGGER.setLevel(Level.FINER);
     }
     
-    private final MatlabInteractor<E> _delegateInteractor;
+    private final MatlabInteractor<T> _delegateInteractor;
     private final boolean _exploreArrays;
     
     /**
@@ -70,11 +69,13 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * {@code
      * LoggingMatlabInteractor<Object> loggingInteractor = new LoggingMatlabInteractor<Object>(proxy);
      * }
+     * <br><br>
+     * If the provided {@code interactor} throws an exception it will be caught, logged, and then rethrown.
      * 
      * @param interactor 
      * @param exploreArrays 
      */
-    public LoggingMatlabInteractor(MatlabInteractor<E> interactor, boolean exploreArrays)
+    public LoggingMatlabInteractor(MatlabInteractor<T> interactor, boolean exploreArrays)
     {
         _delegateInteractor = interactor;
         _exploreArrays = exploreArrays;
@@ -105,7 +106,7 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
         }
         
         public Object[] getArgs() { return _args; }
-        public abstract void invoke() throws MatlabInvocationException;
+        public abstract void invoke();
         public abstract String getName();
     }
     
@@ -118,11 +119,11 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
         }
         
         public Object[] getArgs() { return _args; }
-        public abstract T invoke() throws MatlabInvocationException;
+        public abstract T invoke();
         public abstract String getName();
     }
 
-    private void invoke(VoidInvocation invocation) throws MatlabInvocationException
+    private void invoke(VoidInvocation invocation)
     {   
         LOGGER.entering(this.getClass().getName(), invocation.getName(), invocation.getArgs());
         
@@ -131,7 +132,7 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
             invocation.invoke();
             LOGGER.exiting(this.getClass().getName(), invocation.getName());
         }
-        catch(MatlabInvocationException e)
+        catch(RuntimeException e)
         {            
             LOGGER.throwing(this.getClass().getName(), invocation.getName(), e);
             LOGGER.exiting(this.getClass().getName(), invocation.getName());
@@ -140,7 +141,7 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
         }
     }
 
-    private <T> T invoke(ReturningInvocation<T> invocation) throws MatlabInvocationException
+    private <T> T invoke(ReturningInvocation<T> invocation)
     {
         T data;
         
@@ -149,9 +150,8 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
         {
             data = invocation.invoke();
             LOGGER.exiting(this.getClass().getName(), invocation.getName(), formatResult(data));
-            
         }
-        catch(MatlabInvocationException e)
+        catch(RuntimeException e)
         {
             LOGGER.throwing(this.getClass().getName(), invocation.getName(), e);
             LOGGER.exiting(this.getClass().getName(), invocation.getName());
@@ -165,15 +165,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * Delegates to the interactor; logs the interaction.
      * 
      * @param command
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor
      */
     @Override
-    public void eval(final String command) throws MatlabInvocationException
+    public void eval(final String command)
     {           
         this.invoke(new VoidInvocation(command)
         {
             @Override
-            public void invoke() throws MatlabInvocationException
+            public void invoke()
             {
                 _delegateInteractor.eval(command);
             }
@@ -192,15 +192,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * @param command
      * @param returnCount
      * @return
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public E returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    public T returningEval(final String command, final int returnCount)
     {
-        return this.invoke(new ReturningInvocation<E>(command, returnCount)
+        return this.invoke(new ReturningInvocation<T>(command, returnCount)
         {
             @Override
-            public E invoke() throws MatlabInvocationException
+            public T invoke()
             {
                 return _delegateInteractor.returningEval(command, returnCount);
             }
@@ -218,15 +218,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * 
      * @param functionName
      * @param args
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    public void feval(final String functionName, final Object[] args)
     {
         this.invoke(new VoidInvocation(functionName, args)
         {
             @Override
-            public void invoke() throws MatlabInvocationException
+            public void invoke()
             {
                 _delegateInteractor.feval(functionName, args);
             }
@@ -245,15 +245,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * @param functionName
      * @param args
      * @return
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public E returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
+    public T returningFeval(final String functionName, final Object[] args)
     {
-        return this.invoke(new ReturningInvocation<E>(functionName, args)
+        return this.invoke(new ReturningInvocation<T>(functionName, args)
         {
             @Override
-            public E invoke() throws MatlabInvocationException
+            public T invoke()
             {
                 return _delegateInteractor.returningFeval(functionName, args);
             }
@@ -273,15 +273,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * @param args
      * @param returnCount
      * @return
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public E returningFeval(final String functionName, final Object[] args, final int returnCount) throws MatlabInvocationException
+    public T returningFeval(final String functionName, final Object[] args, final int returnCount)
     {
-        return this.invoke(new ReturningInvocation<E>(functionName, args, returnCount)
+        return this.invoke(new ReturningInvocation<T>(functionName, args, returnCount)
         {
             @Override
-            public E invoke() throws MatlabInvocationException
+            public T invoke()
             {
                 return _delegateInteractor.returningFeval(functionName, args, returnCount);
             }
@@ -299,15 +299,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * 
      * @param variableName
      * @param value
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
+    public void setVariable(final String variableName, final Object value)
     {   
         this.invoke(new VoidInvocation(variableName, value)
         {
             @Override
-            public void invoke() throws MatlabInvocationException
+            public void invoke()
             {
                 _delegateInteractor.setVariable(variableName, value);
             }
@@ -325,15 +325,15 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
      * 
      * @param variableName
      * @return
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public E getVariable(final String variableName) throws MatlabInvocationException
+    public T getVariable(final String variableName)
     {
-        return this.invoke(new ReturningInvocation<E>(variableName)
+        return this.invoke(new ReturningInvocation<T>(variableName)
         {
             @Override
-            public E invoke() throws MatlabInvocationException
+            public T invoke()
             {
                 return _delegateInteractor.getVariable(variableName);
             }
@@ -349,18 +349,18 @@ public class LoggingMatlabInteractor<E> implements MatlabInteractor<E>
     /**
      * Delegates to the interactor; logs the interaction.
      * 
-     * @param <T>
+     * @param <U>
      * @param callable
      * @return
-     * @throws MatlabInvocationException 
+     * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
+    public <U> U invokeAndWait(final MatlabCallable<U> callable)
     {
-        return this.invoke(new ReturningInvocation<T>(callable)
+        return this.invoke(new ReturningInvocation<U>(callable)
         {
             @Override
-            public T invoke() throws MatlabInvocationException
+            public U invoke()
             {
                 return _delegateInteractor.invokeAndWait(callable);
             }

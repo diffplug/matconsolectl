@@ -394,11 +394,6 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             _id = UUID.randomUUID();
         }
         
-        private RemoteIdentifier(String uuidString)
-        {
-            _id  = UUID.fromString(uuidString);
-        }
-        
         @Override
         public boolean equals(Object other)
         {
@@ -428,7 +423,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             return "PROXY_REMOTE_" + _id;
         }
         
-        public String getUUIDString()
+        String getUUIDString()
         {
             return _id.toString();
         }

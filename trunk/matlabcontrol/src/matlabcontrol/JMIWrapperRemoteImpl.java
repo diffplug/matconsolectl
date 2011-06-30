@@ -30,7 +30,7 @@ import java.rmi.RemoteException;
  * Methods called on this proxy will be performed inside of the JVM that created this object. This class is only created
  * inside of the MATLAB's JVM and so {@code JMIWrapper}'s calls will be able to communicate with MATLAB.
  * <br><br>
- * These methods are documented in {@link JMIWrapper}.
+ * These methods are documented in {@link MatlabProxy}.
  * 
  * @since 4.0.0
  * 
@@ -49,49 +49,49 @@ class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject impl
     }
     
     @Override
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
+    public void setVariable(String variableName, Object value)
     {
         JMIWrapper.setVariable(variableName, value);
     }
     
     @Override
-    public Object getVariable(String variableName) throws MatlabInvocationException
+    public Object getVariable(String variableName)
     {
         return JMIWrapper.getVariable(variableName);
     }
 
     @Override
-    public Object returningFeval(String command, Object[] args) throws MatlabInvocationException
+    public Object returningFeval(String command, Object[] args)
     {
         return JMIWrapper.returningFeval(command, args);
     }
     
     @Override
-    public Object returningFeval(String command, Object[] args, int returnCount) throws MatlabInvocationException
+    public Object returningFeval(String command, Object[] args, int returnCount)
     {
         return JMIWrapper.returningFeval(command, args, returnCount);
     }
     
     @Override
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
+    public Object returningEval(String command, int returnCount)
     {    
         return JMIWrapper.returningEval(command, returnCount);
     }
 
     @Override
-    public void eval(String command) throws MatlabInvocationException
+    public void eval(String command)
     {
         JMIWrapper.eval(command);
     }
 
     @Override
-    public void feval(String command, Object[] args) throws MatlabInvocationException
+    public void feval(String command, Object[] args)
     {
         JMIWrapper.feval(command, args);
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable)
     {
         return JMIWrapper.invokeAndWait(callable);
     }
