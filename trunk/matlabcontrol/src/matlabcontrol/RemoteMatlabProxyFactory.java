@@ -217,6 +217,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         //MATLAB flags
+        
         if(_options.getHidden())
         {
             if(Configuration.isWindows())
@@ -231,7 +232,9 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         else
         {
-            if(Configuration.isOSX() || Configuration.isLinux())
+            //If running on *NIX based system the -desktop flag is necessary for MATLAB to appear when not executing
+            //MATLAB from a shell
+            if(!Configuration.isWindows())
             {
                 processArguments.add("-desktop");
             }
@@ -260,17 +263,18 @@ class RemoteMatlabProxyFactory implements ProxyFactory
             processArguments.add("-singleCompThread");
         }
         
-        //Code to run on startup
+        //Argument to follow this will be the code to run on startup
         processArguments.add("-r");
         
-        //Argument that MATLAB will run on start. Tells MATLAB to:
+        //Code that MATLAB will run on start. Tells MATLAB to:
         // - Adds matlabcontrol to MATLAB's dynamic class path
         // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
         // - Removes matlabcontrol from MATLAB's dynamic class path
         // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
-        String runArg = "javaaddpath '" + Configuration.getSupportCodeLocation() + "'; " + 
+        String codeLocation = Configuration.getSupportCodeLocation();
+        String runArg = "javaaddpath '" + codeLocation + "'; " + 
                         MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
-                        "javarmpath '" + Configuration.getSupportCodeLocation() + "'; " +
+                        "javarmpath '" + codeLocation + "'; " +
                         MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
                             _options.getPort() + ");";
         processArguments.add(runArg);
