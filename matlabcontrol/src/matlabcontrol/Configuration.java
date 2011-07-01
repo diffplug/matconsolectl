@@ -37,29 +37,6 @@ import java.net.URL;
  */
 class Configuration
 {   
-    //Cached values may be recomputed in race conditions. This is not problematic because the computed values should
-    //always be the same.
-    
-    /**
-     * Caches {@link #getMatlabLocation()}.
-     */
-    private static volatile String _matlabLocation = null;
-        
-    /**
-     * Caches {@link #getCodebaseLocation()}.
-     */
-    private static volatile String _codebaseLocation = null;
-    
-    /**
-     * Caches {@link #getSupportCodeLocation()}.
-     */
-    private static volatile String _supportCodeLocation = null;
-    
-    /**
-     * Caches {@link #isRunningInsideMatlab()}.
-     */
-    private static volatile Boolean _runningInsideMatlab = null;
-    
     private Configuration() { }
     
     /**
@@ -116,33 +93,28 @@ class Configuration
      */
     static String getMatlabLocation() throws MatlabConnectionException
     {
-        if(_matlabLocation == null)
-        {
-            //Determine the location of MATLAB
-            String matlabLoc;
+        //Determine the location of MATLAB
+        String matlabLoc;
 
-            //OS X
-            if(isOSX())
-            {
-                matlabLoc = getOSXMatlabLocation();
-            }
-            //Windows or Linux
-            else if(isWindows() || isLinux())
-            {
-                matlabLoc = "matlab";
-            }
-            //Other unsupported operating system
-            else
-            {
-                throw new MatlabConnectionException("MATLAB's location or alias can only be determined for OS X, " +
-                        "Windows, & Linux. For this operating system the location or alias must be specified " +
-                        "explicitly.");
-            }
-        
-            _matlabLocation = matlabLoc;
+        //OS X
+        if(isOSX())
+        {
+            matlabLoc = getOSXMatlabLocation();
+        }
+        //Windows or Linux
+        else if(isWindows() || isLinux())
+        {
+            matlabLoc = "matlab";
+        }
+        //Other unsupported operating system
+        else
+        {
+            throw new MatlabConnectionException("MATLAB's location or alias can only be determined for OS X, " +
+                    "Windows, & Linux. For this operating system the location or alias must be specified " +
+                    "explicitly.");
         }
         
-        return _matlabLocation;
+        return matlabLoc;
     }
     
     /**
@@ -220,29 +192,6 @@ class Configuration
         return codebase;
     }
     
-    
-    /**
-     * Determines the location of this source code. Either it will be the directory or jar this .class file is in. The
-     * location format is then adjusted to be understood by RMI as a codebase location.
-     * 
-     * @return directory or jar file this class is in, for RMI
-     * 
-     * @throws MatlabConnectionException
-     */
-    static String getCodebaseLocation() throws MatlabConnectionException
-    {
-        if(_codebaseLocation == null)
-        {
-            String codebase = getSupportCodeLocation();
-            codebase = codebase.replace(" ", "%20");
-            codebase = "file://" + codebase;
-        
-            _codebaseLocation = codebase;
-        }
-        
-        return _codebaseLocation;
-    }
-    
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
      * is, the .class file built from compiling this .java file.) The location format is then adjusted to be compatible
@@ -254,59 +203,56 @@ class Configuration
      */
     static String getSupportCodeLocation() throws MatlabConnectionException
     {
-        if(_supportCodeLocation == null)
+        URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
+        String protocol = location.getProtocol();
+        String path;
+
+        if(protocol.equals("jar"))
         {
-            URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
-            String protocol = location.getProtocol();
-            String path;
+            try
+            {
+                JarURLConnection connection = (JarURLConnection) location.openConnection();
+                path = connection.getJarFileURL().getPath();
+            }
+            catch(ClassCastException e)
+            {
+                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
+                        "however, the connection returned was not for a jar", e);
+            }
+            catch(IOException e)
+            {
+                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
+                        "however, a connection to the jar cannot be established", e);
+            }
+        }
+        else if(protocol.equals("file"))
+        {
+            path = location.getPath();
+        }
+        else
+        {
+            throw new MatlabConnectionException("Support code location is specified by an unknown protocol: " +
+                    protocol);
+        }
+        
+        //Convert URL encoded space to an actual space
+        path = path.replace("%20", " ");
 
-            if(protocol.equals("jar"))
-            {
-                try
-                {
-                    JarURLConnection connection = (JarURLConnection) location.openConnection();
-                    path = connection.getJarFileURL().getPath();
-                }
-                catch(ClassCastException e)
-                {
-                    throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                            "however, the connection returned was not for a jar", e);
-                }
-                catch(IOException e)
-                {
-                    throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                            "however, a connection to the jar cannot be established", e);
-                }
-            }
-            else if(protocol.equals("file"))
-            {
-                path = location.getPath();
-                path = path.replace("%20", " ");
-
-                //If under Windows, convert to a Windows path
-                if(isWindows())
-                {
-                    path = path.replaceFirst("/", "");
-                    path = path.replace("/", "\\");
-                }
-            }
-            else
-            {
-                throw new MatlabConnectionException("Support code location is specified by an unknown protocol: " +
-                        protocol);
-            }
-
-            //Confirm if the file exists
-            if(!new File(path).exists())
-            {
-                throw new MatlabConnectionException("Support code location was determined improperly;  location does " +
-                        "not actually exist. Location determined as: " + path);
-            }
-            
-            _supportCodeLocation = path;
+        //If under Windows, convert to a Windows path
+        if(isWindows())
+        {
+            path = path.replaceFirst("/", "");
+            path = path.replace("/", "\\");
+        }
+        
+        //Confirm the path actually exists
+        if(!new File(path).exists())
+        {
+            throw new MatlabConnectionException("Support code location was determined improperly; location does " +
+                    "not actually exist. Location determined as: " + path);
         }
 
-        return _supportCodeLocation;
+        return path;
     }
     
     /**
@@ -316,26 +262,21 @@ class Configuration
      */
     static boolean isRunningInsideMatlab()
     {
-        if(_runningInsideMatlab == null)
+        boolean available;
+        try
         {
-            boolean available;
-            try
-            {
-                //Load the class com.mathworks.jmi.Matlab and then calls its static method isMatlabAvailable()
-                //All of this is done with reflection so that this class does not cause the class loader to attempt
-                //to load JMI classes (and if not running inside of MATLAB - fail)
-                Class<?> matlabClass = Class.forName("com.mathworks.jmi.Matlab");
-                Method isAvailableMethod = matlabClass.getMethod("isMatlabAvailable");
-                available = (Boolean) isAvailableMethod.invoke(null);
-            }
-            catch(Throwable t)
-            {
-                available = false;
-            }
-            
-            _runningInsideMatlab = available;
+            //Load the class com.mathworks.jmi.Matlab and then calls its static method isMatlabAvailable()
+            //All of this is done with reflection so that this class does not cause the class loader to attempt
+            //to load JMI classes (and if not running inside of MATLAB - fail)
+            Class<?> matlabClass = Class.forName("com.mathworks.jmi.Matlab");
+            Method isAvailableMethod = matlabClass.getMethod("isMatlabAvailable");
+            available = (Boolean) isAvailableMethod.invoke(null);
+        }
+        catch(Throwable t)
+        {
+            available = false;
         }
         
-        return _runningInsideMatlab;
+        return available;
     }
 }
