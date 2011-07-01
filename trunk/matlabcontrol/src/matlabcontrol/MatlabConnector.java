@@ -148,6 +148,18 @@ class MatlabConnector
         @Override
         public void run()
         {
+            //Validate matlabcontrol can be used
+            try
+            {
+                JMIValidator.validateJMIMethods();
+            }
+            catch(MatlabConnectionException e)
+            {
+                System.err.println("matlabcontrol is not compatible with this version of MATLAB");
+                e.printStackTrace();
+                return;
+            }
+            
             //If MATLAB was just launched
             if(!_existingSession)
             {

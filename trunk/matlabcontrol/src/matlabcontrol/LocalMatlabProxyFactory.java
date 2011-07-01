@@ -40,13 +40,15 @@ class LocalMatlabProxyFactory implements ProxyFactory
     public LocalMatlabProxyFactory(MatlabProxyFactoryOptions options) { }
     
     @Override
-    public LocalMatlabProxy getProxy()
+    public LocalMatlabProxy getProxy() throws MatlabConnectionException
     {   
+        JMIValidator.validateJMIMethods();
+        
         return new LocalMatlabProxy(new LocalIdentifier());
     }
     
     @Override
-    public Request requestProxy(RequestCallback requestCallback)
+    public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
     {   
         LocalMatlabProxy proxy = getProxy();
         requestCallback.proxyCreated(proxy);
