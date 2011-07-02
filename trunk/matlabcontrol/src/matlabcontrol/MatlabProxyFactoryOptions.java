@@ -1,5 +1,6 @@
 package matlabcontrol;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -14,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class MatlabProxyFactoryOptions
 {
     private final String _matlabLocation;
+    private final File _startingDirectory;
     private final boolean _hidden;
     private final boolean _usePreviouslyControlled;
     private final long _proxyTimeout;
@@ -27,6 +29,7 @@ public class MatlabProxyFactoryOptions
     private MatlabProxyFactoryOptions(Builder options)
     {
         _matlabLocation = options._matlabLocation;
+        _startingDirectory = options._startingDirectory;
         _hidden = options._hidden;
         _usePreviouslyControlled = options._usePreviouslyControlled;
         _proxyTimeout = options._proxyTimeout.get();
@@ -41,6 +44,11 @@ public class MatlabProxyFactoryOptions
     String getMatlabLocation()
     {
         return _matlabLocation;
+    }
+    
+    File getStartingDirectory()
+    {
+        return _startingDirectory;
     }
 
     boolean getHidden()
@@ -110,6 +118,7 @@ public class MatlabProxyFactoryOptions
     public static class Builder
     {
         private volatile String _matlabLocation = null;
+        private volatile File _startingDirectory = null;
         private volatile boolean _hidden = false;
         private volatile boolean _usePreviouslyControlled = false;
         private volatile String _logFile = null;
@@ -167,6 +176,35 @@ public class MatlabProxyFactoryOptions
         public final Builder setMatlabLocation(String matlabLocation)
         {
             _matlabLocation = matlabLocation;
+            
+            return this;
+        }
+        
+        /**
+         * Sets the starting directory for MATLAB.
+         * 
+         * @param dir
+         * @throws NullPointerException if {@code dir} is {@code null}
+         * @throws IllegalArgumentException if {@code dir} does not exist or is not a directory 
+         */
+        public final Builder setMatlabStartingDirectory(File dir)
+        {
+            if(dir == null)
+            {
+                throw new NullPointerException("dir may not be null");
+            }
+            
+            if(!dir.exists())
+            {
+                throw new IllegalArgumentException("dir specifies a directory that does not exist");
+            }
+            
+            if(!dir.isDirectory())
+            {
+                throw new IllegalArgumentException("dir does not specify a directory");
+            }
+            
+            _startingDirectory = dir;
             
             return this;
         }
