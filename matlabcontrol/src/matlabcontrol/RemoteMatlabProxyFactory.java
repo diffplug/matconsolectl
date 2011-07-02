@@ -282,6 +282,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         //Create process
         ProcessBuilder builder = new ProcessBuilder(processArguments);
+        builder.directory(_options.getStartingDirectory());
+        
         try
         {
             return builder.start();
