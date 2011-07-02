@@ -37,12 +37,6 @@ import java.net.URL;
  */
 class Configuration
 {
-    public static void main(String[] args) throws Throwable
-    {
-        System.out.println(System.getProperty("java.class.path"));
-        System.out.println(getClassPathAsRMICodebase());
-    }
-    
     private Configuration() { }
     
     /**
