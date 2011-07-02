@@ -25,6 +25,9 @@ package matlabcontrol;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,7 +51,7 @@ class MatlabConnector
     /**
      * Used to establish connections on a separate thread.
      */
-    private static final ExecutorService CONNECTION_EXECUTOR = Executors.newSingleThreadExecutor();
+    private static final ExecutorService _connectionExecutor = Executors.newSingleThreadExecutor();
     
     /**
      * The most recently connected receiver retrieved from a Java program running outside of MATLAB.
@@ -126,7 +129,7 @@ class MatlabConnector
         
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
-        CONNECTION_EXECUTOR.submit(new EstablishConnectionRunnable(receiverID, port, existingSession));
+        _connectionExecutor.submit(new EstablishConnectionRunnable(receiverID, port, existingSession));
     }
     
     /**
@@ -137,6 +140,16 @@ class MatlabConnector
         private final String _receiverID;
         private final int _port;
         private final boolean _existingSession;
+    
+        /**
+         * The classpath (with each classpath entry as an individual canonical path) of the most recently connected
+         * receiver's JVM.
+         * <br><br>
+         * This variable can safely be volatile because the needed behavior is volatile read/write of the array, not
+         * its entries. It is also unlikely the volatile behavior is actually necessary, but it could be if the thread
+         * used by {@link MatlabConnector#_connectionExecutor} died and created a new one - this ensures visibility.
+         */
+        private static volatile String[] _previousRemoteClassPath = new String[0];
         
         private EstablishConnectionRunnable(String receiverID, int port, boolean existingSession)
         {
@@ -209,7 +222,23 @@ class MatlabConnector
             
                 //Tell the RMI class loader of the codebase where the receiver is from, this will allow MATLAB to load
                 //classes defined in the remote JVM, but not in this one
-                MatlabRMIClassLoaderSpi.setCodebase(receiver.getRMICodebase());
+                MatlabRMIClassLoaderSpi.setCodebase(receiver.getClassPathAsRMICodebase());
+                
+                //Tell MATLAB's class loader about the codebase where the receiver is from, if not then MATLAB's
+                //environment will freak out when interacting with classes it cannot find the definition of and throw
+                //exceptions with rather confusing messages
+                String[] newClassPath = receiver.getClassPathAsCanonicalPaths();
+                try
+                {
+                    JMIWrapper.invokeAndWait(new ModifyCodebaseCallable(_previousRemoteClassPath, newClassPath));
+                    _previousRemoteClassPath = newClassPath;
+                }
+                catch(MatlabInvocationException e)
+                {
+                    System.err.println("Unable to update MATLAB's class loader; issues may arise interacting with " +
+                            "classes not defined in MATLAB's Java Virtual Machine");
+                    e.printStackTrace();
+                }
 
                 //Create the remote JMI wrapper and then pass it over RMI to the Java application in its own JVM
                 receiver.receiveJMIWrapper(new JMIWrapperRemoteImpl(), _existingSession);
@@ -226,6 +255,44 @@ class MatlabConnector
             }
             
             _connectionInProgress.set(false);
+        }
+    }
+    
+    /**
+     * Modifies MATLAB's dynamic class path. Retrieves the current dynamic class path, removes all of the entries
+     * from the previously connected JVM, adds the new ones, and if the classpath is now different, sets a new dynamic
+     * classpath.
+     */
+    private static class ModifyCodebaseCallable implements MatlabInteractor.MatlabCallable<Void>
+    {
+        private final String[] _toRemove;
+        private final String[] _toAdd;
+        
+        public ModifyCodebaseCallable(String oldRemoteClassPath[], String[] newRemoteClassPath)
+        {
+            _toRemove = oldRemoteClassPath;
+            _toAdd = newRemoteClassPath;
+        }
+
+        @Override
+        public Void call(MatlabInteractor<Object> interactor)
+        {
+            //Current dynamic class path
+            String[] curr = (String[]) interactor.returningFeval("javaclasspath", new Object[] { "-dynamic" }, 1);
+            
+            //Build new dynamic class path
+            List<String> newDynamic = new ArrayList<String>();
+            newDynamic.addAll(Arrays.asList(curr));
+            newDynamic.removeAll(Arrays.asList(_toRemove));
+            newDynamic.addAll(Arrays.asList(_toAdd));
+            
+            //If the class path is different, set it
+            if(!newDynamic.equals(Arrays.asList(curr)))
+            {
+                interactor.feval("javaclasspath", new Object[] { newDynamic.toArray(new String[newDynamic.size()]) });
+            }
+            
+            return null;
         }
     }
 }

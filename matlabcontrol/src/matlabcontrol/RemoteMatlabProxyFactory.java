@@ -53,8 +53,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final MatlabProxyFactoryOptions _options;
     
     /**
-     * {@link RemoteRequestReceiver} instances. They need to be stored because the RMI registry only holds weak references to
-     * exported objects.
+     * {@link RemoteRequestReceiver} instances. They need to be stored because the RMI registry only holds weak
+     * references to exported objects.
      */
     private final CopyOnWriteArrayList<RemoteRequestReceiver> _receivers = new CopyOnWriteArrayList<RemoteRequestReceiver>();
     
@@ -80,7 +80,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         initRegistry();
         
         //Create and bind the receiver
-        RemoteRequestReceiver receiver = new RemoteRequestReceiver(requestCallback, proxyID, Configuration.getClassPathAsRMICodebase());
+        RemoteRequestReceiver receiver = new RemoteRequestReceiver(requestCallback, proxyID,
+                Configuration.getClassPathAsRMICodebase(), Configuration.getClassPathAsCanonicalPaths());
         _receivers.add(receiver);
         try
         {
@@ -299,16 +300,19 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         private final RequestCallback _requestCallback;
         private final RemoteIdentifier _proxyID;
         private final String _codebase;
+        private final String[] _canonicalPaths;
         
         private final String _receiverID;
         
         private volatile boolean _receivedJMIWrapper = false;
         
-        public RemoteRequestReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID, String codebase)
+        public RemoteRequestReceiver(RequestCallback requestCallback, RemoteIdentifier proxyID,
+                String codebase, String[] canonicalPaths)
         {
             _requestCallback = requestCallback;
             _proxyID = proxyID;
             _codebase = codebase;
+            _canonicalPaths = canonicalPaths;
             
             _receiverID = "PROXY_RECEIVER_" + proxyID.getUUIDString();
         }
@@ -359,9 +363,15 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
 
         @Override
-        public String getRMICodebase() throws RemoteException
+        public String getClassPathAsRMICodebase() throws RemoteException
         {
             return _codebase;
+        }
+
+        @Override
+        public String[] getClassPathAsCanonicalPaths() throws RemoteException
+        {
+            return _canonicalPaths;
         }
     }
     

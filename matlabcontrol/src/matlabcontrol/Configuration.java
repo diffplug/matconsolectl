@@ -36,7 +36,13 @@ import java.net.URL;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class Configuration
-{   
+{
+    public static void main(String[] args) throws Throwable
+    {
+        System.out.println(System.getProperty("java.class.path"));
+        System.out.println(getClassPathAsRMICodebase());
+    }
+    
     private Configuration() { }
     
     /**
@@ -158,38 +164,81 @@ class Configuration
     
     /**
      * The codebase format is a list of URL formatted strings separated by spaces. What would normally be a space is
-     * instead represented as {@code %20}. While not explicitly specified, directories must be terminated with a
-     * {@code /} or it is treated as if it were a JAR. This is because the default RMI class loader internally uses a
-     * {@link java.net.URLClassLoader}. The normal classpath format does not have this requirement.
+     * instead represented as {@code %20}. Directories must be terminated with a {@code /} or they are treated as if
+     * they were a JAR. Paths must be absolute. The normal classpath format does not have these requirement. This method
+     * converts the classpath to RMI's codebase format.
      * 
      * @return codebase
      */
-    static String getClassPathAsRMICodebase()
+    static String getClassPathAsRMICodebase() throws MatlabConnectionException
     {
-        String classpath = System.getProperty("java.class.path", "");
-        
-        StringBuilder codebaseBuilder = new StringBuilder();
-            
-        String[] paths = classpath.split(":");
-        for(String path : paths)
+        try
         {
-            codebaseBuilder.append("file://");
-
-            String formatedPath = path;
-            formatedPath = formatedPath.replace(" ", "%20");
-            codebaseBuilder.append(formatedPath);
+            StringBuilder codebaseBuilder = new StringBuilder();
+            String[] paths = System.getProperty("java.class.path", "").split(File.pathSeparator);
             
-            if(!formatedPath.endsWith("/") && new File(path).isDirectory())
+            for(String path : paths)
             {
-                codebaseBuilder.append("/");
+                codebaseBuilder.append("file://");
+
+                File file = new File(path);
+                String transformedPath = file.getCanonicalPath();
+                transformedPath = transformedPath.replace(" ", "%20");
+
+                //Windows URIs need to be of the form file:///C:/Documents%20and%20Settings/davris/FileSchemeURIs.doc
+                if(isWindows())
+                {
+                    transformedPath = transformedPath.replace("\\", "/");
+                    if(!transformedPath.startsWith("/"))
+                    {
+                        codebaseBuilder.append("/");
+                    }
+                }
+
+                codebaseBuilder.append(transformedPath);
+
+                if(!transformedPath.endsWith("/") && file.isDirectory())
+                {
+                    codebaseBuilder.append("/");
+                }
+
+                codebaseBuilder.append(" ");
             }
 
-            codebaseBuilder.append(" ");
-        }
-
-        String codebase = codebaseBuilder.toString();
+            String codebase = codebaseBuilder.toString();
         
-        return codebase;
+            return codebase;
+        }
+        catch(IOException e)
+        {
+            throw new MatlabConnectionException("Unable to resolve canonical path of classpath entry", e);
+        }
+    }
+    
+    /**
+     * Splits the classpath into individual entries and converts each entry into its canonical path.
+     * 
+     * @return
+     * @throws MatlabConnectionException 
+     */
+    static String[] getClassPathAsCanonicalPaths() throws MatlabConnectionException
+    {
+        try
+        {
+            String classpath = System.getProperty("java.class.path", "");
+            String[] paths = classpath.split(File.pathSeparator);
+            
+            for(int i = 0; i < paths.length; i++)
+            {
+                paths[i] = new File(paths[i]).getCanonicalPath();
+            }
+        
+            return paths;
+        }
+        catch(IOException e)
+        {
+            throw new MatlabConnectionException("Unable to resolve canonical path of classpath entry", e);
+        }
     }
     
     /**

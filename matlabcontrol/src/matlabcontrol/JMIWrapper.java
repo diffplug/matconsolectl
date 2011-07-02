@@ -56,7 +56,7 @@ import matlabcontrol.MatlabInteractor.MatlabCallable;
 class JMIWrapper
 {
     private static final MatlabThreadInteractor THREAD_INTERACTOR = new MatlabThreadInteractor();
-    
+     
     private JMIWrapper() { }
     
     /**
@@ -302,6 +302,12 @@ class JMIWrapper
         @Override
         public void setVariable(String variableName, Object value)
         {
+            //TEST
+            //this.returningFeval("assignin", new Object[]{ "base", variableName, new ValueBox(new Object()) }, 0);
+            //this.returningFeval("eval", new Object[] { variableName + " = " + variableName + ".value;" }, 0); 
+            //END-TEST
+            
+            
             this.returningFeval("assignin", new Object[]{ "base", variableName, value }, 0);
         }
 
