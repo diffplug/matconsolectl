@@ -22,4 +22,4 @@ There are reports of recent Windows versions of MATLAB (`R2010a` through `R2011a
 Due to the large diversity of Linux distributions, Linux is not shown in the above table. However, the following combinations are known to work:
 Debian 2.6 & `R2008b`, Ubuntu 9.10 & `R2010a`, unknown Linux distro & `R2011a`
 
-*No effort is (or will be) made to ensure compatibility with versions prior to `R2007b`.* This is because versions of MATLAB prior to `R2007b` [http://www.mathworks.com/support/solutions/en/data/1-1812J/ do not make use of Java 6].
+*No effort will be made to ensure compatibility with versions prior to `R2007b`.* This is because versions of MATLAB prior to `R2007b` [http://www.mathworks.com/support/solutions/en/data/1-1812J/ do not make use of Java 6].
