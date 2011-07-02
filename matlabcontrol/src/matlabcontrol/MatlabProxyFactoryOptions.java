@@ -22,6 +22,7 @@ public class MatlabProxyFactoryOptions
     private final String _licenseFile;
     private final boolean _useSingleCompThread;
     private final int _port;
+    private final long _initializationTime;
         
     private MatlabProxyFactoryOptions(Builder options)
     {
@@ -34,6 +35,7 @@ public class MatlabProxyFactoryOptions
         _licenseFile = options._licenseFile;
         _useSingleCompThread = options._useSingleCompThread;
         _port = options._port;
+        _initializationTime = options._initializationTime.get();
     }
 
     String getMatlabLocation()
@@ -81,6 +83,11 @@ public class MatlabProxyFactoryOptions
         return _port;
     }
     
+    long getInitializationTime()
+    {
+        return _initializationTime;
+    }
+    
     /**
      * Builds instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
      * then a default will be used. Depending on how the factory operates, not all properties may be used. Currently all
@@ -113,6 +120,7 @@ public class MatlabProxyFactoryOptions
         
         //Assigning to a long is not atomic, so use an AtomicLong so that a thread always sees an intended value
         private final AtomicLong _proxyTimeout = new AtomicLong(90000L);
+        private final AtomicLong _initializationTime = new AtomicLong(5000L);
 
         /**
          * Sets the location of the MATLAB executable or script that will launch MATLAB. If the value set cannot be
@@ -181,6 +189,28 @@ public class MatlabProxyFactoryOptions
         public final Builder setHidden(boolean hidden)
         {
             _hidden = hidden;
+            
+            return this;
+        }
+        
+        /**
+         * Sets the amount of time matlabcontrol waits before initializing in MATLAB and establishing a connection. By
+         * default this value is {@code 5000} milliseconds. If MATLAB is hanging indefinitely when launched by
+         * matlabcontrol you should try setting a greater {@code initializationTime}. This value is only used when
+         * connecting immediately after a session of MATLAB is launched, not on subsequent reconnections (if enabled).
+         * 
+         * @param initializationTime amount of time to wait, in milliseconds
+         * 
+         * @throws IllegalArgumentException if initializationTime is negative
+         */
+        public final Builder setInitializationTime(long initializationTime)
+        {
+            if(initializationTime < 0)
+            {
+                throw new IllegalArgumentException("initializationTime [" + initializationTime + "] may not be negative");
+            }
+            
+            _initializationTime.set(initializationTime);
             
             return this;
         }
@@ -313,20 +343,20 @@ public class MatlabProxyFactoryOptions
         
         /**
          * Sets the port matlabcontrol uses to communicate with MATLAB. By default port {@code 2100} is used. The port
-         * value must be non-negative. It is recommended to be in the range of {@code 1024} to {@code 49151}, but this
+         * value may not be negative. It is recommended to be in the range of {@code 1024} to {@code 49151}, but this
          * range is not enforced. The port should be otherwise unused; however, any number of {@link MatlabProxyFactory}
          * instances (even those running in completely separate applications) may use the same port. A 
          * {@code MatlabProxyFactory} will only be able to connect to a previously controlled running session that was
          * started by a factory using the same {@code port}.
          * 
          * @param port
-         * @throws IllegalArgumentException if port is not non-negative
+         * @throws IllegalArgumentException if port is negative
          */
         public final Builder setPort(int port)
         {
             if(port < 0)
             {
-                throw new IllegalArgumentException("port [" + port + "] must be non-negative");
+                throw new IllegalArgumentException("port [" + port + "] may not be negative");
             }
             
             _port = port;

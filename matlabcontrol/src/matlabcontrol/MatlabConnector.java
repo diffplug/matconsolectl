@@ -110,10 +110,11 @@ class MatlabConnector
      * 
      * @param receiverID the key that binds the receiver in the registry
      * @param port the port the registry is running on
+     * @param initializationTime
      */
-    public static void connectFromMatlab(String receiverID, int port)
+    public static void connectFromMatlab(String receiverID, int port, long initializationTime)
     {
-        connect(receiverID, port, false);
+        connect(receiverID, port, false, initializationTime);
     }
     
     /**
@@ -121,15 +122,17 @@ class MatlabConnector
      * continue to initialize.
      * 
      * @param receiverID
+     * @param port
      * @param existingSession 
+     * @param initializationTime 
      */
-    static void connect(String receiverID, int port, boolean existingSession)
+    static void connect(String receiverID, int port, boolean existingSession, long initializationTime)
     {
         _connectionInProgress.set(true);
         
         //Establish the connection on a separate thread to allow MATLAB to continue to initialize
         //(If this request is coming over RMI then MATLAB has already initialized, but this will not cause an issue.)
-        _connectionExecutor.submit(new EstablishConnectionRunnable(receiverID, port, existingSession));
+        _connectionExecutor.submit(new EstablishConnectionRunnable(receiverID, port, existingSession, initializationTime));
     }
     
     /**
@@ -140,7 +143,8 @@ class MatlabConnector
         private final String _receiverID;
         private final int _port;
         private final boolean _existingSession;
-    
+        private final long _initializationTime;
+        
         /**
          * The classpath (with each classpath entry as an individual canonical path) of the most recently connected
          * receiver's JVM.
@@ -151,11 +155,12 @@ class MatlabConnector
          */
         private static volatile String[] _previousRemoteClassPath = new String[0];
         
-        private EstablishConnectionRunnable(String receiverID, int port, boolean existingSession)
+        private EstablishConnectionRunnable(String receiverID, int port, boolean existingSession, long initializationTime)
         {
             _receiverID = receiverID;
             _port = port;
             _existingSession = existingSession;
+            _initializationTime = initializationTime;
         }
 
         @Override
@@ -180,14 +185,17 @@ class MatlabConnector
                 System.setProperty("java.rmi.server.RMIClassLoaderSpi", MatlabRMIClassLoaderSpi.class.getName());
         
                 //Attempt to wait for MATLAB to initialize, if not still proceed
-                try
+                if(_initializationTime > 0)
                 {
-                    Thread.sleep(5000L);
-                }
-                catch(InterruptedException ex)
-                {
-                    System.err.println("Unable to wait for MATLAB to initialize, problems may occur");
-                    ex.printStackTrace();
+                    try
+                    {
+                        Thread.sleep(_initializationTime);
+                    }
+                    catch(InterruptedException ex)
+                    {
+                        System.err.println("Unable to wait for MATLAB to initialize, problems may occur");
+                        ex.printStackTrace();
+                    }
                 }
                 
                 //Make this session of MATLAB of visible over RMI so that reconnections can occur, proceed if it fails
