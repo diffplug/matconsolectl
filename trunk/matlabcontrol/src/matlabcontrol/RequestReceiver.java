@@ -55,10 +55,18 @@ interface RequestReceiver extends Remote
     public String getReceiverID() throws RemoteException;
     
     /**
-     * The codebase of the virtual machine the receiver was created in.
+     * The classpath of the VM the receiver was created in encoded as an RMI codebase.
      * 
      * @return
      * @throws RemoteException 
      */
-    public String getRMICodebase() throws RemoteException;
+    public String getClassPathAsRMICodebase() throws RemoteException;
+    
+    /**
+     * The classpath of the VM the receiver was created in encoded as canonical paths.
+     * 
+     * @return
+     * @throws RemoteException 
+     */
+    public String[] getClassPathAsCanonicalPaths() throws RemoteException;
 }
