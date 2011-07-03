@@ -23,6 +23,7 @@ package matlabcontrol.extensions;
  */
 
 import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 
 /**
@@ -55,7 +56,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public void eval(String command)
+    public void eval(String command) throws MatlabInvocationException
     {
         _proxy.eval(command);
     }
@@ -69,7 +70,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public ReturnData returningEval(String command, int returnCount)
+    public ReturnData returningEval(String command, int returnCount) throws MatlabInvocationException
     {
         return new ReturnData(_proxy.returningEval(command, returnCount));
     }
@@ -82,7 +83,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public void feval(String functionName, Object[] args)
+    public void feval(String functionName, Object[] args) throws MatlabInvocationException
     {
         _proxy.feval(functionName, args);
     }
@@ -96,7 +97,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public ReturnData returningFeval(String functionName, Object[] args)
+    public ReturnData returningFeval(String functionName, Object[] args) throws MatlabInvocationException
     {
         return new ReturnData(_proxy.returningFeval(functionName, args));
     }
@@ -112,6 +113,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      */
     @Override
     public ReturnData returningFeval(String functionName, Object[] args, int returnCount)
+            throws MatlabInvocationException
     {
         return new ReturnData(_proxy.returningFeval(functionName, args, returnCount));
     }
@@ -124,7 +126,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public void setVariable(String variableName, Object value)
+    public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
         _proxy.setVariable(variableName, value);
     }
@@ -137,7 +139,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public ReturnData getVariable(String variableName)
+    public ReturnData getVariable(String variableName) throws MatlabInvocationException
     {
         return new ReturnData(_proxy.getVariable(variableName));
     }
@@ -152,7 +154,7 @@ public class ReturnDataMatlabInteractor implements MatlabInteractor<ReturnData>
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
     @Override
-    public <T> T invokeAndWait(MatlabCallable<T> callable)
+    public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return _proxy.invokeAndWait(callable);
     }

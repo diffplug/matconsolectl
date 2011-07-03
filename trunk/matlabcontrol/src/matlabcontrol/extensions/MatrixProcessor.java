@@ -27,6 +27,7 @@ import java.io.Serializable;
 import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabInteractor.MatlabCallable;
+import matlabcontrol.MatlabInvocationException;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
@@ -61,7 +62,7 @@ public class MatrixProcessor
      * @return the retrieved matrix
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public MatlabMatrix getMatrix(String matrixName)
+    public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException
     {
         MatrixInfo info = _proxy.invokeAndWait(new GetMatrixCallable(matrixName));
         
@@ -78,7 +79,7 @@ public class MatrixProcessor
         }
 
         @Override
-        public MatrixInfo call(MatlabInteractor<Object> interactor)
+        public MatrixInfo call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
         {
             //Retrieve real values
             Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1);
@@ -125,7 +126,7 @@ public class MatrixProcessor
      * @param matrix
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public void setMatrix(String matrixName, MatlabMatrix matrix)
+    public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
     {
         _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
@@ -145,7 +146,7 @@ public class MatrixProcessor
         }
         
         @Override
-        public Object call(MatlabInteractor<Object> interactor)
+        public Object call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
         {
             //Store real array in the MATLAB environment
             String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);
