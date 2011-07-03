@@ -29,7 +29,7 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabInvocationException extends RuntimeException
+public class MatlabInvocationException extends Exception
 {    
     private static final long serialVersionUID = 0xB400L;
     

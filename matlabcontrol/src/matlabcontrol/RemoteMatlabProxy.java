@@ -160,15 +160,15 @@ class RemoteMatlabProxy extends MatlabProxy
     
     private static interface RemoteVoidInvocation
     {
-        public void invoke() throws RemoteException;
+        public void invoke() throws RemoteException, MatlabInvocationException;
     }
     
     private static interface RemoteReturningInvocation<T>
     {
-        public T invoke() throws RemoteException;
+        public T invoke() throws RemoteException, MatlabInvocationException;
     }
 
-    private void invoke(RemoteVoidInvocation invocation)
+    private void invoke(RemoteVoidInvocation invocation) throws MatlabInvocationException
     {
         if(!_isConnected)
         {
@@ -202,7 +202,7 @@ class RemoteMatlabProxy extends MatlabProxy
         }
     }
 
-    private <T> T invoke(RemoteReturningInvocation<T> invocation)
+    private <T> T invoke(RemoteReturningInvocation<T> invocation) throws MatlabInvocationException
     {
         if(!_isConnected)
         {
@@ -237,12 +237,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void setVariable(final String variableName, final Object value)
+    public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {
         this.invoke(new RemoteVoidInvocation()
         {
             @Override
-            public void invoke() throws RemoteException
+            public void invoke() throws RemoteException, MatlabInvocationException
             {
                 _jmiWrapper.setVariable(variableName, value);
             }
@@ -250,12 +250,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object getVariable(final String variableName)
+    public Object getVariable(final String variableName) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<Object>()
         {
             @Override
-            public Object invoke() throws RemoteException
+            public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.getVariable(variableName);
             }
@@ -263,12 +263,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void exit()
+    public void exit() throws MatlabInvocationException
     {
         this.invoke(new RemoteVoidInvocation()
         {
             @Override
-            public void invoke() throws RemoteException
+            public void invoke() throws RemoteException, MatlabInvocationException
             {
                 _jmiWrapper.exit();
             }
@@ -276,12 +276,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void eval(final String command)
+    public void eval(final String command) throws MatlabInvocationException
     {
         this.invoke(new RemoteVoidInvocation()
         {
             @Override
-            public void invoke() throws RemoteException
+            public void invoke() throws RemoteException, MatlabInvocationException
             {
                 _jmiWrapper.eval(command);
             }
@@ -289,12 +289,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public Object returningEval(final String command, final int returnCount)
+    public Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<Object>()
         {
             @Override
-            public Object invoke() throws RemoteException
+            public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.returningEval(command, returnCount);
             }
@@ -302,12 +302,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public void feval(final String functionName, final Object[] args)
+    public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
         this.invoke(new RemoteVoidInvocation()
         {
             @Override
-            public void invoke() throws RemoteException
+            public void invoke() throws RemoteException, MatlabInvocationException
             {
                 _jmiWrapper.feval(functionName, args);
             }
@@ -315,12 +315,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object returningFeval(final String functionName, final Object[] args)
+    public Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<Object>()
         {
             @Override
-            public Object invoke() throws RemoteException
+            public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.returningFeval(functionName, args);
             }
@@ -329,11 +329,12 @@ class RemoteMatlabProxy extends MatlabProxy
     
     @Override
     public Object returningFeval(final String functionName, final Object[] args, final int returnCount)
+            throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<Object>()
         {
             @Override
-            public Object invoke() throws RemoteException
+            public Object invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.returningFeval(functionName, args, returnCount);
             }
@@ -341,12 +342,12 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public <T> T invokeAndWait(final MatlabCallable<T> callable)
+    public <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<T>()
         {
             @Override
-            public T invoke() throws RemoteException
+            public T invoke() throws RemoteException, MatlabInvocationException
             {
                 return _jmiWrapper.invokeAndWait(callable);
             }

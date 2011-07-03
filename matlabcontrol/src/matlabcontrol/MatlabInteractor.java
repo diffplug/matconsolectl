@@ -50,7 +50,7 @@ public interface MatlabInteractor<T>
      * 
      * @see #returningEval(String, int)
      */
-    public void eval(String command);
+    public void eval(String command) throws MatlabInvocationException;
 
     /**
      * Evaluates a command in MATLAB, returning the result.
@@ -62,7 +62,7 @@ public interface MatlabInteractor<T>
      * 
      * @see #eval(String)
      */
-    public T returningEval(String command, int returnCount);
+    public T returningEval(String command, int returnCount) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
@@ -75,7 +75,7 @@ public interface MatlabInteractor<T>
      * @see #returningFeval(String, Object[], int)
      * @see #returningFeval(String, Object[])
      */
-    public void feval(String functionName, Object[] args);
+    public void feval(String functionName, Object[] args) throws MatlabInvocationException;
 
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
@@ -89,7 +89,7 @@ public interface MatlabInteractor<T>
      * @see #feval(String, Object[])
      * @see #returningFeval(String, Object[])
      */
-    public T returningFeval(String functionName, Object[] args);
+    public T returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
@@ -105,7 +105,7 @@ public interface MatlabInteractor<T>
      * @see #feval(String, Object[])
      * @see #returningFeval(String, Object[])
      */
-    public T returningFeval(String functionName, Object[] args, int returnCount);
+    public T returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
     
     /**
      * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
@@ -114,7 +114,7 @@ public interface MatlabInteractor<T>
      * @param value
      * @throws MatlabInvocationException
      */
-    public void setVariable(String variableName, Object value);
+    public void setVariable(String variableName, Object value) throws MatlabInvocationException;
     
     /**
      * Gets the value of {@code variableName} in MATLAB.
@@ -123,7 +123,7 @@ public interface MatlabInteractor<T>
      * @return value
      * @throws MatlabInvocationException
      */
-    public T getVariable(String variableName);
+    public T getVariable(String variableName) throws MatlabInvocationException;
     
     /**
      * Runs the {@code callable} in MATLAB, returning the result of the {@code callable}.
@@ -133,7 +133,7 @@ public interface MatlabInteractor<T>
      * @return result of the callable
      * @throws MatlabInvocationException 
      */
-    public <U> U invokeAndWait(MatlabCallable<U> callable);
+    public <U> U invokeAndWait(MatlabCallable<U> callable) throws MatlabInvocationException;
     
     /**
      * Computation performed in MATLAB.
@@ -146,9 +146,9 @@ public interface MatlabInteractor<T>
          * Performs the computation in MATLAB.
          * 
          * @param interactor
-         * @return
+         * @return result of the computation
          * @throws MatlabInvocationException 
          */
-        public U call(MatlabInteractor<Object> interactor);
+        public U call(MatlabInteractor<Object> interactor) throws MatlabInvocationException;
     }
 }

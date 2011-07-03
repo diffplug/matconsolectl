@@ -47,49 +47,49 @@ class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject impl
     }
     
     @Override
-    public void setVariable(String variableName, Object value)
+    public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
         JMIWrapper.setVariable(variableName, value);
     }
     
     @Override
-    public Object getVariable(String variableName)
+    public Object getVariable(String variableName) throws MatlabInvocationException
     {
         return JMIWrapper.getVariable(variableName);
     }
 
     @Override
-    public Object returningFeval(String command, Object[] args)
+    public Object returningFeval(String command, Object[] args) throws MatlabInvocationException
     {
         return JMIWrapper.returningFeval(command, args);
     }
     
     @Override
-    public Object returningFeval(String command, Object[] args, int returnCount)
+    public Object returningFeval(String command, Object[] args, int returnCount) throws MatlabInvocationException
     {
         return JMIWrapper.returningFeval(command, args, returnCount);
     }
     
     @Override
-    public Object returningEval(String command, int returnCount)
+    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
     {    
         return JMIWrapper.returningEval(command, returnCount);
     }
 
     @Override
-    public void eval(String command)
+    public void eval(String command) throws MatlabInvocationException
     {
         JMIWrapper.eval(command);
     }
 
     @Override
-    public void feval(String command, Object[] args)
+    public void feval(String command, Object[] args) throws MatlabInvocationException
     {
         JMIWrapper.feval(command, args);
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable)
+    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws MatlabInvocationException
     {
         return JMIWrapper.invokeAndWait(callable);
     }

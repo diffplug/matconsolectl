@@ -133,8 +133,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <h3>Exceptions</h3>
  * Proxy methods that are relayed to MATLAB can throw {@link MatlabInvocationException}s. They will be thrown if:
  * <ul>
- * <li>An internal MATLAB exception occurs, typically from trying to use a function or variable that does not exist, or
- *     incorrectly calling a function (such as providing the wrong number of arguments).</li>
+ * <li>An internal MATLAB exception occurs. This occurs primarily for two different reasons. The first is anything that
+ *     would normally cause an exception in MATLAB such as trying to use a function improperly or referencing a variable
+ *     that does not exist. The second is due to the unreliable nature of the underlying JMI code. It can become out of
+ *     sync with the MATLAB environment resulting in an inability to retrieve or make use of a variable that was
+ *     previously set.</li>
  * <li>The proxy has been disconnected via {@link #disconnect()}.</li>
  * <br><i>Running outside MATLAB</i>
  * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted (likely due to
@@ -150,10 +153,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *     {@link matlabcontrol.extensions.MatlabCallbackInteractor} may be used to interact with MATLAB on the EDT.) This
  *     does not apply to {@link #exit()} which may be called from the EDT.</li>
  * </ul>
- * {@code MatlabInvocationException}s do not need to be caught. In most situations proper use of the proxy method will
- * avoid exceptions being thrown. However, if the session is also being actively interacted with by a user it may be
- * impossible to know the state of MATLAB and its environment; most notably MATLAB could have been closed. In such
- * situations catching {@code MatlabInvocationException}s may be appropriate.
  * <br><br>
  * * This is due to Remote Method Invocation (RMI) prohibiting loading classes defined in remote Java Virtual Machines
  * unless a {@code SecurityManager} has been set. {@link PermissiveSecurityManager} exists to provide an easy way to set
@@ -308,7 +307,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #disconnect()
      * @see #isConnected() 
      */
-    public abstract void exit();
+    public abstract void exit() throws MatlabInvocationException;
     
    /**
      * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.
@@ -319,7 +318,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #returningEval(String, int)
      */
     @Override
-    public abstract void eval(String command);
+    public abstract void eval(String command) throws MatlabInvocationException;
 
     /**
      * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
@@ -340,7 +339,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #eval(String)
      */
     @Override
-    public abstract Object returningEval(String command, int returnCount);
+    public abstract Object returningEval(String command, int returnCount) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
@@ -357,7 +356,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #returningFeval(String, Object[])
      */
     @Override
-    public abstract void feval(String functionName, Object[] args);
+    public abstract void feval(String functionName, Object[] args) throws MatlabInvocationException;
 
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
@@ -380,7 +379,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #returningFeval(String, Object[])
      */
     @Override
-    public abstract Object returningFeval(String functionName, Object[] args);
+    public abstract Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
@@ -407,7 +406,8 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @see #returningFeval(String, Object[])
      */
     @Override
-    public abstract Object returningFeval(String functionName, Object[] args, int returnCount);
+    public abstract Object returningFeval(String functionName, Object[] args, int returnCount)
+            throws MatlabInvocationException;
     
     /**
      * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
@@ -417,7 +417,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @throws MatlabInvocationException
      */
     @Override
-    public abstract void setVariable(String variableName, Object value);
+    public abstract void setVariable(String variableName, Object value) throws MatlabInvocationException;
     
     /**
      * Gets the value of {@code variableName} in MATLAB.
@@ -427,7 +427,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @throws MatlabInvocationException
      */
     @Override
-    public abstract Object getVariable(String variableName);
+    public abstract Object getVariable(String variableName) throws MatlabInvocationException;
     
     /**
      * Runs the {@code callable} on MATLAB's main thread and waits for it to return its result. This method allows for
@@ -447,7 +447,7 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * @throws MatlabInvocationException 
      */
     @Override
-    public abstract <U> U invokeAndWait(MatlabCallable<U> callable);
+    public abstract <U> U invokeAndWait(MatlabCallable<U> callable) throws MatlabInvocationException;
     
     /**
      * Implementers can be notified when a proxy becomes disconnected from MATLAB.
