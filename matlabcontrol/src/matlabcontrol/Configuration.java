@@ -25,7 +25,7 @@ package matlabcontrol;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
-import java.net.JarURLConnection;
+import java.net.URISyntaxException;
 import java.net.URL;
 
 /**
@@ -36,7 +36,7 @@ import java.net.URL;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class Configuration
-{
+{   
     private Configuration() { }
     
     /**
@@ -62,8 +62,7 @@ class Configuration
     /**
      * If running on Linux.
      * 
-     * @return 
-     * @throws
+     * @return
      */
     static boolean isLinux()
     {
@@ -86,8 +85,7 @@ class Configuration
      * For OS X this will be the location, for Windows or Linux this will be an alias. For any other operating system an 
      * exception will be thrown.
      * 
-     * @return MATLAB's location or alias
-     * 
+     * @return
      * @throws MatlabConnectionException thrown if the location of MATLAB cannot be determined on OS X, or the alias
      *                                       cannot be determined because the operating system is not Windows or Linux
      */
@@ -157,12 +155,11 @@ class Configuration
     }
     
     /**
-     * The codebase format is a list of URL formatted strings separated by spaces. What would normally be a space is
-     * instead represented as {@code %20}. Directories must be terminated with a {@code /} or they are treated as if
-     * they were a JAR. Paths must be absolute. The normal classpath format does not have these requirement. This method
-     * converts the classpath to RMI's codebase format.
+     * Converts the classpath into RMI's codebase format. The codebase format is a list of URL formatted strings
+     * separated by spaces. As the application may be running in a different directory, paths are made absolute.
      * 
      * @return codebase
+     * @throws MatlabConnectionException
      */
     static String getClassPathAsRMICodebase() throws MatlabConnectionException
     {
@@ -171,46 +168,27 @@ class Configuration
             StringBuilder codebaseBuilder = new StringBuilder();
             String[] paths = System.getProperty("java.class.path", "").split(File.pathSeparator);
             
-            for(String path : paths)
+            for(int i = 0; i < paths.length; i++)
             {
                 codebaseBuilder.append("file://");
+                codebaseBuilder.append(new File(paths[i]).getCanonicalFile().toURI().toURL().getPath());
 
-                File file = new File(path);
-                String transformedPath = file.getCanonicalPath();
-                transformedPath = transformedPath.replace(" ", "%20");
-
-                //Windows URIs need to be of the form file:///C:/Documents%20and%20Settings/davris/FileSchemeURIs.doc
-                if(isWindows())
+                if(i != paths.length - 1)
                 {
-                    transformedPath = transformedPath.replace("\\", "/");
-                    if(!transformedPath.startsWith("/"))
-                    {
-                        codebaseBuilder.append("/");
-                    }
+                    codebaseBuilder.append(" ");
                 }
-
-                codebaseBuilder.append(transformedPath);
-
-                if(!transformedPath.endsWith("/") && file.isDirectory())
-                {
-                    codebaseBuilder.append("/");
-                }
-
-                codebaseBuilder.append(" ");
             }
-
-            String codebase = codebaseBuilder.toString();
         
-            return codebase;
+            return codebaseBuilder.toString();
         }
         catch(IOException e)
         {
-            throw new MatlabConnectionException("Unable to resolve canonical path of classpath entry", e);
+            throw new MatlabConnectionException("Unable to resolve classpath entry", e);
         }
     }
     
     /**
-     * Splits the classpath into individual entries and converts each entry into its canonical path.
+     * Converts the classpath into individual canonical entries.
      * 
      * @return
      * @throws MatlabConnectionException 
@@ -219,8 +197,7 @@ class Configuration
     {
         try
         {
-            String classpath = System.getProperty("java.class.path", "");
-            String[] paths = classpath.split(File.pathSeparator);
+            String[] paths = System.getProperty("java.class.path", "").split(File.pathSeparator);
             
             for(int i = 0; i < paths.length; i++)
             {
@@ -231,71 +208,41 @@ class Configuration
         }
         catch(IOException e)
         {
-            throw new MatlabConnectionException("Unable to resolve canonical path of classpath entry", e);
+            throw new MatlabConnectionException("Unable to resolve classpath entry", e);
         }
     }
     
     /**
      * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
-     * is, the .class file built from compiling this .java file.) The location format is then adjusted to be compatible
-     * with MATLAB.
+     * is, the .class file built from compiling this .java file.) Returned as a string so that it may be used by MATLAB.
      * 
-     * @return directory or jar file this class is in, for MATLAB
-     * 
+     * @return
      * @throws MatlabConnectionException
      */
     static String getSupportCodeLocation() throws MatlabConnectionException
     {
-        URL location = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
-        String protocol = location.getProtocol();
-        String path;
+        try
+        {
+            URL url = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
+            File file = new File(url.toURI().getPath()).getCanonicalFile();
 
-        if(protocol.equals("jar"))
-        {
-            try
+            //Confirm the file's location actually exists
+            if(!file.exists())
             {
-                JarURLConnection connection = (JarURLConnection) location.openConnection();
-                path = connection.getJarFileURL().getPath();
+                throw new MatlabConnectionException("Support code location was determined improperly; location does " +
+                        "not actually exist. Location determined as: " + file.getAbsolutePath());
             }
-            catch(ClassCastException e)
-            {
-                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                        "however, the connection returned was not for a jar", e);
-            }
-            catch(IOException e)
-            {
-                throw new MatlabConnectionException("Support code location is specified by the jar protocol; " + 
-                        "however, a connection to the jar cannot be established", e);
-            }
-        }
-        else if(protocol.equals("file"))
-        {
-            path = location.getPath();
-        }
-        else
-        {
-            throw new MatlabConnectionException("Support code location is specified by an unknown protocol: " +
-                    protocol);
-        }
-        
-        //Convert URL encoded space to an actual space
-        path = path.replace("%20", " ");
 
-        //If under Windows, convert to a Windows path
-        if(isWindows())
-        {
-            path = path.replaceFirst("/", "");
-            path = path.replace("/", "\\");
+            return file.getAbsolutePath();
         }
-        
-        //Confirm the path actually exists
-        if(!new File(path).exists())
+        catch(IOException e)
         {
-            throw new MatlabConnectionException("Support code location was determined improperly; location does " +
-                    "not actually exist. Location determined as: " + path);
+            throw new MatlabConnectionException("Support code location could not be determined", e);
         }
-
-        return path;
+        catch(URISyntaxException e)
+        {
+            throw new MatlabConnectionException("Support code location could not be determined", e);
+        }
     }
     
     /**
