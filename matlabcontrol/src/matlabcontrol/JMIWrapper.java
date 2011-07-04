@@ -219,7 +219,7 @@ class JMIWrapper
             //Used to block the calling thread while waiting for MATLAB to finish computing
             final ArrayBlockingQueue<MatlabReturn<T>> returnQueue = new ArrayBlockingQueue<MatlabReturn<T>>(1); 
 
-            Matlab.whenMatlabReady(new Runnable()
+            Matlab.whenMatlabIdle(new Runnable()
             {
                 @Override
                 public void run()
