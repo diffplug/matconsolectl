@@ -28,46 +28,49 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import matlabcontrol.MatlabInteractor;
+import matlabcontrol.MatlabInteractor.MatlabCallable;
 import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy;
+import matlabcontrol.MatlabProxy.DisconnectionListener;
+import matlabcontrol.MatlabProxy.Identifier;
 
 /**
- * Wraps around an interactor to provide a log of interactions. The data is not altered. This interactor is very
- * useful for determining the Java types and structure of data returned from MATLAB.
+ * Wraps around a {@link MatlabProxy} to provide a log of interactions. The data is not altered. This logger is useful
+ * for determining the Java types and structure of data returned from MATLAB.
  * <br><br>
  * Entering a method, exiting a method, and throwing an exception are logged. Method parameters and return values are
- * logged. The contents of a returned array can optionally be recursively explored. As is convention, all of these
- * interactions are logged at {@code Level.FINER}. If the logging system has not been otherwise configured, then the
- * {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their level is
- * too low. To configure the {@code ConsoleHandler} to show these log messages, call {@link #showInConsoleHandler()}.
+ * logged. The contents of a returned array will be recursively explored and its contents logged. As is convention, all
+ * of these interactions are logged at {@code Level.FINER}. If the logging system has not been otherwise configured,
+ * then the {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their
+ * level is too low. To configure the {@code ConsoleHandler} to show these log messages, call
+ * {@link #showInConsoleHandler()}.
  * <br><br>
- * This class is conditionally thread-safe. To be thread-safe the delegate {@link MatlabInteractor} provided to the
- * constructor must be thread-safe.
+ * This class is unconditionally thread-safe.
  * 
  * @since 4.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class LoggingMatlabInteractor implements MatlabInteractor
+public class MatlabProxyLogger
 {
-    private static final Logger LOGGER = Logger.getLogger(LoggingMatlabInteractor.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MatlabProxyLogger.class.getName());
     static
     {
         LOGGER.setLevel(Level.FINER);
     }
+    private static final String CLASS_NAME = MatlabProxyLogger.class.getName();
     
-    private final MatlabInteractor _delegateInteractor;
+    private final MatlabProxy _proxy;
     
     /**
-     * Constructs the interactor. If the provided {@code interactor} throws an exception it will be caught, logged, and
+     * Constructs the logger. If the provided {@code proxy} throws an exception it will be caught, logged, and
      * then rethrown.
      * 
-     * @param interactor 
-     * @param exploreArrays 
+     * @param proxy
      */
-    public LoggingMatlabInteractor(MatlabInteractor interactor, boolean exploreArrays)
+    public MatlabProxyLogger(MatlabProxy proxy)
     {
-        _delegateInteractor = interactor;
+        _proxy = proxy;
     }
     
     /**
@@ -86,252 +89,389 @@ public class LoggingMatlabInteractor implements MatlabInteractor
         }
     }
     
-    private static abstract class VoidInvocation
+    private static abstract class Invocation
     {
-        private final Object[] _args;
-        public VoidInvocation(Object... args)
-        {
-            _args = args;
-        }
+        final String name;
+        final Object[] args;
         
-        public Object[] getArgs() { return _args; }
-        public abstract void invoke() throws MatlabInvocationException;
-        public abstract String getName();
+        public Invocation(String name, Object... args)
+        {
+            this.name = name;
+            this.args = args;
+        }
     }
     
-    private static abstract class ReturningInvocation<T>
-    {        
-        private final Object[] _args;
-        public ReturningInvocation(Object... args)
+    private static abstract class VoidThrowingInvocation extends Invocation
+    {
+        public VoidThrowingInvocation(String name, Object... args)
         {
-            _args = args;
+            super(name, args);
         }
         
-        public Object[] getArgs() { return _args; }
+        public abstract void invoke() throws MatlabInvocationException;
+    }
+    
+    private static abstract class VoidInvocation extends Invocation
+    {
+        public VoidInvocation(String name, Object... args)
+        {
+            super(name, args);
+        }
+        
+        public abstract void invoke();
+    }
+    
+    private static abstract class ReturnThrowingInvocation<T> extends Invocation
+    {
+        public ReturnThrowingInvocation(String name, Object... args)
+        {
+            super(name, args);
+        }
+        
         public abstract T invoke() throws MatlabInvocationException;
-        public abstract String getName();
+    }
+    
+    private static abstract class ReturnInvocation<T> extends Invocation
+    {
+        public ReturnInvocation(String name, Object... args)
+        {
+            super(name, args);
+        }
+        
+        public abstract T invoke();
+    }
+    
+    private static abstract class ReturnBooleanInvocation extends Invocation
+    {
+        public ReturnBooleanInvocation(String name, Object... args)
+        {
+            super(name, args);
+        }
+        
+        public abstract boolean invoke();
     }
 
-    private void invoke(VoidInvocation invocation) throws MatlabInvocationException
+    private void invoke(VoidThrowingInvocation invocation) throws MatlabInvocationException
     {   
-        LOGGER.entering(this.getClass().getName(), invocation.getName(), invocation.getArgs());
+        LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
         
         try
         {
             invocation.invoke();
-            LOGGER.exiting(this.getClass().getName(), invocation.getName());
+            LOGGER.exiting(CLASS_NAME, invocation.name);
         }
-        catch(RuntimeException e)
+        catch(MatlabInvocationException e)
         {            
-            LOGGER.throwing(this.getClass().getName(), invocation.getName(), e);
-            LOGGER.exiting(this.getClass().getName(), invocation.getName());
+            LOGGER.throwing(CLASS_NAME, invocation.name, e);
+            LOGGER.exiting(CLASS_NAME, invocation.name);
             
             throw e;
         }
     }
+    
+    private void invoke(VoidInvocation invocation)
+    {   
+        LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
+        invocation.invoke();
+        LOGGER.exiting(CLASS_NAME, invocation.name);
+    }
 
-    private <T> T invoke(ReturningInvocation<T> invocation) throws MatlabInvocationException
+    private <T> T invoke(ReturnThrowingInvocation<T> invocation) throws MatlabInvocationException
     {
         T data;
         
-        LOGGER.entering(this.getClass().getName(), invocation.getName(), invocation.getArgs());
+        LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
         try
         {
             data = invocation.invoke();
-            LOGGER.exiting(this.getClass().getName(), invocation.getName(), formatResult(data));
+            LOGGER.exiting(CLASS_NAME, invocation.name, formatResult(data));
         }
         catch(MatlabInvocationException e)
         {
-            LOGGER.throwing(this.getClass().getName(), invocation.getName(), e);
-            LOGGER.exiting(this.getClass().getName(), invocation.getName());
+            LOGGER.throwing(CLASS_NAME, invocation.name, e);
+            LOGGER.exiting(CLASS_NAME, invocation.name);
             
             throw e;
         }
         return data;
     }
+    
+    private <T> T invoke(ReturnInvocation<T> invocation)
+    {
+        T data;
+        
+        LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
+        data = invocation.invoke();
+        LOGGER.exiting(CLASS_NAME, invocation.name, formatResult(data));
+        
+        return data;
+    }
+    
+    private boolean invoke(ReturnBooleanInvocation invocation)
+    {
+        boolean data;
+        
+        LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
+        data = invocation.invoke();
+        LOGGER.exiting(CLASS_NAME, invocation.name, formatResult(data));
+        
+        return data;
+    }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param command
-     * @throws MatlabInvocationException if thrown by the interactor
+     * @throws MatlabInvocationException
      */
-    @Override
     public void eval(final String command) throws MatlabInvocationException
     {           
-        this.invoke(new VoidInvocation(command)
+        this.invoke(new VoidThrowingInvocation("eval(String)", command)
         {
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateInteractor.eval(command);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "eval(String)";
+                _proxy.eval(command);
             }
         });
     }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param command
      * @param nargout
      * @return
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationExceptio
      */
-    @Override
     public Object[] returningEval(final String command, final int nargout) throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<Object[]>(command, nargout)
+        return this.invoke(new ReturnThrowingInvocation<Object[]>("returningEval(String, int)", command, nargout)
         {
             @Override
             public Object[] invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.returningEval(command, nargout);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "returningEval(String, int)";
+                return _proxy.returningEval(command, nargout);
             }
         });
     }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param functionName
      * @param args
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationException
      */
-    @Override
     public void feval(final String functionName, final Object... args) throws MatlabInvocationException
     {
-        this.invoke(new VoidInvocation(functionName, args)
+        this.invoke(new VoidThrowingInvocation("feval(String, Object...)", functionName, args)
         {
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateInteractor.feval(functionName, args);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "feval(String, Object...)";
+                _proxy.feval(functionName, args);
             }
         });
     }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param functionName
      * @param nargout
      * @param args
      * @return
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationException
      */
-    @Override
     public Object[] returningFeval(final String functionName, final int nargout, final Object... args)
             throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<Object[]>(functionName, nargout, args)
+        return this.invoke(new ReturnThrowingInvocation<Object[]>("returningFeval(String, int, Object...)",
+                functionName, nargout, args)
         {
             @Override
             public Object[] invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.returningFeval(functionName, nargout, args);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "returningFeval(String, int, Object...)";
+                return _proxy.returningFeval(functionName, nargout, args);
             }
         });
     }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param variableName
      * @param value
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationException
      */
-    @Override
     public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {   
-        this.invoke(new VoidInvocation(variableName, value)
+        this.invoke(new VoidThrowingInvocation("setVariable(String, int)", variableName, value)
         {
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _delegateInteractor.setVariable(variableName, value);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "setVariable(String, int)";
+                _proxy.setVariable(variableName, value);
             }
         });
     }
 
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param variableName
      * @return
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationException
      */
-    @Override
     public Object getVariable(final String variableName) throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<Object>(variableName)
+        return this.invoke(new ReturnThrowingInvocation<Object>("getVariable(String)", variableName)
         {
             @Override
             public Object invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.getVariable(variableName);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "getVariable(String)";
+                return _proxy.getVariable(variableName);
             }
         });
     }
     
     /**
-     * Delegates to the interactor; logs the interaction.
+     * Delegates to the proxy; logs the interaction.
      * 
      * @param <U>
      * @param callable
      * @return
-     * @throws MatlabInvocationException if thrown by the interactor 
+     * @throws MatlabInvocationException
      */
-    @Override
     public <U> U invokeAndWait(final MatlabCallable<U> callable) throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<U>(callable)
+        return this.invoke(new ReturnThrowingInvocation<U>("invokeAndWait(MatlabThreadCallable)", callable)
         {
             @Override
             public U invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.invokeAndWait(callable);
+                return _proxy.invokeAndWait(callable);
             }
+        });
+    }
 
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @param listener 
+     */
+    public void addDisconnectionListener(final DisconnectionListener listener)
+    {        
+        this.invoke(new VoidInvocation("addDisconnectionListener(DisconnectionListener)", listener)
+        {
             @Override
-            public String getName()
+            public void invoke()
             {
-                return "invokeAndWait(MatlabThreadCallable)";
+                _proxy.addDisconnectionListener(listener);
+            }
+        });
+        
+    }
+    
+    /**
+     *  Delegates to the proxy; logs the interaction.
+     * 
+     * @param listener 
+     */
+    public void removeDisconnectionListener(final DisconnectionListener listener)
+    {
+        this.invoke(new VoidInvocation("removeDisconnectionListener(DisconnectionListener)", listener)
+        {
+            @Override
+            public void invoke()
+            {
+                _proxy.removeDisconnectionListener(listener);
+            }
+        });
+    }
+
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @return 
+     */
+    public boolean disconnect()
+    {        
+        return this.invoke(new ReturnBooleanInvocation("disconnect()")
+        {
+            @Override
+            public boolean invoke()
+            {
+                return _proxy.disconnect();
+            }
+        });
+    }
+
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @return 
+     */
+    public boolean isExistingSession()
+    {
+        return this.invoke(new ReturnBooleanInvocation("isExistingSession()")
+        {
+            @Override
+            public boolean invoke()
+            {
+                return _proxy.isExistingSession();
+            }
+        });
+    }
+
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @return 
+     */
+    public boolean isConnected()
+    {
+        return this.invoke(new ReturnBooleanInvocation("isConnected()")
+        {
+            @Override
+            public boolean invoke()
+            {
+                return _proxy.isConnected();
+            }
+        });
+    }
+
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @return 
+     */
+    public Identifier getIdentifier()
+    {
+        return this.invoke(new ReturnInvocation<Identifier>("getIdentifier()")
+        {
+            @Override
+            public Identifier invoke()
+            {
+                return _proxy.getIdentifier();
+            }
+        });
+    }
+
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @throws MatlabInvocationException 
+     */
+    public void exit() throws MatlabInvocationException
+    {
+        this.invoke(new VoidThrowingInvocation("exit")
+        {
+            @Override
+            public void invoke() throws MatlabInvocationException
+            {
+                _proxy.exit();
             }
         });
     }
@@ -345,8 +485,7 @@ public class LoggingMatlabInteractor implements MatlabInteractor
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() +
-                " delegate=" + _delegateInteractor + "]";
+        return "[" + this.getClass().getName() + " proxy=" + _proxy + "]";
     }
     
     private String formatResult(Object result)
