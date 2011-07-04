@@ -134,10 +134,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * Proxy methods that are relayed to MATLAB can throw {@link MatlabInvocationException}s. They will be thrown if:
  * <ul>
  * <li>An internal MATLAB exception occurs. This occurs primarily for two different reasons. The first is anything that
- *     would normally cause an exception in MATLAB such as trying to use a function improperly or referencing a variable
- *     that does not exist. The second is due to the unreliable nature of the underlying JMI code. It can become out of
- *     sync with the MATLAB environment resulting in an inability to retrieve or make use of a variable that was
- *     previously set.</li>
+ *     would normally cause an error in MATLAB such as trying to use a function improperly or referencing a variable
+ *     that does not exist. The second is due to the unreliable and undocumented nature of the underlying Java MATLAB
+ *     Interface API.</li>
  * <li>The proxy has been disconnected via {@link #disconnect()}.</li>
  * <br><i>Running outside MATLAB</i>
  * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted (likely due to
