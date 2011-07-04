@@ -48,15 +48,13 @@ interface JMIWrapperRemote extends Remote
     
     public void eval(String command) throws RemoteException, MatlabInvocationException;
     
-    public Object returningEval(String command, int returnCount) throws RemoteException, MatlabInvocationException;
+    public Object[] returningEval(String command, int nargout) throws RemoteException, MatlabInvocationException;
     
     public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
     
-    public Object returningFeval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+    public Object[] returningFeval(String command, int nargout, Object... args) throws RemoteException, MatlabInvocationException;
     
-    public Object returningFeval(String command, Object[] args, int returnCount) throws RemoteException, MatlabInvocationException;
-    
-    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws RemoteException, MatlabInvocationException;
+    public <U> U invokeAndWait(MatlabProxy.MatlabCallable<U> callable) throws RemoteException, MatlabInvocationException;
     
     /**
      * This method does nothing. It is used internally to check if a connection is still active via calling this method

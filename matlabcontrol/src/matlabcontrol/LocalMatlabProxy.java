@@ -92,11 +92,11 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
+    public Object[] returningEval(String command, int nargout) throws MatlabInvocationException
     {
         if(this.isConnected())
         {
-            return JMIWrapper.returningEval(command, returnCount);
+            return JMIWrapper.returningEval(command, nargout);
         }
         else
         {
@@ -116,26 +116,13 @@ class LocalMatlabProxy extends MatlabProxy
             throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
-    
-    @Override
-    public Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException
-    {
-        if(this.isConnected())
-        {
-            return JMIWrapper.returningFeval(functionName, args);
-        }
-        else
-        {
-            throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
-        }
-    }
 
     @Override
-    public Object returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException
+    public Object[] returningFeval(String functionName, int nargout, Object... args) throws MatlabInvocationException
     {
         if(this.isConnected())
         {
-            return JMIWrapper.returningFeval(functionName, args, returnCount);
+            return JMIWrapper.returningFeval(functionName, nargout, args);
         }
         else
         {

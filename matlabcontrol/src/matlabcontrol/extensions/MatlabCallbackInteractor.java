@@ -52,7 +52,7 @@ import matlabcontrol.MatlabProxy;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabCallbackInteractor<T>
+public class MatlabCallbackInteractor
 {
     /**
      * Executor that manages the single daemon thread used to invoke methods on the interactor. 
@@ -62,7 +62,7 @@ public class MatlabCallbackInteractor<T>
     /**
      * The interactor delegated to.
      */
-    private final MatlabInteractor<T> _delegateInteractor;
+    private final MatlabInteractor _delegateInteractor;
     
     /**
      * Constructs this interactor which will delegate to the provided {@code interactor}. The type returned by the
@@ -79,7 +79,7 @@ public class MatlabCallbackInteractor<T>
      * 
      * @param interactor 
      */
-    public MatlabCallbackInteractor(MatlabInteractor<T> interactor)
+    public MatlabCallbackInteractor(MatlabInteractor interactor)
     {
         _delegateInteractor = interactor;
     }
@@ -100,10 +100,10 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
-     * @param command
      * @param callback 
+     * @param command
      */
-    public void eval(final String command, final MatlabCallback callback)
+    public void eval(final MatlabCallback callback, final String command)
     {
         _executor.submit(new Runnable()
         {
@@ -127,11 +127,11 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
-     * @param command
-     * @param returnCount
      * @param callback 
+     * @param command
+     * @param nargout
      */
-    public void returningEval(final String command, final int returnCount, final MatlabDataCallback<T> callback)
+    public void returningEval(final MatlabDataCallback<Object[]> callback, final String command, final int nargout)
     {
         _executor.submit(new Runnable()
         {
@@ -140,7 +140,7 @@ public class MatlabCallbackInteractor<T>
             {
                 try
                 {
-                    T data = _delegateInteractor.returningEval(command, returnCount);
+                    Object[] data = _delegateInteractor.returningEval(command, nargout);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -155,11 +155,11 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
+     * @param callback 
      * @param functionName
      * @param args
-     * @param callback 
      */
-    public void feval(final String functionName, final Object[] args, final MatlabCallback callback)
+    public void feval(final MatlabCallback callback, final String functionName, final Object... args)
     {        
         _executor.submit(new Runnable()
         {
@@ -183,41 +183,13 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
-     * @param functionName
-     * @param args
      * @param callback 
-     */
-    public void returningFeval(final String functionName, final Object[] args, final MatlabDataCallback<T> callback)
-    {        
-        _executor.submit(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                try
-                {
-                    T data = _delegateInteractor.returningFeval(functionName, args);
-                    callback.invocationSucceeded(data);
-                }
-                catch(MatlabInvocationException e)
-                {
-                    callback.invocationFailed(e);
-                }
-            }       
-        });
-    }
-
-    /**
-     * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
-     * completed.
-     * 
      * @param functionName
+     * @param nargout
      * @param args
-     * @param returnCount
-     * @param callback 
      */
-    public void returningFeval(final String functionName, final Object[] args, final int returnCount,
-            final MatlabDataCallback<T> callback)
+    public void returningFeval(final MatlabDataCallback<Object[]> callback, final String functionName,
+            final int nargout, final Object... args)
     {
         _executor.submit(new Runnable()
         {
@@ -226,7 +198,7 @@ public class MatlabCallbackInteractor<T>
             {
                 try
                 {
-                    T data = _delegateInteractor.returningFeval(functionName, args, returnCount);
+                    Object[] data = _delegateInteractor.returningFeval(functionName, nargout, args);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -241,11 +213,11 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
+     * @param callback 
      * @param variableName
      * @param value
-     * @param callback 
      */
-    public void setVariable(final String variableName, final Object value, final MatlabCallback callback)
+    public void setVariable( final MatlabCallback callback, final String variableName, final Object value)
     {
         _executor.submit(new Runnable()
         {
@@ -269,10 +241,10 @@ public class MatlabCallbackInteractor<T>
      * Delegates to the interactor, calling the {@code callback} when the delegate interactor's corresponding method has
      * completed.
      * 
-     * @param variableName
      * @param callback 
+     * @param variableName
      */
-    public void getVariable(final String variableName, final MatlabDataCallback<T> callback)
+    public void getVariable(final MatlabDataCallback<Object> callback, final String variableName)
     {        
         _executor.submit(new Runnable()
         {
@@ -281,7 +253,7 @@ public class MatlabCallbackInteractor<T>
             {
                 try
                 {
-                    T data = _delegateInteractor.getVariable(variableName);
+                    Object data = _delegateInteractor.getVariable(variableName);
                     callback.invocationSucceeded(data);
                 }
                 catch(MatlabInvocationException e)
@@ -373,6 +345,7 @@ public class MatlabCallbackInteractor<T>
         public Thread newThread(Runnable r)
         {
             Thread thread = _delegateFactory.newThread(r);
+            thread.setName("MatlabCallbackInteractor Thread");
             thread.setDaemon(true);
             
             return thread;

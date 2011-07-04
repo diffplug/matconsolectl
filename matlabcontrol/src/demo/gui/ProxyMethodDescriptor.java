@@ -32,12 +32,10 @@ enum ProxyMethodDescriptor
     EVAL("void eval(String command)", Documentation.EVAL, "command", "args (disabled)", false, 0),
     RETURNING_EVAL("Object returningEval(String command, int returnCount)", Documentation.RETURNING_EVAL, "comamnd", "args (disabled)", true, 0),
     FEVAL("void feval(String functionName, Object[] args)", Documentation.FEVAL, "functionName", "args", false, ArrayPanel.NUM_ENTRIES),
-    RETURNING_AUTO_FEVAL("Object returningFeval(String functionName, Object[] args)", Documentation.AUTO_RETURNING_FEVAL, "functionName", "args", false, ArrayPanel.NUM_ENTRIES),
     RETURNING_FEVAL("Object returningFeval(String functionName, Object[] args, int returnCount)", Documentation.RETURNING_FEVAL, "functionName", "args", true, ArrayPanel.NUM_ENTRIES),
     SET_VARIABLE("void setVariable(String variableName, Object value)", Documentation.SET_VARIABLE, "variableName", "value", false, 1),
     GET_VARIABLE("Object getVariable(String variableName)", Documentation.GET_VARIABLE, "variableName", "args (disabled)", false, 0);
 
-    
     private ProxyMethodDescriptor(String signature, String message, String stringInputName,
             String argsInputName, boolean returnCountEnabled, int argsInputNumberEnabled)
     {
@@ -108,18 +106,6 @@ enum ProxyMethodDescriptor
         "<br><br>" +
         "The <tt>Object</tt>s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this " +
         "means that a <tt>String</tt> will be converted to a MATLAB <tt>char</tt> array, not a variable name.</html>",
-
-        AUTO_RETURNING_FEVAL =
-        "<html>Calls a MATLAB function with the name <tt>functionName</tt>, returning the result. Arguments to the function may " +
-        "be provided as <tt>args</tt>, if you wish to call the function with no arguments pass in <tt>null</tt>." +
-        "<br><br>" +
-        "The <tt>Object</tt>s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this " +
-        "means that a <tt>String</tt> will be converted to a MATLAB <tt>char</tt> array, not a variable name." +
-        "<br><br>" +
-        "This method may only be used for if <tt>functionName</tt> returns a fixed number of arguments. If " +
-        "<tt>functionName</tt> returns a variable number of arguments an exception will be thrown. To successfully call " +
-        "<tt>functionName</tt> use <tt>returningFeval(String, Object[], int)</tt> and specify the " +
-        "number of returned arguments.</html>",
 
         RETURNING_FEVAL =
         "<html>Calls a MATLAB function with the name <tt>functionName</tt>, returning the result. Arguments to the function may " +

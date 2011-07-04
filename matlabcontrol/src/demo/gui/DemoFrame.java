@@ -370,6 +370,41 @@ public class DemoFrame extends JFrame
         methodBox.setSelectedIndex(0);
         
         //Invoke button action
+        final MatlabCallback voidCallback = new MatlabCallback()
+        {
+            @Override
+            public void invocationSucceeded()
+            {
+                displayReturn();
+                _invokeButton.setEnabled(true);
+            }
+
+            @Override
+            public void invocationFailed(MatlabInvocationException ex)
+            {
+                displayException(ex);
+                _invokeButton.setEnabled(true);
+            }
+        };
+        
+        final MatlabDataCallback dataCallback = new MatlabDataCallback()
+        {
+                @Override
+                public void invocationSucceeded(Object data)
+                {
+                    displayResult(data);
+                    _invokeButton.setEnabled(true);
+                }
+
+                @Override
+                public void invocationFailed(MatlabInvocationException ex)
+                {
+                    displayException(ex);
+                    _invokeButton.setEnabled(true);
+                }
+        };
+        
+        
         _invokeButton.addActionListener(new ActionListener()
         {
             @Override
@@ -382,168 +417,57 @@ public class DemoFrame extends JFrame
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _interactor.eval(field.getText(), new MatlabCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded()
-                        {
-                            displayReturn();
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.eval(voidCallback, field.getText());
                 }
-                //returningEval(String command, int returnCount)
+                //returningEval(String command, int nargout)
                 else if(descriptor == ProxyMethodDescriptor.RETURNING_EVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
-                    int returnCount = 0;
+                    int nargout = 0;
                     try
                     {
-                        returnCount = Integer.parseInt(returnCountField.getText());
+                        nargout = Integer.parseInt(returnCountField.getText());
                     }
                     catch(Exception ex) { }
                     
-                    _interactor.returningEval(field.getText(), returnCount, new MatlabDataCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded(Object data)
-                        {
-                            displayResult(data);
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.returningEval(dataCallback, field.getText(), nargout);
                 }
-                //feval(String functionName, Object[] args)
+                //feval(String functionName, Object... args)
                 else if(descriptor == ProxyMethodDescriptor.FEVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _interactor.feval(field.getText(), arrayPanel.getArray(), new MatlabCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded()
-                        {
-                            displayReturn();
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.feval(voidCallback, field.getText(), arrayPanel.getArray());
                 }
-                //returningFeval(String functionName, Object[] args)
-                else if(descriptor == ProxyMethodDescriptor.RETURNING_AUTO_FEVAL)
-                {
-                    _invokeButton.setEnabled(false);
-                            
-                    _interactor.returningFeval(field.getText(), arrayPanel.getArray(), new MatlabDataCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded(Object data)
-                        {
-                            displayResult(data);
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
-                }
-                //returningFeval(String functionName, Object[] args, int returnCount)
+                //returningFeval(String functionName, int nargout, Object... args)
                 else if(descriptor == ProxyMethodDescriptor.RETURNING_FEVAL)
                 {
                     _invokeButton.setEnabled(false);
                     
-                    int returnCount = 0;
+                    int nargout = 0;
                     try
                     {
-                        returnCount = Integer.parseInt(returnCountField.getText());
+                        nargout = Integer.parseInt(returnCountField.getText());
                     }
                     catch(Exception ex) { }
                             
-                    _interactor.returningFeval(field.getText(), arrayPanel.getArray(), returnCount, new MatlabDataCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded(Object data)
-                        {
-                            displayResult(data);
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.returningFeval(dataCallback, field.getText(), nargout, arrayPanel.getArray());
+                    
                 }
                 //setVariable(String variableName, Object value)
                 else if(descriptor == ProxyMethodDescriptor.SET_VARIABLE)
                 {
                     _invokeButton.setEnabled(false);
                     
-                    _interactor.setVariable(field.getText(), arrayPanel.getFirstEntry(), new MatlabCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded()
-                        {
-                            displayReturn();
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.setVariable(voidCallback, field.getText(), arrayPanel.getFirstEntry());
                 }
                 //getVariable(String variableName)
                 else if(descriptor == ProxyMethodDescriptor.GET_VARIABLE)
                 {
                     _invokeButton.setEnabled(false);
                             
-                    _interactor.getVariable(field.getText(), new MatlabDataCallback()
-                    {
-                        @Override
-                        public void invocationSucceeded(Object data)
-                        {
-                            displayResult(data);
-                            _invokeButton.setEnabled(true);
-                        }
-
-                        @Override
-                        public void invocationFailed(MatlabInvocationException ex)
-                        {
-                            displayException(ex);
-                            _invokeButton.setEnabled(true);
-                        }
-                    });
+                    _interactor.getVariable(dataCallback, field.getText());
                 }
             }
         });
