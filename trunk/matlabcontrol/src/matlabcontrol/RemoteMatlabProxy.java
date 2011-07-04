@@ -289,14 +289,14 @@ class RemoteMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public Object returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    public Object[] returningEval(final String command, final int nargout) throws MatlabInvocationException
     {
-        return this.invoke(new RemoteReturningInvocation<Object>()
+        return this.invoke(new RemoteReturningInvocation<Object[]>()
         {
             @Override
-            public Object invoke() throws RemoteException, MatlabInvocationException
+            public Object[] invoke() throws RemoteException, MatlabInvocationException
             {
-                return _jmiWrapper.returningEval(command, returnCount);
+                return _jmiWrapper.returningEval(command, nargout);
             }
         });
     }
@@ -315,28 +315,15 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public Object returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
-    {
-        return this.invoke(new RemoteReturningInvocation<Object>()
-        {
-            @Override
-            public Object invoke() throws RemoteException, MatlabInvocationException
-            {
-                return _jmiWrapper.returningFeval(functionName, args);
-            }
-        });
-    }
-    
-    @Override
-    public Object returningFeval(final String functionName, final Object[] args, final int returnCount)
+    public Object[] returningFeval(final String functionName, final int nargout, final Object... args)
             throws MatlabInvocationException
     {
-        return this.invoke(new RemoteReturningInvocation<Object>()
+        return this.invoke(new RemoteReturningInvocation<Object[]>()
         {
             @Override
-            public Object invoke() throws RemoteException, MatlabInvocationException
+            public Object[] invoke() throws RemoteException, MatlabInvocationException
             {
-                return _jmiWrapper.returningFeval(functionName, args, returnCount);
+                return _jmiWrapper.returningFeval(functionName, nargout, args);
             }
         });
     }

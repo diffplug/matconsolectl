@@ -79,14 +79,14 @@ public class MatrixProcessor
         }
 
         @Override
-        public MatrixInfo call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
+        public MatrixInfo call(MatlabInteractor interactor) throws MatlabInvocationException
         {
             //Retrieve real values
-            Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1);
+            Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1)[0];
             double[] realValues = (double[]) realObject;
             
             //Retrieve imaginary values if present
-            boolean isReal = ((boolean[]) interactor.returningEval("isreal(" + _matrixName + ");", 1))[0];
+            boolean isReal = ((boolean[]) interactor.returningEval("isreal(" + _matrixName + ");", 1)[0])[0];
             double[] imaginaryValues = null;
             if(!isReal)
             {
@@ -95,7 +95,7 @@ public class MatrixProcessor
             }
 
             //Retrieve lengths of array
-            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ");", 1);
+            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ");", 1)[0];
             int[] lengths = new int[size.length];
             for(int i = 0; i < size.length; i++)
             {
@@ -146,17 +146,17 @@ public class MatrixProcessor
         }
         
         @Override
-        public Object call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
+        public Object call(MatlabInteractor interactor) throws MatlabInvocationException
         {
             //Store real array in the MATLAB environment
-            String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1);
+            String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1)[0];
             interactor.setVariable(realArray, _realArray);
             
             //If present, store the imaginary array in the MATLAB environment
             String imagArray = null;
             if(_imaginaryArray != null)
             {
-                imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1);
+                imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1)[0];
                 interactor.setVariable(imagArray, _imaginaryArray);
             }
 

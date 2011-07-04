@@ -141,18 +141,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <br><i>Running outside MATLAB</i>
  * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted (likely due to
  *     closing MATLAB).</li>
- * <li>The class of the object to be sent or returned is not {@link java.io.Serializable} or {@link java.rmi.Remote}.
+ * <li>The class of an object to be sent or returned is not {@link java.io.Serializable} or {@link java.rmi.Remote}.
  *     Java primitives and arrays behave as if they were {@code Serializable}.</li>
- * <li>The class of the object to be returned from MATLAB is not defined in your application and no
+ * <li>The class of an object to be returned from MATLAB is not defined in your application and no
  *     {@link SecurityManager} has been installed.*</li>
- * <li>The class of the object to sent to MATLAB is not defined in MATLAB and the class is not on your application's
+ * <li>The class of an object to sent to MATLAB is not defined in MATLAB and the class is not on your application's
  *     classpath.⊤</li>
  * <br><i>Running inside MATLAB</i>
  * <li>The method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components.✝ (A
  *     {@link matlabcontrol.extensions.MatlabCallbackInteractor} may be used to interact with MATLAB on the EDT.) This
  *     does not apply to {@link #exit()} which may be called from the EDT.</li>
  * </ul>
- * <br><br>
  * * This is due to Remote Method Invocation (RMI) prohibiting loading classes defined in remote Java Virtual Machines
  * unless a {@code SecurityManager} has been set. {@link PermissiveSecurityManager} exists to provide an easy way to set
  * a security manager without further restricting permissions. Please consult {@code PermissiveSecurityManager}'s
@@ -176,7 +175,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public abstract class MatlabProxy implements MatlabInteractor<Object>
+public abstract class MatlabProxy implements MatlabInteractor
 {   
     /**
      * Unique identifier for this proxy.
@@ -313,8 +312,6 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * 
      * @param command the command to be evaluated in MATLAB
      * @throws MatlabInvocationException 
-     * 
-     * @see #returningEval(String, int)
      */
     @Override
     public abstract void eval(String command) throws MatlabInvocationException;
@@ -323,89 +320,70 @@ public abstract class MatlabProxy implements MatlabInteractor<Object>
      * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
      * <br><br>
      * In order for the result of this command to be returned the number of arguments to be returned must be specified
-     * by {@code returnCount}. If the command you are evaluating is a MATLAB function you can determine the amount of
-     * arguments it returns by using the {@code nargout} function in the MATLAB Command Window. If it returns
-     * {@code -1} that means the function returns a variable number of arguments. In that case, you will need to
-     * manually determine the appropriate number of arguments returned for your use. If the number of arguments MATLAB
-     * attempts to return differs {@code returnCount} an undefined behavior will occur. Among the behaviors possible
-     * is an exception being thrown, {@code null} being returned, or an empty {@code String} being returned.
+     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
+     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
+     * each resulting in a different behavior:
+     * <pre>
+     * {@code
+     * M = inmem;
+     * [M, X] = inmem;
+     * [M, X, J] = inmem;
+     * }
+     * </pre>
+     * If the command cannot return the number of arguments specified by {@code nargout} then an unspecified
+     * behavior will occur.
      * 
      * @param command the command to be evaluated in MATLAB
-     * @param returnCount the number of arguments that will be returned from evaluating the command
-     * @return result of MATLAB {@code eval}
-     * @throws MatlabInvocationException 
-     * 
-     * @see #eval(String)
+     * @param nargout the number of arguments that will be returned from evaluating {@code command}
+     * @return result of MATLAB command, the length of the array will be {@code nargout}
+     * @throws MatlabInvocationException
      */
     @Override
-    public abstract Object returningEval(String command, int returnCount) throws MatlabInvocationException;
-    
-    /**
-     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
-     * @throws MatlabInvocationException 
-     * 
-     * @see #returningFeval(String, Object[], int)
-     * @see #returningFeval(String, Object[])
-     */
-    @Override
-    public abstract void feval(String functionName, Object[] args) throws MatlabInvocationException;
-
-    /**
-     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
-     * <br><br>
-     * This method may only be used for if {@code functionName} returns a fixed number of arguments. If 
-     * {@code functionName} returns a variable number of arguments an exception will be thrown. To successfully call
-     * {@code functionName} use {@link #returningFeval(java.lang.String, java.lang.Object[], int)} and specify the
-     * number of returned arguments.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
-     * @return result of MATLAB function
-     * @throws MatlabInvocationException 
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     */
-    @Override
-    public abstract Object returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
+    public abstract Object[] returningEval(String command, int nargout) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
+     * be provided as {@code args}, but are not required if the function needs no arguments.
      * <br><br>
-     * The {@code Object}s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this
-     * means that a {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
+     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
+     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
+     * 
+     * @param functionName the name of the MATLAB function to call
+     * @param args the arguments to the function
+     * @throws MatlabInvocationException 
+     */
+    @Override
+    public abstract void feval(String functionName, Object... args) throws MatlabInvocationException;
+    
+    /**
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, but are not required if the function needs no arguments.
+     * <br><br>
+     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
+     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
      * <br><br>
      * In order for the result of this function to be returned the number of arguments to be returned must be specified
-     * by {@code returnCount}. You can use the {@code nargout} function in the MATLAB Command Window to determine the
-     * number of arguments that will be returned. If {@code nargout} returns {@code -1} that means the function returns
-     * a variable number of arguments. In that case, you will need to manually determine the appropriate number of
-     * arguments returned for your use. If the number of arguments MATLAB attempts to return differs {@code returnCount}
-     * an undefined behavior will occur. Among the behaviors possible is an exception being thrown, {@code null} being
-     * returned, or an empty {@code String} being returned.
+     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
+     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
+     * each resulting in a different behavior:
+     * <pre>
+     * {@code
+     * M = inmem;
+     * [M, X] = inmem;
+     * [M, X, J] = inmem;
+     * }
+     * </pre>
+     * If the function is not capable of returning the number of arguments specified by {@code nargout} then an
+     * unspecified behavior will occur.
      * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
-     * @param returnCount the number of arguments that will be returned from this function
-     * @return result of MATLAB function
+     * @param functionName the name of the MATLAB function to call
+     * @param nargout the number of arguments that will be returned by {@code functionName}
+     * @param args the arguments to the function
+     * @return result of MATLAB function, the length of the array will be {@code nargout}
      * @throws MatlabInvocationException 
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
      */
     @Override
-    public abstract Object returningFeval(String functionName, Object[] args, int returnCount)
+    public abstract Object[] returningFeval(String functionName, int nargout, Object... args)
             throws MatlabInvocationException;
     
     /**

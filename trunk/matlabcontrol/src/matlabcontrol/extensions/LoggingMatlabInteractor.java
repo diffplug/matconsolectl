@@ -48,7 +48,7 @@ import matlabcontrol.MatlabInvocationException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
+public class LoggingMatlabInteractor implements MatlabInteractor
 {
     private static final Logger LOGGER = Logger.getLogger(LoggingMatlabInteractor.class.getName());
     static
@@ -56,30 +56,18 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
         LOGGER.setLevel(Level.FINER);
     }
     
-    private final MatlabInteractor<T> _delegateInteractor;
-    private final boolean _exploreArrays;
+    private final MatlabInteractor _delegateInteractor;
     
     /**
-     * Constructs the interactor. If {@code exploreArrays} is {@code true} then when the returned value is an array
-     * it will be recursively explored and the complete contents of that array will be logged. Exploring very large
-     * arrays can be considerably expensive.
-     * <br><br>
-     * A {@link matlabcontrol.MatlabProxy} is a {@code MatlabInteractor} that returns {@code Object}s. To use with a
-     * {@code MatlabProxy}:
-     * <br><br>
-     * {@code
-     * LoggingMatlabInteractor<Object> loggingInteractor = new LoggingMatlabInteractor<Object>(proxy);
-     * }
-     * <br><br>
-     * If the provided {@code interactor} throws an exception it will be caught, logged, and then rethrown.
+     * Constructs the interactor. If the provided {@code interactor} throws an exception it will be caught, logged, and
+     * then rethrown.
      * 
      * @param interactor 
      * @param exploreArrays 
      */
-    public LoggingMatlabInteractor(MatlabInteractor<T> interactor, boolean exploreArrays)
+    public LoggingMatlabInteractor(MatlabInteractor interactor, boolean exploreArrays)
     {
         _delegateInteractor = interactor;
-        _exploreArrays = exploreArrays;
     }
     
     /**
@@ -191,19 +179,19 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
      * Delegates to the interactor; logs the interaction.
      * 
      * @param command
-     * @param returnCount
+     * @param nargout
      * @return
      * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public T returningEval(final String command, final int returnCount) throws MatlabInvocationException
+    public Object[] returningEval(final String command, final int nargout) throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<T>(command, returnCount)
+        return this.invoke(new ReturningInvocation<Object[]>(command, nargout)
         {
             @Override
-            public T invoke() throws MatlabInvocationException
+            public Object[] invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.returningEval(command, returnCount);
+                return _delegateInteractor.returningEval(command, nargout);
             }
 
             @Override
@@ -222,7 +210,7 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
      * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    public void feval(final String functionName, final Object... args) throws MatlabInvocationException
     {
         this.invoke(new VoidInvocation(functionName, args)
         {
@@ -235,7 +223,7 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
             @Override
             public String getName()
             {
-                return "feval(String, Object[])";
+                return "feval(String, Object...)";
             }
         });
     }
@@ -244,54 +232,27 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
      * Delegates to the interactor; logs the interaction.
      * 
      * @param functionName
+     * @param nargout
      * @param args
      * @return
      * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public T returningFeval(final String functionName, final Object[] args) throws MatlabInvocationException
-    {
-        return this.invoke(new ReturningInvocation<T>(functionName, args)
-        {
-            @Override
-            public T invoke() throws MatlabInvocationException
-            {
-                return _delegateInteractor.returningFeval(functionName, args);
-            }
-
-            @Override
-            public String getName()
-            {
-                return "returningFeval(String, Object[])";
-            }
-        });
-    }
-
-    /**
-     * Delegates to the interactor; logs the interaction.
-     * 
-     * @param functionName
-     * @param args
-     * @param returnCount
-     * @return
-     * @throws MatlabInvocationException if thrown by the interactor 
-     */
-    @Override
-    public T returningFeval(final String functionName, final Object[] args, final int returnCount)
+    public Object[] returningFeval(final String functionName, final int nargout, final Object... args)
             throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<T>(functionName, args, returnCount)
+        return this.invoke(new ReturningInvocation<Object[]>(functionName, nargout, args)
         {
             @Override
-            public T invoke() throws MatlabInvocationException
+            public Object[] invoke() throws MatlabInvocationException
             {
-                return _delegateInteractor.returningFeval(functionName, args, returnCount);
+                return _delegateInteractor.returningFeval(functionName, nargout, args);
             }
 
             @Override
             public String getName()
             {
-                return "returningFeval(String, Object[], int)";
+                return "returningFeval(String, int, Object...)";
             }
         });
     }
@@ -330,12 +291,12 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
      * @throws MatlabInvocationException if thrown by the interactor 
      */
     @Override
-    public T getVariable(final String variableName) throws MatlabInvocationException
+    public Object getVariable(final String variableName) throws MatlabInvocationException
     {
-        return this.invoke(new ReturningInvocation<T>(variableName)
+        return this.invoke(new ReturningInvocation<Object>(variableName)
         {
             @Override
-            public T invoke() throws MatlabInvocationException
+            public Object invoke() throws MatlabInvocationException
             {
                 return _delegateInteractor.getVariable(variableName);
             }
@@ -385,8 +346,7 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
     public String toString()
     {
         return "[" + this.getClass().getName() +
-                " delegate=" + _delegateInteractor + "," +
-                " exploreArrays=" + _exploreArrays + "]";
+                " delegate=" + _delegateInteractor + "]";
     }
     
     private String formatResult(Object result)
@@ -399,14 +359,7 @@ public class LoggingMatlabInteractor<T> implements MatlabInteractor<T>
         }
         else if(result.getClass().isArray())
         {
-            if(_exploreArrays)
-            {
-                formattedResult = result.getClass().getName() + "\n" + formatResult(result, 0).trim();
-            }
-            else
-            {
-                formattedResult = result.toString();
-            }
+            formattedResult = result.getClass().getName() + "\n" + formatResult(result, 0).trim();
         }
         else
         {

@@ -283,10 +283,10 @@ class MatlabConnector
         }
 
         @Override
-        public Void call(MatlabInteractor<Object> interactor) throws MatlabInvocationException
+        public Void call(MatlabInteractor interactor) throws MatlabInvocationException
         {
             //Current dynamic class path
-            String[] curr = (String[]) interactor.returningFeval("javaclasspath", new Object[] { "-dynamic" }, 1);
+            String[] curr = (String[]) interactor.returningFeval("javaclasspath", 1, "-dynamic")[0];
             
             //Build new dynamic class path
             List<String> newDynamic = new ArrayList<String>();

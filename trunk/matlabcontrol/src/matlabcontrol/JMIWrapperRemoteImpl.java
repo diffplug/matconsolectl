@@ -47,6 +47,30 @@ class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject impl
     }
     
     @Override
+    public void eval(String command) throws MatlabInvocationException
+    {
+        JMIWrapper.eval(command);
+    }
+    
+    @Override
+    public Object[] returningEval(String command, int nargout) throws MatlabInvocationException
+    {    
+        return JMIWrapper.returningEval(command, nargout);
+    }
+    
+    @Override
+    public void feval(String command, Object... args) throws MatlabInvocationException
+    {
+        JMIWrapper.feval(command, args);
+    }
+    
+    @Override
+    public Object[] returningFeval(String command, int nargout, Object... args) throws MatlabInvocationException
+    {
+        return JMIWrapper.returningFeval(command, nargout, args);
+    }
+    
+    @Override
     public void setVariable(String variableName, Object value) throws MatlabInvocationException
     {
         JMIWrapper.setVariable(variableName, value);
@@ -56,36 +80,6 @@ class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject impl
     public Object getVariable(String variableName) throws MatlabInvocationException
     {
         return JMIWrapper.getVariable(variableName);
-    }
-
-    @Override
-    public Object returningFeval(String command, Object[] args) throws MatlabInvocationException
-    {
-        return JMIWrapper.returningFeval(command, args);
-    }
-    
-    @Override
-    public Object returningFeval(String command, Object[] args, int returnCount) throws MatlabInvocationException
-    {
-        return JMIWrapper.returningFeval(command, args, returnCount);
-    }
-    
-    @Override
-    public Object returningEval(String command, int returnCount) throws MatlabInvocationException
-    {    
-        return JMIWrapper.returningEval(command, returnCount);
-    }
-
-    @Override
-    public void eval(String command) throws MatlabInvocationException
-    {
-        JMIWrapper.eval(command);
-    }
-
-    @Override
-    public void feval(String command, Object[] args) throws MatlabInvocationException
-    {
-        JMIWrapper.feval(command, args);
     }
     
     @Override

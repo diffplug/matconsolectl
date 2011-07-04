@@ -40,72 +40,48 @@ package matlabcontrol;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  * @param T the type of data returned by methods which return values from MATLAB
  */
-public interface MatlabInteractor<T>
+public interface MatlabInteractor
 {    
     /**
-     * Evaluates a command in MATLAB.
+     * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.
      * 
      * @param command the command to be evaluated in MATLAB
      * @throws MatlabInvocationException 
-     * 
-     * @see #returningEval(String, int)
      */
-    public void eval(String command) throws MatlabInvocationException;
+    public abstract void eval(String command) throws MatlabInvocationException;
 
     /**
-     * Evaluates a command in MATLAB, returning the result.
+     * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
      * 
      * @param command the command to be evaluated in MATLAB
-     * @param returnCount the number of arguments that will be returned from evaluating the command
-     * @return result of MATLAB {@code eval}
-     * @throws MatlabInvocationException 
-     * 
-     * @see #eval(String)
+     * @param nargout the number of arguments that will be returned from evaluating {@code command}
+     * @return result of MATLAB command
+     * @throws MatlabInvocationException
      */
-    public T returningEval(String command, int returnCount) throws MatlabInvocationException;
-    
-    /**
-     * Calls a MATLAB function with the name {@code functionName}. Arguments to the function may be provided as
-     * {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
-     * @throws MatlabInvocationException 
-     * 
-     * @see #returningFeval(String, Object[], int)
-     * @see #returningFeval(String, Object[])
-     */
-    public void feval(String functionName, Object[] args) throws MatlabInvocationException;
-
-    /**
-     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}.
-     * 
-     * @param functionName name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
-     * @return result of MATLAB function
-     * @throws MatlabInvocationException 
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
-     */
-    public T returningFeval(String functionName, Object[] args) throws MatlabInvocationException;
+    public abstract Object[] returningEval(String command, int nargout) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, if you wish to call the function with no arguments pass in {@code null}. Specifies
-     * the number of arguments returned as {@code returnCount}.
+     * be provided as {@code args}, but are not required if the function needs no arguments.
      * 
-     * @param functionName name of the MATLAB function to call
+     * @param functionName the name of the MATLAB function to call
      * @param args the arguments to the function, {@code null} if none
-     * @param returnCount the number of arguments that will be returned from this function
+     * @throws MatlabInvocationException 
+     */
+    public abstract void feval(String functionName, Object... args) throws MatlabInvocationException;
+    
+    /**
+     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
+     * be provided as {@code args}, but are not required if the function needs no arguments.
+     * 
+     * @param functionName the name of the MATLAB function to call
+     * @param nargout the number of arguments that will be returned by {@code functionName}
+     * @param args the arguments to the function
      * @return result of MATLAB function
      * @throws MatlabInvocationException 
-     * 
-     * @see #feval(String, Object[])
-     * @see #returningFeval(String, Object[])
      */
-    public T returningFeval(String functionName, Object[] args, int returnCount) throws MatlabInvocationException;
+    public abstract Object[] returningFeval(String functionName, int nargout, Object... args)
+            throws MatlabInvocationException;
     
     /**
      * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
@@ -113,6 +89,8 @@ public interface MatlabInteractor<T>
      * @param variableName
      * @param value
      * @throws MatlabInvocationException
+     * 
+     * @see #getVariable(String) 
      */
     public void setVariable(String variableName, Object value) throws MatlabInvocationException;
     
@@ -122,8 +100,9 @@ public interface MatlabInteractor<T>
      * @param variableName
      * @return value
      * @throws MatlabInvocationException
+     * @see #setVariable(String, Object)
      */
-    public T getVariable(String variableName) throws MatlabInvocationException;
+    public Object getVariable(String variableName) throws MatlabInvocationException;
     
     /**
      * Runs the {@code callable} in MATLAB, returning the result of the {@code callable}.
@@ -149,6 +128,6 @@ public interface MatlabInteractor<T>
          * @return result of the computation
          * @throws MatlabInvocationException 
          */
-        public U call(MatlabInteractor<Object> interactor) throws MatlabInvocationException;
+        public U call(MatlabInteractor interactor) throws MatlabInvocationException;
     }
 }
