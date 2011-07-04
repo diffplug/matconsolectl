@@ -213,7 +213,7 @@ public class MatlabProxyLogger
         
         LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
         data = invocation.invoke();
-        LOGGER.exiting(CLASS_NAME, invocation.name, formatResult(data));
+        LOGGER.exiting(CLASS_NAME, invocation.name, "boolean: " + data);
         
         return data;
     }
