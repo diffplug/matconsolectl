@@ -50,7 +50,7 @@ class MatlabSessionImpl implements MatlabSession
         boolean success = false;
         if(MatlabConnector.isAvailableForConnection())
         {
-            MatlabConnector.connect(receiverID, port, true, 0);
+            MatlabConnector.connect(receiverID, port, true);
             success = true;
         }
         
