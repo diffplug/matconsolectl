@@ -277,7 +277,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                         MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
                         "javarmpath '" + codeLocation + "'; " +
                         MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
-                            _options.getPort() + ", " + _options.getInitializationTime() +  ");";
+                            _options.getPort() + ");";
         processArguments.add(runArg);
         
         //Create process
