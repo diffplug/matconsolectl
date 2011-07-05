@@ -37,7 +37,7 @@ interface ProxyFactory
     /**
      * Returns a {@link MatlabProxy}. If a connection cannot be established before the timeout then this method will end
      * execution and an exception will be thrown. A timeout can be specified with the options provided to this factory.
-     * If no timeout was specified, then a default of 90 seconds will be used.
+     * If no timeout was specified, then a default of 180 seconds will be used.
      * <br><br>
      * While this method blocks the calling thread until a proxy is created (or the timeout is reached), any number of
      * threads may call {@code getProxy()} simultaneously.
