@@ -4,11 +4,11 @@ import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Options that configure how {@link MatlabProxyFactory} operates. Use a {@link Builder} to create an instance of this
- * class.
+ * Options that configure how a factory operates. Use a {@link Builder} to create an instance of this class.
  * <br><br>
  * This class is unconditionally thread-safe.
  * 
+ * @see MatlabProxyFactory#MatlabProxyFactory(matlabcontrol.MatlabProxyFactoryOptions) 
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
@@ -97,7 +97,7 @@ public class MatlabProxyFactoryOptions
     }
     
     /**
-     * Builds instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
+     * Creates instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
      * then a default will be used. Depending on how the factory operates, not all properties may be used. Currently all
      * properties are used only when running outside MATLAB, but future releases may add additional options.
      * <br><br>

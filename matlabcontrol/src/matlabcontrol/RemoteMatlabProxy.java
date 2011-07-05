@@ -329,7 +329,7 @@ class RemoteMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
     {
         return this.invoke(new RemoteReturningInvocation<T>()
         {

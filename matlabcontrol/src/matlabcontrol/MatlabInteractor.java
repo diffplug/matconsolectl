@@ -23,65 +23,92 @@ package matlabcontrol;
  */
 
 /**
- * Interacts with a session of MATLAB. This interface exists to facilitate creating wrappers around a
- * {@link MatlabProxy} that in turn can be provided to another wrapper. The {@link matlabcontrol.extensions} package
- * contains several classes which do exactly that. Example usage:
- * <pre>
- * {@code 
- * MatlabProxy proxy = factory.getProxy();
- * ReturnDataMatlabInteractor returnInteractor = new ReturnDataMatlabInteractor(proxy);
- * MatlabCallbackInteractor<ReturnData> callbackInteractor = new MatlabCallbackInteractor<ReturnData>(returnInteractor);
- * }
- * </pre>
- * All methods defined in this interface may throw a {@link MatlabInvocationException} if the {@code eval} or
- * {@code feval} statement cannot be successfully completed.
+ * Interacts with a session of MATLAB.
  * 
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
- * @param T the type of data returned by methods which return values from MATLAB
  */
-public interface MatlabInteractor
-{    
+interface MatlabInteractor
+{
     /**
      * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.
      * 
      * @param command the command to be evaluated in MATLAB
      * @throws MatlabInvocationException 
      */
-    public abstract void eval(String command) throws MatlabInvocationException;
+    public void eval(String command) throws MatlabInvocationException;
 
     /**
      * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
+     * <br><br>
+     * In order for the result of this command to be returned the number of arguments to be returned must be specified
+     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
+     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
+     * each resulting in a different behavior:
+     * <pre>
+     * {@code
+     * M = inmem;
+     * [M, X] = inmem;
+     * [M, X, J] = inmem;
+     * }
+     * </pre>
+     * The returned {@code Object} array will be of length {@code nargout} with each return argument placed into the
+     * corresponding array position.
+     * <br><br>
+     * If the command cannot return the number of arguments specified by {@code nargout} then an exception will be
+     * thrown.
      * 
      * @param command the command to be evaluated in MATLAB
      * @param nargout the number of arguments that will be returned from evaluating {@code command}
-     * @return result of MATLAB command
+     * @return result of MATLAB command, the length of the array will be {@code nargout}
      * @throws MatlabInvocationException
      */
-    public abstract Object[] returningEval(String command, int nargout) throws MatlabInvocationException;
+    public Object[] returningEval(String command, int nargout) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
      * be provided as {@code args}, but are not required if the function needs no arguments.
+     * <br><br>
+     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
+     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
      * 
      * @param functionName the name of the MATLAB function to call
-     * @param args the arguments to the function, {@code null} if none
+     * @param args the arguments to the function
      * @throws MatlabInvocationException 
      */
-    public abstract void feval(String functionName, Object... args) throws MatlabInvocationException;
+    public void feval(String functionName, Object... args) throws MatlabInvocationException;
     
     /**
      * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
      * be provided as {@code args}, but are not required if the function needs no arguments.
+     * <br><br>
+     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
+     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
+     * <br><br>
+     * In order for the result of this function to be returned the number of arguments to be returned must be specified
+     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
+     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
+     * each resulting in a different behavior:
+     * <pre>
+     * {@code
+     * M = inmem;
+     * [M, X] = inmem;
+     * [M, X, J] = inmem;
+     * }
+     * </pre>
+     * The returned {@code Object} array will be of length {@code nargout} with each return argument placed into the
+     * corresponding array position.
+     * <br><br>
+     * If the function is not capable of returning the number of arguments specified by {@code nargout} then an
+     * exception will be thrown.
      * 
      * @param functionName the name of the MATLAB function to call
      * @param nargout the number of arguments that will be returned by {@code functionName}
      * @param args the arguments to the function
-     * @return result of MATLAB function
+     * @return result of MATLAB function, the length of the array will be {@code nargout}
      * @throws MatlabInvocationException 
      */
-    public abstract Object[] returningFeval(String functionName, int nargout, Object... args)
-            throws MatlabInvocationException;
+    public Object[] returningFeval(String functionName, int nargout, Object... args) throws MatlabInvocationException;
     
     /**
      * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
@@ -89,8 +116,6 @@ public interface MatlabInteractor
      * @param variableName
      * @param value
      * @throws MatlabInvocationException
-     * 
-     * @see #getVariable(String) 
      */
     public void setVariable(String variableName, Object value) throws MatlabInvocationException;
     
@@ -100,34 +125,6 @@ public interface MatlabInteractor
      * @param variableName
      * @return value
      * @throws MatlabInvocationException
-     * @see #setVariable(String, Object)
      */
     public Object getVariable(String variableName) throws MatlabInvocationException;
-    
-    /**
-     * Runs the {@code callable} in MATLAB, returning the result of the {@code callable}.
-     * 
-     * @param <U> the type of data returned by the callable
-     * @param callable
-     * @return result of the callable
-     * @throws MatlabInvocationException 
-     */
-    public <U> U invokeAndWait(MatlabCallable<U> callable) throws MatlabInvocationException;
-    
-    /**
-     * Computation performed in MATLAB.
-     * 
-     * @param <U> type of the data returned by the callable
-     */
-    public static interface MatlabCallable<U>
-    {
-        /**
-         * Performs the computation in MATLAB.
-         * 
-         * @param interactor
-         * @return result of the computation
-         * @throws MatlabInvocationException 
-         */
-        public U call(MatlabInteractor interactor) throws MatlabInvocationException;
-    }
 }

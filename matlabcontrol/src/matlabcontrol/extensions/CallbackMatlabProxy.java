@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabInteractor.MatlabCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.MatlabProxy;
 
 /**
@@ -313,7 +313,7 @@ public class CallbackMatlabProxy
      * @param callable
      * @param callback 
      */
-    public <U> void invokeAndWait(final MatlabCallable<U> callable, final MatlabDataCallback<U> callback)
+    public <U> void invokeAndWait(final MatlabThreadCallable<U> callable, final MatlabDataCallback<U> callback)
     {        
         _executor.submit(new Runnable()
         {

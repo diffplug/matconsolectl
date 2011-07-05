@@ -28,7 +28,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import matlabcontrol.MatlabInteractor.MatlabCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.DisconnectionListener;
@@ -344,7 +344,7 @@ public class MatlabProxyLogger
      * @return
      * @throws MatlabInvocationException
      */
-    public <U> U invokeAndWait(final MatlabCallable<U> callable) throws MatlabInvocationException
+    public <U> U invokeAndWait(final MatlabThreadCallable<U> callable) throws MatlabInvocationException
     {
         return this.invoke(new ReturnThrowingInvocation<U>("invokeAndWait(MatlabThreadCallable)", callable)
         {

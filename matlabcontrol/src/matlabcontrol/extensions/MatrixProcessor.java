@@ -24,10 +24,10 @@ package matlabcontrol.extensions;
 
 import java.io.Serializable;
 
-import matlabcontrol.MatlabInteractor;
 import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabInteractor.MatlabCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 
 /**
  * Handles retrieving and sending MATLAB matrices.
@@ -69,7 +69,7 @@ public class MatrixProcessor
         return new MatlabMatrix(info.real, info.imaginary, info.lengths);
     }
     
-    private static class GetMatrixCallable implements MatlabCallable<MatrixInfo>, Serializable
+    private static class GetMatrixCallable implements MatlabThreadCallable<MatrixInfo>, Serializable
     {
         private final String _matrixName;
         
@@ -79,23 +79,23 @@ public class MatrixProcessor
         }
 
         @Override
-        public MatrixInfo call(MatlabInteractor interactor) throws MatlabInvocationException
+        public MatrixInfo call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             //Retrieve real values
-            Object realObject = interactor.returningEval("real(" + _matrixName + ");", 1)[0];
+            Object realObject = proxy.returningEval("real(" + _matrixName + ");", 1)[0];
             double[] realValues = (double[]) realObject;
             
             //Retrieve imaginary values if present
-            boolean isReal = ((boolean[]) interactor.returningEval("isreal(" + _matrixName + ");", 1)[0])[0];
+            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + _matrixName + ");", 1)[0])[0];
             double[] imaginaryValues = null;
             if(!isReal)
             {
-                Object imaginaryObject = interactor.returningEval("imag(" + _matrixName + ");", 1);
+                Object imaginaryObject = proxy.returningEval("imag(" + _matrixName + ");", 1);
                 imaginaryValues = (double[]) imaginaryObject;
             }
 
             //Retrieve lengths of array
-            double[] size = (double[]) interactor.returningEval("size(" + _matrixName + ");", 1)[0];
+            double[] size = (double[]) proxy.returningEval("size(" + _matrixName + ");", 1)[0];
             int[] lengths = new int[size.length];
             for(int i = 0; i < size.length; i++)
             {
@@ -131,7 +131,7 @@ public class MatrixProcessor
         _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
     }
     
-    private static class SetMatrixCallable implements MatlabCallable<Object>, Serializable
+    private static class SetMatrixCallable implements MatlabThreadCallable<Object>, Serializable
     {
         private final String _matrixName;
         private final double[] _realArray, _imaginaryArray;
@@ -146,18 +146,18 @@ public class MatrixProcessor
         }
         
         @Override
-        public Object call(MatlabInteractor interactor) throws MatlabInvocationException
+        public Object call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             //Store real array in the MATLAB environment
-            String realArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_real', who);", 1)[0];
-            interactor.setVariable(realArray, _realArray);
+            String realArray = (String) proxy.returningEval("genvarname('" + _matrixName + "_real', who);", 1)[0];
+            proxy.setVariable(realArray, _realArray);
             
             //If present, store the imaginary array in the MATLAB environment
             String imagArray = null;
             if(_imaginaryArray != null)
             {
-                imagArray = (String) interactor.returningEval("genvarname('" + _matrixName + "_imag', who);", 1)[0];
-                interactor.setVariable(imagArray, _imaginaryArray);
+                imagArray = (String) proxy.returningEval("genvarname('" + _matrixName + "_imag', who);", 1)[0];
+                proxy.setVariable(imagArray, _imaginaryArray);
             }
 
             //Build a statement to eval
@@ -174,11 +174,11 @@ public class MatrixProcessor
                 evalStatement += ", " + length;
             }
             evalStatement += ");";
-            interactor.eval(evalStatement);
+            proxy.eval(evalStatement);
             
             //Clear variables holding separate real and imaginary arrays
-            interactor.eval("clear " + realArray + ";");
-            interactor.eval("clear " + imagArray + ";");
+            proxy.eval("clear " + realArray + ";");
+            proxy.eval("clear " + imagArray + ";");
             
             return null;
         }

@@ -28,7 +28,8 @@ import java.util.concurrent.ArrayBlockingQueue;
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
 
-import matlabcontrol.MatlabInteractor.MatlabCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 
 /**
  * Interacts with MATLAB via the undocumented Java MATLAB Interface (JMI).
@@ -55,7 +56,7 @@ import matlabcontrol.MatlabInteractor.MatlabCallable;
  */
 class JMIWrapper
 {
-    private static final MatlabThreadInteractor THREAD_INTERACTOR = new MatlabThreadInteractor();
+    private static final MatlabThreadProxy THREAD_INTERACTOR = new MatlabThreadProxyImpl();
      
     private JMIWrapper() { }
     
@@ -87,7 +88,7 @@ class JMIWrapper
         }
         else
         {
-            Matlab.whenMatlabReady(runnable);
+            Matlab.whenMatlabIdle(runnable);
         }
     }
     
@@ -97,10 +98,10 @@ class JMIWrapper
     
     static void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {
-        invokeAndWait(new MatlabCallable<Void>()
+        invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 proxy.setVariable(variableName, value);
                 
@@ -111,10 +112,10 @@ class JMIWrapper
     
     static Object getVariable(final String variableName) throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabCallable<Object>()
+        return invokeAndWait(new MatlabThreadCallable<Object>()
         {
             @Override
-            public Object call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Object call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 return proxy.getVariable(variableName);
             }
@@ -123,10 +124,10 @@ class JMIWrapper
     
     static void eval(final String command) throws MatlabInvocationException
     {           
-        invokeAndWait(new MatlabCallable<Void>()
+        invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 proxy.eval(command);
                 
@@ -137,10 +138,10 @@ class JMIWrapper
     
     static Object[] returningEval(final String command, final int nargout) throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabCallable<Object[]>()
+        return invokeAndWait(new MatlabThreadCallable<Object[]>()
         {
             @Override
-            public Object[] call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 return proxy.returningEval(command, nargout);
             }
@@ -149,10 +150,10 @@ class JMIWrapper
 
     static void feval(final String functionName, final Object... args) throws MatlabInvocationException
     {   
-        invokeAndWait(new MatlabCallable<Void>()
+        invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 proxy.feval(functionName, args);
                 
@@ -164,10 +165,10 @@ class JMIWrapper
     static Object[] returningFeval(final String functionName, final int nargout, final Object... args)
             throws MatlabInvocationException
     {
-        return invokeAndWait(new MatlabCallable<Object[]>()
+        return invokeAndWait(new MatlabThreadCallable<Object[]>()
         {
             @Override
-            public Object[] call(MatlabInteractor proxy) throws MatlabInvocationException
+            public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
                 return proxy.returningFeval(functionName, nargout, args);
             }      
@@ -182,7 +183,7 @@ class JMIWrapper
      * @return
      * @throws MatlabInvocationException 
      */
-    static <T> T invokeAndWait(final MatlabCallable<T> callable) throws MatlabInvocationException
+    static <T> T invokeAndWait(final MatlabThreadCallable<T> callable) throws MatlabInvocationException
     {
         T result;
         
@@ -284,9 +285,9 @@ class JMIWrapper
     }
     /**
      * Interacts with MATLAB on MATLAB's main thread. Interacting on MATLAB's main thread is not enforced by this class,
-     * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabCallable)}.
+     * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)}.
      */
-    private static class MatlabThreadInteractor implements MatlabInteractor
+    private static class MatlabThreadProxyImpl implements MatlabThreadProxy
     {   
         @Override
         public void setVariable(String variableName, Object value) throws MatlabInvocationException
@@ -370,14 +371,6 @@ class JMIWrapper
             {
                 throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(new ThrowableWrapper(ex));
             }
-        }
-
-        @Override
-        public <T> T invokeAndWait(MatlabCallable<T> callable) throws MatlabInvocationException
-        {
-            //Invoking this from inside a MatlabCallable does not make a lot of sense, but it can be done without
-            //issue by invoking it right away as this is code is running on the MATLAB thread
-            return callable.call(this);
         }
     }
 }

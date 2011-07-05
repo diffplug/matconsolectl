@@ -110,7 +110,7 @@ public class MatlabProxyFactory implements ProxyFactory
     }
     
     /**
-     * A request for a {@link MatlabProxy}. Because requests have no timeout, a {@code Request} has no concept of
+     * A request for a proxy. Because requests have no timeout, a {@code Request} has no concept of
      * failure.
      * <br><br>
      * Implementations of this class are unconditionally thread-safe.

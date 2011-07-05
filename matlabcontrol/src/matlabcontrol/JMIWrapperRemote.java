@@ -54,7 +54,7 @@ interface JMIWrapperRemote extends Remote
     
     public Object[] returningFeval(String command, int nargout, Object... args) throws RemoteException, MatlabInvocationException;
     
-    public <U> U invokeAndWait(MatlabProxy.MatlabCallable<U> callable) throws RemoteException, MatlabInvocationException;
+    public <U> U invokeAndWait(MatlabProxy.MatlabThreadCallable<U> callable) throws RemoteException, MatlabInvocationException;
     
     /**
      * This method does nothing. It is used internally to check if a connection is still active via calling this method
