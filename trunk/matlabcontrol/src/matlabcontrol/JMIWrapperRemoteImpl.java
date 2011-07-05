@@ -83,7 +83,7 @@ class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject impl
     }
     
     @Override
-    public <T> T invokeAndWait(MatlabProxy.MatlabCallable<T> callable) throws MatlabInvocationException
+    public <T> T invokeAndWait(MatlabProxy.MatlabThreadCallable<T> callable) throws MatlabInvocationException
     {
         return JMIWrapper.invokeAndWait(callable);
     }

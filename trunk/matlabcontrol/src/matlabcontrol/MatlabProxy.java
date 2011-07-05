@@ -26,15 +26,13 @@ import java.io.Serializable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Allows for Java to communicate with a running MATLAB session. This class cannot be instantiated, it may be created
- * with a {@link MatlabProxyFactory}. Interaction with MATLAB occurs as if calling {@code eval} and {@code feval} in the
+ * Communicates with a running MATLAB session. This class cannot be instantiated, it may be created with a
+ * {@link MatlabProxyFactory}. Interaction with MATLAB occurs as if calling {@code eval} and {@code feval} in the
  * MATLAB Command Window.
  * <h3>Communicating with MATLAB</h3>
- * Methods which interact with MATLAB may provide any objects as function arguments (with a few exceptions documented in
- * the next section) and those methods return any object. (When running outside MATLAB there are further restrictions,
- * documented in the exceptions section.) As such all methods that send data to MATLAB take in either {@code Object} or
- * {@code Object[]}, and the return type of all methods that interact with MATLAB is {@code Object}. Primitives will be
- * auto-boxed as necessary.
+ * Methods which interact with MATLAB provide Java objects to the MATLAB environment and retrieve data from the MATLAB
+ * environment as Java objects. What follows is a description of how the conversion between Java and MATLAB types
+ * occurs using MATLAB R2010b. How they are converted may differ between versions.
  * <br><br>
  * <b>MATLAB to Java</b><br>
  * When values are returned from MATLAB they will be converted to Java types as needed. MATLAB fully supports calling
@@ -42,8 +40,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <a href="http://www.hulu.com/watch/13827/saturday-night-live-snl-digital-short-andys-dad">documented</a> this
  * behavior. This proxy causes MATLAB values to be returned to Java as opposed to becoming a method's arguments. The
  * behavior of this is entirely undocumented and is not entirely consistent with how MATLAB types are converted when
- * provided to a Java method. How they are converted may differ between versions.  The following descriptions are
- * what occurs when using MATLAB R2010b.
+ * provided to a Java method.
  * <br><br>
  * If the value is a Java type, it will not be converted. MATLAB numeric types {@code double}, {@code single},
  * {@code int8}, {@code uint8}, {@code int16}, {@code uint16}, {@code int32}, {@code uint32}, {@code int64}, and
@@ -61,8 +58,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * returning Java values into the MATLAB environment. MathWorks has
  * <a href="http://www.mathworks.com/help/techdoc/matlab_external/f6671.html">documented</a> this behavior. This proxy
  * causes Java values to be provided to MATLAB functions. The behavior of this is undocumented and is not entirely
- * consistent with how Java types are converted to MATLAB types when returned from Java method. How they are converted
- * may differ between versions. The following descriptions are what occurs when using MATLAB R2010b.
+ * consistent with how Java types are converted to MATLAB types when returned from Java method.
  * <br><br><i>Truth values</i><br>
  * Java's {@code boolean} primitive and {@code Boolean} class are both converted to a MATLAB {@code logical} A Java
  * {@code boolean[]} becomes a MATLAB {@code logical} array. A Java {@code Boolean[]} is not converted.
@@ -109,11 +105,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * same object in the MATLAB environment.
  * <br><br>
  * <b>Help transferring data</b><br>
- * The {@link matlabcontrol.extensions.LoggingMatlabInteractor} exists to record what is being returned from MATLAB. To
+ * The {@link matlabcontrol.extensions.MatlabProxyLogger} exists to record what is being returned from MATLAB. To
  * easily transfer between MATLAB matrices and Java multi-dimensional arrays a
  * {@link matlabcontrol.extensions.MatlabMatrix} may be used. These matrices can be sent to and retrieved from MATLAB
- * with a {@link matlabcontrol.extensions.MatrixProcessor}. {@link matlabcontrol.extensions.ReturnDataMatlabInteractor}
- * simplifies casting the returned data.
+ * with a {@link matlabcontrol.extensions.MatrixProcessor}.
  * <h3>Thread Safety</h3>
  * This proxy is unconditionally thread-safe. Methods defined in {@link MatlabInteractor} as well as {@link #exit()} may
  * be called concurrently; however they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a
@@ -125,11 +120,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * interactions with MATLAB may occur between the two calls. In typical use it is unlikely this behavior will pose a
  * problem. However, for some uses cases it may be necessary to guarantee that several interactions with MATLAB occur
  * without interruption. Uninterrupted access to MATLAB's main thread may be obtained by use of
- * {@link #invokeAndWait(matlabcontrol.MatlabInteractor.MatlabCallable) invokeAndWait(...)}.
+ * {@link #invokeAndWait(matlabcontrol.MatlabInteractor.MatlabThreadCallable) invokeAndWait(...)}.
  * <h3>Threads</h3>
- * When <strong>running outside MATLAB</strong>, the proxy makes use of multiple internally managed threads. When the
- * proxy becomes disconnected from MATLAB it notifies its disconnection listeners and then terminates all threads it was
- * using internally. A proxy may disconnect from MATLAB without exiting MATLAB by calling {@link #disconnect()}.
+ * When <i>running outside MATLAB</i>, the proxy makes use of multiple internally managed threads. When the proxy
+ * becomes disconnected from MATLAB it notifies its disconnection listeners and then terminates all threads it was using
+ * internally. A proxy may disconnect from MATLAB without exiting MATLAB by calling {@link #disconnect()}.
  * <h3>Exceptions</h3>
  * Proxy methods that are relayed to MATLAB can throw {@link MatlabInvocationException}s. They will be thrown if:
  * <ul>
@@ -149,7 +144,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *     classpath.⊤</li>
  * <br><i>Running inside MATLAB</i>
  * <li>The method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components.✝ (A
- *     {@link matlabcontrol.extensions.MatlabCallbackInteractor} may be used to interact with MATLAB on the EDT.) This
+ *     {@link matlabcontrol.extensions.CallbackMatlabProxy} may be used to interact with MATLAB on the EDT.) This
  *     does not apply to {@link #exit()} which may be called from the EDT.</li>
  * </ul>
  * * This is due to Remote Method Invocation (RMI) prohibiting loading classes defined in remote Java Virtual Machines
@@ -307,127 +302,57 @@ public abstract class MatlabProxy implements MatlabInteractor
      */
     public abstract void exit() throws MatlabInvocationException;
     
-   /**
-     * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.
-     * 
-     * @param command the command to be evaluated in MATLAB
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public abstract void eval(String command) throws MatlabInvocationException;
-
-    /**
-     * Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's {@code eval('command')}.
-     * <br><br>
-     * In order for the result of this command to be returned the number of arguments to be returned must be specified
-     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
-     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
-     * each resulting in a different behavior:
-     * <pre>
-     * {@code
-     * M = inmem;
-     * [M, X] = inmem;
-     * [M, X, J] = inmem;
-     * }
-     * </pre>
-     * If the command cannot return the number of arguments specified by {@code nargout} then an unspecified
-     * behavior will occur.
-     * 
-     * @param command the command to be evaluated in MATLAB
-     * @param nargout the number of arguments that will be returned from evaluating {@code command}
-     * @return result of MATLAB command, the length of the array will be {@code nargout}
-     * @throws MatlabInvocationException
-     */
-    @Override
-    public abstract Object[] returningEval(String command, int nargout) throws MatlabInvocationException;
-    
-    /**
-     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, but are not required if the function needs no arguments.
-     * <br><br>
-     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
-     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
-     * 
-     * @param functionName the name of the MATLAB function to call
-     * @param args the arguments to the function
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public abstract void feval(String functionName, Object... args) throws MatlabInvocationException;
-    
-    /**
-     * Calls a MATLAB function with the name {@code functionName}, returning the result. Arguments to the function may
-     * be provided as {@code args}, but are not required if the function needs no arguments.
-     * <br><br>
-     * The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means that a
-     * {@code String} will be converted to a MATLAB {@code char} array, not a variable name.
-     * <br><br>
-     * In order for the result of this function to be returned the number of arguments to be returned must be specified
-     * by {@code nargout}. This is equivalent in MATLAB to the number of variables placed on the left hand side of an
-     * expression. For example, in MATLAB the {@code inmem} function may be used with either 1, 2, or 3 return values
-     * each resulting in a different behavior:
-     * <pre>
-     * {@code
-     * M = inmem;
-     * [M, X] = inmem;
-     * [M, X, J] = inmem;
-     * }
-     * </pre>
-     * If the function is not capable of returning the number of arguments specified by {@code nargout} then an
-     * unspecified behavior will occur.
-     * 
-     * @param functionName the name of the MATLAB function to call
-     * @param nargout the number of arguments that will be returned by {@code functionName}
-     * @param args the arguments to the function
-     * @return result of MATLAB function, the length of the array will be {@code nargout}
-     * @throws MatlabInvocationException 
-     */
-    @Override
-    public abstract Object[] returningFeval(String functionName, int nargout, Object... args)
-            throws MatlabInvocationException;
-    
-    /**
-     * Sets {@code variableName} to {@code value} in MATLAB, creating the variable if it does not yet exist.
-     * 
-     * @param variableName
-     * @param value
-     * @throws MatlabInvocationException
-     */
-    @Override
-    public abstract void setVariable(String variableName, Object value) throws MatlabInvocationException;
-    
-    /**
-     * Gets the value of {@code variableName} in MATLAB.
-     * 
-     * @param variableName
-     * @return value
-     * @throws MatlabInvocationException
-     */
-    @Override
-    public abstract Object getVariable(String variableName) throws MatlabInvocationException;
-    
     /**
      * Runs the {@code callable} on MATLAB's main thread and waits for it to return its result. This method allows for
      * uninterrupted access to MATLAB's main thread between two or more interactions with MATLAB.
      * <br><br>
-     * The {@link MatlabInteractor} provided to the {@code callable} will invoke its methods directly on MATLAB's main
-     * thread without delay. The interactor will behave identically to a {@code MatlabProxy} running inside MATLAB which
-     * is being used on MATLAB's main thread. This interactor should be used to interact with MATLAB, not a
-     * {@code MatlabProxy} (or any class delegating to it).
-     * <br><br>
      * If <i>running outside MATLAB</i> the {@code callable} must be {@link java.io.Serializable}; it may not be
      * {@link java.rmi.Remote}.
      * 
-     * @param <U>
+     * @param <T>
      * @param callable
      * @return result of the callable
      * @throws MatlabInvocationException 
      */
-    @Override
-    public abstract <U> U invokeAndWait(MatlabCallable<U> callable) throws MatlabInvocationException;
+    public abstract <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
     
     /**
-     * Implementers can be notified when a proxy becomes disconnected from MATLAB.
+     * Uninterrupted block of computation performed in MATLAB.
+     * 
+     * @see MatlabProxy#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) 
+     * @param <T> type of the data returned by the callable
+     */
+    public static interface MatlabThreadCallable<T>
+    {
+        /**
+         * Performs the computation in MATLAB. The {@code proxy} provided will invoke its methods directly on MATLAB's
+         * main thread without delay. This {@code proxy} should be used to interact with MATLAB, not a
+         * {@code MatlabProxy} (or any class delegating to it).
+         * 
+         * @param proxy
+         * @return result of the computation
+         * @throws MatlabInvocationException
+         */
+        public T call(MatlabThreadProxy proxy) throws MatlabInvocationException;
+    }
+    
+    /**
+     * Operates on MATLAB's main thread without interruption. This interface is not intended to be implemented by users
+     * of matlabcontrol.
+     * <br><br>
+     * An implementation of this interface is provided to
+     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy)} so that the callable can interact with
+     * MATLAB. Implementations of this interface behave identically to a {@link MatlabProxy} running inside of MATLAB
+     * except that they are <b>not</b> thread-safe. They must be used solely on the thread that calls
+     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
+     */
+    public static interface MatlabThreadProxy extends MatlabInteractor
+    {
+        
+    }
+    
+    /**
+     * Listens for a proxy's disconnection from MATLAB.
      * 
      * @see MatlabProxy#addDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener)
      * @see MatlabProxy#removeDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener) 
@@ -447,11 +372,9 @@ public abstract class MatlabProxy implements MatlabInteractor
     }
     
     /**
-     * Uniquely identifies a proxy.
+     * Uniquely identifies a proxy. This interface is not intended to be implemented by users of matlabcontrol.
      * <br><br>
-     * Implementations of this class are unconditionally thread-safe.
-     * <br><br>
-     * This interface is not intended to be implemented by users of matlabcontrol.
+     * Implementations of this interface are unconditionally thread-safe.
      * 
      * @since 4.0.0
      * 
@@ -469,7 +392,7 @@ public abstract class MatlabProxy implements MatlabInteractor
         public boolean equals(Object other);
         
         /**
-         * Returns a hashCode which conforms to the {@code hashCode} contract defined in {@link Object#hashCode()}.
+         * Returns a hash code which conforms to the {@code hashCode} contract defined in {@link Object#hashCode()}.
          * 
          * @return 
          */
