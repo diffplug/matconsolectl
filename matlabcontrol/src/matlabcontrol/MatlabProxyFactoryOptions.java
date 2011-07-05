@@ -121,7 +121,7 @@ public class MatlabProxyFactoryOptions
         private volatile int _port = 2100;
         
         //Assigning to a long is not atomic, so use an AtomicLong so that a thread always sees an intended value
-        private final AtomicLong _proxyTimeout = new AtomicLong(90000L);
+        private final AtomicLong _proxyTimeout = new AtomicLong(180000L);
 
         /**
          * Sets the location of the MATLAB executable or script that will launch MATLAB. If the value set cannot be
@@ -318,7 +318,7 @@ public class MatlabProxyFactoryOptions
 
         /**
          * Sets the amount of time in milliseconds to wait for a proxy to be created when requested via the blocking
-         * method {@link MatlabProxyFactory#getProxy()}. By default this property is set to {@code 90000} milliseconds.
+         * method {@link MatlabProxyFactory#getProxy()}. By default this property is set to {@code 180000} milliseconds.
          * 
          * @param timeout
          * 
