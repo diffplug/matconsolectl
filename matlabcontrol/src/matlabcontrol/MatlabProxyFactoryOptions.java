@@ -231,10 +231,10 @@ public class MatlabProxyFactoryOptions
          * The MATLAB Command Window will appear fully minimized.
          * <br><br>
          * <strong>OS X</strong><br>
-         * MATLAB will be entirely hidden.
+         * MATLAB will be entirely hidden. The MATLAB session will terminate when the Java application terminates.
          * <br><br>
          * <strong>Linux</strong><br>
-         * MATLAB will be entirely hidden.
+         * MATLAB will be entirely hidden. The MATLAB session will terminate when the Java application terminates.
          * 
          * @param hidden 
          */

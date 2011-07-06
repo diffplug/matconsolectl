@@ -22,7 +22,10 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.RemoteException;
@@ -286,11 +289,48 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         try
         {
-            return builder.start();
+            Process process = builder.start();
+            
+            //If running under UNIX and MATLAB ishidden the output stream needs to be read so that MATLAB does not block
+            if(_options.getHidden() && !Configuration.isWindows())
+            {
+                new ProcessStreamDrainer(process.getInputStream(), "Input").start();
+                new ProcessStreamDrainer(process.getErrorStream(), "Error").start(); 
+            }
+            
+            return process;
         }
         catch(IOException e)
         {
             throw new MatlabConnectionException("Could not launch MATLAB. Command: " + builder.command(), e);
+        }
+    }
+    
+    /**
+     * Continously reads the contents of the stream using this daemon thread to prevent the MATLAB process from
+     * blocking.
+     */
+    private static class ProcessStreamDrainer extends Thread
+    {
+        private final InputStream _stream;
+        
+        private ProcessStreamDrainer(InputStream stream, String type)
+        {
+            _stream = stream;
+            
+            this.setDaemon(true);
+            this.setName("ProcessStreamDrainer - " + type);
+        }
+        
+        @Override
+        public void run()
+        {
+            try
+            {
+                BufferedReader in = new BufferedReader(new InputStreamReader(_stream));
+                while(in.readLine() != null);
+            }
+            catch(IOException e) { }
         }
     }
     
