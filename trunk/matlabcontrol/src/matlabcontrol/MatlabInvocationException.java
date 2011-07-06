@@ -36,14 +36,14 @@ public class MatlabInvocationException extends Exception
     static enum Reason
     {
         INTERRRUPTED("Method could not be completed because the MATLAB thread was interrupted before MATLAB returned"),
-        PROXY_NOT_CONNECTED("This proxy is no longer connected to MATLAB"),
-        UNMARSHALLING("Object attempting to be received cannot be transferred between Java Virtual Machines"),
-        MARSHALLING("Object attempting to be sent cannot be transferred between Java Virtual Machines"),
+        PROXY_NOT_CONNECTED("The proxy is not connected to MATLAB"),
+        UNMARSHAL("Object attempting to be received cannot be transferred between Java Virtual Machines"),
+        MARSHAL("Object attempting to be sent cannot be transferred between Java Virtual Machines"),
         INTERNAL_EXCEPTION("Method did not return properly because of an internal MATLAB exception"),
+        NARGOUT_MISMATCH("Number of arguments returned did not match excepted"),
         EVENT_DISPATCH_THREAD("Method cannot be executed on the Event Dispatch Thread"),
-        RUNTIME_CALLABLE("RuntimeException occurred in MatlabThreadCallable, see cause for more information"),
-        AUTO_FEVAL_FAILURE("returningFeval(String, Object[]) could not determine the number of return arguments"),
-        UNKNOWN("Method could not be invoked for an unknown reason");
+        RUNTIME_EXCEPTION("RuntimeException occurred in MatlabThreadCallable, see cause for more information"),
+        UNKNOWN("Method could not be invoked for an unknown reason, see cause for more information");
         
         private final String _message;
         

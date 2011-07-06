@@ -200,7 +200,7 @@ class JMIWrapper
             catch(RuntimeException e)
             {
                 ThrowableWrapper cause = new ThrowableWrapper(e);
-                throw MatlabInvocationException.Reason.RUNTIME_CALLABLE.asException(cause);
+                throw MatlabInvocationException.Reason.RUNTIME_EXCEPTION.asException(cause);
             }
         }
         else
@@ -227,7 +227,7 @@ class JMIWrapper
                     {
                         ThrowableWrapper cause = new ThrowableWrapper(e);
                         MatlabInvocationException userCausedException =
-                                MatlabInvocationException.Reason.RUNTIME_CALLABLE.asException(cause);
+                                MatlabInvocationException.Reason.RUNTIME_EXCEPTION.asException(cause);
                         matlabReturn = new MatlabReturn<T>(userCausedException);
                     }
                     
@@ -346,22 +346,22 @@ class JMIWrapper
                 {
                     if(matlabResult == null)
                     {
-                        String errorMsg = "Expected " + nargout + " return values, instead null was returned";
-                        throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(errorMsg);
+                        String errorMsg = "Expected " + nargout + " return arguments, instead null was returned";
+                        throw MatlabInvocationException.Reason.NARGOUT_MISMATCH.asException(errorMsg);
                     }
                     else if(!matlabResult.getClass().equals(Object[].class))
                     {
-                        String errorMsg = "Expected " + nargout + " return values, instead 1 value was returned";
-                        throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(errorMsg);
+                        String errorMsg = "Expected " + nargout + " return arguments, instead 1 argument was returned";
+                        throw MatlabInvocationException.Reason.NARGOUT_MISMATCH.asException(errorMsg);
                     }
                     
                     resultArray = (Object[]) matlabResult;
                     
                     if(nargout != resultArray.length)
                     {
-                        String errorMsg = "Expected " + nargout + " return values, instead " + resultArray.length + ""
-                                + "value(s) was/were returned";
-                        throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(errorMsg);
+                        String errorMsg = "Expected " + nargout + " return arguments, instead " + resultArray.length +
+                                (resultArray.length == 1 ? "argument was" : "arguments were") + " returned";
+                        throw MatlabInvocationException.Reason.NARGOUT_MISMATCH.asException(errorMsg);
                     }
                 }
                 
