@@ -11,14 +11,15 @@ Below is a chart of known compatibility for version 3.1.0 when running outside M
 || Windows Vista|| ? ||    `*`   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||
 || Windows 7    ||  `*` ||   `*`   ||    `*`  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||
 
+*No effort will be made to ensure compatibility with versions prior to `R2007b`.*
+
 *?* No reports. If you have this configuration please leave a comment with the relevant data and the table will be updated.
 
-*`*`* Yes for some, No for others. The reason for this is not understood. If matlabcontrol does not work for you with this setup, any information you could provide would be greatly appreciated.
-----
-
-There are reports of recent Windows versions of MATLAB (`R2010a` through `R2011a`) sometimes hanging indefinitely when launched by matlabcontrol. Attempts are being made to resolve this issue in a future release.
+*`*`* Yes for some, no for others. If matlabcontrol does not work for you with this setup, any information you could provide would be greatly appreciated.
 
 Due to the large diversity of Linux distributions, Linux is not shown in the above table. However, the following combinations are known to work:
 Debian 2.6 & `R2008b`, Ubuntu 9.10 & `R2010a`, unknown Linux distro & `R2011a`
 
-*No effort will be made to ensure compatibility with versions prior to `R2007b`.*
+----
+
+If when matlabcontrol launches MATLAB, MATLAB displays the error `??? Undefined variable "matlabcontrol" or class "matlabcontrol.MatlabConnector.connectFromMatlab".` this is most likely because your version of MATLAB is using a Java Virtual Machine (JVM) that is too old to be compatible with matlabcontrol. matlabcontrol 3.1.0 makes use of Java 5, which is Java Class Version 49. To check which Java Class Version your MATLAB JVM supports, in MATLAB enter `java.lang.System.getProperty('java.class.version')`. If it is less than 49, you must either upgrade to a newer version of MATLAB or upgrade your MATLAB's JVM. [http://www.mathworks.com/support/solutions/en/data/1-1812J/ More information] is available from The MathWorks on which JVM your version of MATLAB is using and how to upgrade the JVM.
