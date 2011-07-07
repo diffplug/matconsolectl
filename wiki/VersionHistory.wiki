@@ -1,0 +1,11 @@
+#summary Information on the releases of matlabcontrol
+
+= Version History =
+
+New versions of matlabcontrol are released periodically. The capabilities and reliability of matlabcontrol have improved as underlying [JMI Java MATLAB Interface] has become better understood.
+
+== Versioning Format ==
+
+Versions use a `α.β.γ` format to indicate information about the release. `α` indicates a major new release which is incompatible with releases with a different `α`. `β` introduces new or improved features while retaining full binary compatibility. For example an application making use of 1.3.2 could upgrade to 1.4.0 without changing their code. `γ` is a bug fix and retains full binary compatibility. For instance an application could upgrade from 1.4.0 to 1.4.1 without changing their code.
+
+== Releases == 
