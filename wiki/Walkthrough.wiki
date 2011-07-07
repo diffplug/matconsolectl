@@ -168,5 +168,3 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 }}}
 
 To send the array to MATLAB we constructed a `MatlabNumericArray` using `array` as the first argument and `null` as the second. The `null` meant the numeric array had no imaginary component. The real component is not optional and cannot be `null`. Convenience constructors exist for `double[][]`, `double[][][]`, and `double[][][][]`, but a `MatlabNumericArray` may be constructed with any dimension greater than two.
-
-= Hello World, `feval` Edition =
