@@ -23,3 +23,28 @@ If the demo has successfully connected to MATLAB then matlabcontrol is compatibl
 The demo is an interactive demonstration of the core methods of matlabcontrol. By default the selected method in the drop down list is `eval`. Keeping that selection, type `disp('hello world')` in the text box labeled command and then press the 'Invoke' button. MATLAB's Command Window should now show 'hello world' in it. Congratulations, you have just controlled MATLAB from Java!
 
 = Hello World =
+
+Let's now repeat that Hello World experience as a small Java program. This code assumes importing the `matlabcontrol` package.
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Display 'hello world' just like when using the demo
+    proxy.eval("disp('hello world')");
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+To run this code outside MATLAB, run it as you would any other Java code.
+
+To run this code inside MATLAB, add the class you place this main method in to MATLAB's class path. Then you can run this code from MATLAB's Command Window by entering `thepackage.TheClass.main([])`.  Yes, you have just used MATLAB to communicate with Java to communicate with MATLAB. Doing this is actually very useful for testing, but is by no means required. Pure Java code can call matlabcontrol methods inside MATLAB without issue. There is an important limitation when running inside of MATLAB, matlabcontrol cannot be called from the Event Dispatch Thread (EDT) used by AWT and Swing. More details can be found in the javadocs for `matlabcontrol.MatlabProxy` including a workaround.
+
+The code you just ran was identical to using `eval` in MATLAB except that no values were returned. There is way to return values from MATLAB, we'll get to that later.
+
+= Hello World, `feval` Edition =
