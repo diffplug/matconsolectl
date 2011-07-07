@@ -69,15 +69,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <br><br>
  * <center>
  * <table border="1" cellpadding="4">
- * <tr> <th bgcolor="#C0C0C0">Java Type</th>   <th bgcolor="#C0C0C0">MATLAB Type</th> </tr>
- * <tr> <td><code>boolean[]</code></td>        <td><code>logical</code> array</td>    </tr>
- * <tr> <td><code>char[]</code></td>           <td>not supported*</td>                </tr>
- * <tr> <td><code>byte[]</code></td>           <td><code>int8</code> array</td>       </tr>
- * <tr> <td><code>short[]</code></td>          <td><code>int16</code> array</td>      </tr>
- * <tr> <td><code>int[]</code></td>            <td><code>int32</code> array</td>      </tr>
- * <tr> <td><code>long</code></td>             <td>not supported*</td>                </tr>
- * <tr> <td><code>float</code></td>            <td><code>single</code> array</td>     </tr>
- * <tr> <td><code>double</code></td>           <td><code>double</code> array</td>     </tr>
+ * <tr>   <th bgcolor="#C0C0C0">Java Type</th>   <th bgcolor="#C0C0C0">MATLAB Type</th> </tr>
+ * <tr>   <td><code>boolean[]</code></td>        <td><code>logical</code> array</td>    </tr>
+ * <tr>   <td><code>char[]</code></td>           <td>not supported*</td>                </tr>
+ * <tr>   <td><code>byte[]</code></td>           <td><code>int8</code> array</td>       </tr>
+ * <tr>   <td><code>short[]</code></td>          <td><code>int16</code> array</td>      </tr>
+ * <tr>   <td><code>int[]</code></td>            <td><code>int32</code> array</td>      </tr>
+ * <tr>   <td><code>long[]</code></td>           <td>not supported*</td>                </tr>
+ * <tr>   <td><code>float[]</code></td>          <td><code>single</code> array</td>     </tr>
+ * <tr>   <td><code>double[]</code></td>         <td><code>double</code> array</td>     </tr>
  * </table>
  * </center>
  * <br>
