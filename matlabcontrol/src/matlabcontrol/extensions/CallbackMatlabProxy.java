@@ -81,8 +81,6 @@ public class CallbackMatlabProxy
 
     /**
      * Delegates to the proxy, calling the {@code callback} when the proxy's corresponding method has completed.
-     * 
-     * @return 
      */
     public void isConnected(final MatlabDataCallback<Boolean> callback)
     {
