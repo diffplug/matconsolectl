@@ -9,20 +9,34 @@ JMI has been included with each version of MATLAB since MATLAB 5.3 `(R11)` when 
 
 The oldest public [http://www.mathforum.com/kb/message.jspa?messageID=851527&tstart=0 reference] to JMI comes from Aguido Horatio Davis of Griffith University. On September 17, 2000 he posted about discovering JMI and testing some of its functionality. In February of 2002 Peter Webb of The Mathworks (makers of MATLAB) published an article entitled "Integrating Java Components into MATLAB" in the News and Notes section of The Mathworks' Newsletters. Additionally, he posted the ImageBrowser code discussed in his article on the website.
 
-The article has since been removed for the website, the [http://www.mathworks.com/company/newsletters/news_notes/win02/patterns.html page] is now a dead link. However, a copy of the article is [http://bbs.matwav.com/viewthread.php?tid=71482 available on zfhit's blog]. The [http://www.mathworks.com/nnimagebrowser page with the code] states that "The file you are trying to view is not in a published state." There are no known existing public mirrors of this example code. However, a [http://webscripts.softpedia.com/scriptScreenshots/Matlab-ImageBrowser-Screenshots-37200.html screen shot] can be seen. The Mathworks has never since posted any information regarding JMI, although a [http://www.mathworks.com/matlabcentral/newsreader/search_results?dur=all&page=1&search_string=tag%3Ajmi few posts] relating to JMI are available on MATLAB Central which is part of The Mathworks website.
+The article has since been removed for the website, the [http://www.mathworks.com/company/newsletters/news_notes/win02/patterns.html page] is now a dead link. However, a copy of the article is [http://bbs.matwav.com/viewthread.php?tid=71482 available on zfhit's blog]. The [http://www.mathworks.com/nnimagebrowser page with the code] states that "The file you are trying to view is not in a published state." There are no known existing public mirrors of this example code. The Mathworks has never since posted any information regarding JMI, although a [http://www.mathworks.com/matlabcentral/newsreader/search_results?dur=all&page=1&search_string=tag%3Ajmi few posts] relating to JMI are available on MATLAB Central which is part of The Mathworks website.
 
 = The Interface =
 
-The interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at /java/jar/jmi.jar in the MATLAB directory on your computer. For instance, on OS X with `MATLAB R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB you have. `MATLAB R2009b` for OS X's jmi.jar contains a number of packages:
-  * `com.mathworks.jmi`
-  * `com.mathworks.jmi.bean`
-  * `com.mathworks.jmi.bean.resources`
-  * `com.mathworks.jmi.mdt`
-  * `com.mathworks.jmi.resources`
-  * `com.mathworks.jmi.types`
-  * `com.mathworks.jmi.types.resources`
-  * `com.mathworks.jmi.util`
+The interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at `matlabroot`/java/jar/jmi.jar where `matlabroot` is the location of your MATLAB installation (on Windows it is located at `matlabroot`/java/java/jmi.jar). For instance, on OS X with `MATLAB R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB you have. All of the code in it has the root package `com.mathworks.jmi`, and there are a number of subpackages. Subsequent releases of MATLAB have seen successive additions to jmi.jar
 
-The only classes matlabcontrol uses are `com.mathworks.jmi.Matlab` and `com.mathworks.jmi.NativeMatlab` as well as the exception `com.mathworks.jmi.MatlabException`. While not used in this API, `com.mathworks.jmi.MatlabPath` may also be of interest. It involves changes to the MATLAB path; incorporating its features will be considered for future releases.
+= matlabcontrol's Use of JMI =
 
-The methods and fields of the `Matlab` class can easily be viewed by using MATLAB. To list all of the method names of the class in MATLAB's Command Window type `methods com.mathworks.jmi.Matlab`. This will list all of the method names, but it won't provide any other important information. To see more detailed information, instead type `methodsview com.mathworks.jmi.Matlab`. To see the fields (also known as member or instance variables) type `fieldnames(com.mathworks.jmi.Matlab)`. There are a great number of methods and fields. matlabcontrol only uses a small number of those methods and none of the fields. 
+matlabcontrol makes use of only two classes, and a total of just three methods.
+
+`com.mathworks.jmi.NativeMatlab` is used to determine if the code is currently executing on MATLAB's main thread:
+
+{{{
+public static boolean nativeIsMatlabThread()
+}}}
+
+`com.mathworks.jmi.Matlab` enables Java to communicate with MATLAB. All communication is done with:
+
+{{{
+public static Object mtFevalConsoleOutput(String, Object[], int) throws Exception
+}}}
+
+If the incoming request to interact with MATLAB is not executing on MATLAB's main thread, then it can be placed on the thread by use of:
+
+{{{
+public static void whenMatlabIdle(Runnable)
+}}}
+
+= Exploring JMI =
+
+The methods and fields of the `Matlab` class can easily be viewed by using MATLAB. To list all of the method names of the class in MATLAB's Command Window type `methods com.mathworks.jmi.Matlab`. This will list all of the method names, but it won't provide any other important information. To see more detailed information, instead type `methodsview com.mathworks.jmi.Matlab`. To see the fields (also known as member or instance variables) type `fieldnames(com.mathworks.jmi.Matlab)`.
