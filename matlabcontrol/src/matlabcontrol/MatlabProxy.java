@@ -229,9 +229,10 @@ public abstract class MatlabProxy implements MatlabInteractor
     public String toString()
     {
         return "[" + this.getClass().getName() +
-                " identifier=" + this.getIdentifier() + ", " +
-                " connected=" + this.isConnected() + ", " +
-                " existing=" + this.isExistingSession() + 
+                " identifier=" + this.getIdentifier() + "," +
+                " connected=" + this.isConnected() + "," +
+                " insideMatlab=" + this.isRunningInsideMatlab() + "," +
+                " existingSession=" + this.isExistingSession() +
                 "]";
     }
     
@@ -265,6 +266,13 @@ public abstract class MatlabProxy implements MatlabInteractor
             listener.proxyDisconnected(this);
         }
     }
+    
+    /**
+     * Whether this proxy is running inside of MATLAB.
+     * 
+     * @return
+     */
+    public abstract boolean isRunningInsideMatlab();
     
     /**
      * Whether this proxy is connected to MATLAB.
