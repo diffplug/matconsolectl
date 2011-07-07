@@ -24,7 +24,9 @@ The demo is an interactive demonstration of the core methods of matlabcontrol. B
 
 = Hello World =
 
-Let's now repeat that Hello World experience as a small Java program. This code assumes importing the `matlabcontrol` package. We're going to rethrow the exceptions for the moment, we'll return to them and what they mean later in this walkthrough.
+Let's now repeat that Hello World experience as a small Java program. If you are running outside MATLAB you do *not* need to add the matlabcontrol jar to MATLAB's class path. If you are running inside MATLAB you will need to add matlabcontrol to either the static or dynamic class path.
+
+This code assumes importing the `matlabcontrol` package. We're going to rethrow the exceptions for the moment, we'll return to them and what they mean later in this walkthrough.
 
 {{{
 public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
@@ -260,3 +262,6 @@ proxy.feval("+", "a", "b");
 }}}
 
 Instead what will occur is that `a` and `b` will be converted to MATLAB  char values which have corresponding numeric values, and so MATLAB will compute `195` as the result.
+
+=`MatlabConnectionException` and `MatlabInvocationException`=
+So far we've been ignoring these two exceptions. If a `MatlabConnectionException`s occur when running outside MATLAB it can often be avoid by configuring the `MatlabProxyFactory` by using non-default settings for the `MatlabProxyFactoryOptions`. If running inside MATLAB then there is nothing that can be done, the underlying [JMI Java MATLAB Interface] in your version of MATLAB is not compatible with matlabcontrol. `MatlabInvocationException`s arise for a variety of reasons that prevent the interaction successfully occurring in MATLAB. The javadocs for `MatlabProxy` contain a detailed explanation of the conditions under which an exception will occur.
