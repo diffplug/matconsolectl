@@ -24,10 +24,10 @@ The demo is an interactive demonstration of the core methods of matlabcontrol. B
 
 = Hello World =
 
-Let's now repeat that Hello World experience as a small Java program. This code assumes importing the `matlabcontrol` package.
+Let's now repeat that Hello World experience as a small Java program. This code assumes importing the `matlabcontrol` package. We're going to rethrow the exceptions for the moment, we'll return to them and what they mean later in this walkthrough.
 
 {{{
-public static void main(String[] args) throws MatlabConnectionException
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
 {
     //Create a proxy, which we will use to control MATLAB
     MatlabProxyFactory factory = new MatlabProxyFactory();
@@ -45,6 +45,45 @@ To run this code outside MATLAB, run it as you would any other Java code.
 
 To run this code inside MATLAB, add the class you place this main method in to MATLAB's class path. Then you can run this code from MATLAB's Command Window by entering `thepackage.TheClass.main([])`.  Yes, you have just used MATLAB to communicate with Java to communicate with MATLAB. Doing this is actually very useful for testing, but is by no means required. Pure Java code can call matlabcontrol methods inside MATLAB without issue. There is an important limitation when running inside of MATLAB, matlabcontrol cannot be called from the Event Dispatch Thread (EDT) used by AWT and Swing. More details can be found in the javadocs for `matlabcontrol.MatlabProxy` including a workaround.
 
-The code you just ran was identical to using `eval` in MATLAB except that no values were returned. There is way to return values from MATLAB, we'll get to that later.
+The code you just ran was identical to using `eval` in MATLAB except that no values were returned. There is way to return values from MATLAB, we'll get to that next.
+
+= Setting and Getting Variables =
+
+Now we're going to set a variable in the MATLAB environment, modify it using `eval` and then retrieve it:
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Set a variable, add to it, retrieve it, and print the result
+    proxy.setVariable("a", 5);
+    proxy.eval("a = a + 6");
+    Object result = proxy.getVariable("a");
+    System.out.println("Result: " + result);
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+Run this code in the same manner you ran the code in the previous example.
+
+You probably expected this code to print:
+
+{{{
+Result: 11
+}}}
+
+But instead saw something like:
+
+{{{
+Result: [D@1e9e5c73
+}}}
+
+You very reasonably expected to be returned a `Number`; however, instead you were returned a `double[]`. This is because in MATLAB numeric types are always an array, even when there is just a single value. What was returned was a `double[]` with just one element. How MATLAB converts its types to Java types is documented in detail in the javadocs for `matlabcontrol.MatlabProxy`, and classes exist to help convert MATLAB arrays to Java arrays. But for now, let's just get out the result we want.
+
 
 = Hello World, `feval` Edition =
