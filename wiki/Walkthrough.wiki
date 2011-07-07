@@ -130,8 +130,41 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 }
 }}}
 
-The above snippet of code demonstrates that it's easy to retrieve a multidimensional numeric array from MATLAB. There are however some important subtle and not so subtle details. The not so subtle aspect is that while MATLAB uses 1-based index, Java uses 0-based index - and so does MatlabNumericArray. Accessing a real value (accessing imaginary values is done in the same manner so long as they exist) can be done *without* converting to multidimensional array. This saves computation time and memory. If the array is large enough, the amount of memory being saved can make the difference between having an `OutOfMemoryError` or not (of course you can always increase the JVM's heap size). In the above example, when indexing into a MatlabNumericArray three `int`s were provided as arguments. The method accepts a variable number of arguments, but if the number of arguments does not match the dimensions of the array then an `ArrayDimensionException` will be thrown. (While not seen in this example, it is also possible to index into the array using the linear index, just as can be done in MATLAB, except that again it uses 0-based indexing.) Similarly, the `MatlabNumericArray` can be converted into a Java array, and if an attempt is made to convert it to the wrong number of dimensions then an `ArrayDimensionException` is thrown.
+The above snippet of code demonstrates that it's easy to retrieve a multidimensional numeric array from MATLAB. There are however some important subtle and not so subtle details. The not so subtle aspect is that while MATLAB uses 1-based index, Java uses 0-based index - and so does `MatlabNumericArray`. Accessing a real value (accessing imaginary values is done in the same manner so long as they exist) can be done *without* converting to multidimensional array. This saves computation time and memory. If the array is large enough, the amount of memory being saved can make the difference between having an `OutOfMemoryError` or not (of course you can always increase the JVM's heap size). In the above example, when indexing into a `MatlabNumericArray` three `int`s were provided as arguments. The method accepts a variable number of arguments, but if the number of arguments does not match the dimensions of the array then an `ArrayDimensionException` will be thrown. (While not seen in this example, it is also possible to index into the array using the linear index, just as can be done in MATLAB, except that again it uses 0-based indexing.) Similarly, the `MatlabNumericArray` can be converted into a Java array, and if an attempt is made to convert it to the wrong number of dimensions then an `ArrayDimensionException` is thrown.
 
+In a similar manner, Java arrays of `double` can be sent to MATLAB. Arrays in MATLAB are always at least two dimensions, so the lowest dimension Java array that can be sent to MATLAB is a `double[][]`. Putting together the ability to set arrays, get arrays, and perform `eval`, we can now transpose an array using matlabcontrol. (Note: the `Arrays` class in the following example is `java.util.Arrays`)
 
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Create and print a 2D double array
+    double[][] array = new double[][] { { 1, 2, 3 }, { 4, 5, 6 }, { 7, 8, 9 } };
+    System.out.println("Original: ");
+    for(int i = 0; i < array.length; i++)
+    {
+        System.out.println(Arrays.toString(array[i]));
+    }
+        
+    //Send the array to MATLAB, transpose it, then retrieve it and convert it to a 2D double array
+    MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
+    processor.setNumericArray("array", new MatlabNumericArray(array, null));
+    proxy.eval("array = transpose(array)");
+    double[][] transposedArray = processor.getNumericArray("array").getRealArray2D();
+        
+     //Print the returned array, now transposed
+     System.out.println("Transposed: ");
+     for(int i = 0; i < transposedArray.length; i++)
+     {
+         System.out.println(Arrays.toString(transposedArray[i]));
+     }
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
 
 = Hello World, `feval` Edition =
