@@ -130,6 +130,7 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 }
 }}}
 
+The above snippet of code demonstrates that it's easy to retrieve a multidimensional numeric array from MATLAB. There are however some important subtle and not so subtle details. The not so subtle aspect is that while MATLAB uses 1-based index, Java uses 0-based index - and so does MatlabNumericArray. Accessing a real value (accessing imaginary values is done in the same manner so long as they exist) can be done *without* converting to multidimensional array. This saves computation time and memory. If the array is large enough, the amount of memory being saved can make the difference between having an `OutOfMemoryError` or not (of course you can always increase the JVM's heap size). In the above example, when indexing into a MatlabNumericArray three `int`s were provided as arguments. The method accepts a variable number of arguments, but if the number of arguments does not match the dimensions of the array then an `ArrayDimensionException` will be thrown. (While not seen in this example, it is also possible to index into the array using the linear index, just as can be done in MATLAB, except that again it uses 0-based indexing.) Similarly, the `MatlabNumericArray` can be converted into a Java array, and if an attempt is made to convert it to the wrong number of dimensions then an `ArrayDimensionException` is thrown.
 
 
 
