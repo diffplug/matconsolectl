@@ -97,7 +97,7 @@ Result: 11
 
 In many situations you will need to determine the returned type and cast the result. `matlabcontrol.extensions.MatlabProxyLogger` can record exactly what was returned by MATLAB to help you figure out how to cast the returned value. 
 
-== Numeric Arrays ==
+= Numeric Arrays =
 
 `matlabcontrol.extensions.MatlabTypeConverter` can convert between Java and MATLAB numeric arrays. To fully understand the difference between MATLAB and Java arrays you can read the javadocs for `matlabcontrol.extensions.MatlabNumericArray`. The important takeaway is that directly retrieving an array using `getVariable(...)` would return a Java `double[]` regardless of the dimensions of the MATLAB array, and also that any imaginary values would be completely ignored. Using `MatlabTypeConverter`'s `getNumericArray(...)` method solves all of these problems. Let's see it in action:
 
@@ -168,3 +168,36 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 }}}
 
 To send the array to MATLAB we constructed a `MatlabNumericArray` using `array` as the first argument and `null` as the second. The `null` meant the numeric array had no imaginary component. The real component is not optional and cannot be `null`. Convenience constructors exist for `double[][]`, `double[][][]`, and `double[][][][]`, but a `MatlabNumericArray` may be constructed with any dimension greater than two.
+
+=Returning `eval`=
+So far when we've used `eval` we have not been to get back the result. matlabcontrol is capable of getting the results of `eval` by providing one providing piece of information. In MATLAB functions may have a variable number of return arguments and the number of arguments that will be returned can effect how the function behaves. Therefore, when returning values from `eval` it is necessary to specify the number of return arguments. Java cannot receive a variable number of return arguments so instead a `Object[]` is returned with length equal to the number of return arguments specified. In the following example we will use `eval` to return an entry in an array:
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Create an array for this example
+    proxy.eval("array = magic(3)");
+
+    //Invoke eval, specifying 1 argument to be returned - arguments are returned as an array
+    Object[] returnArguments = proxy.returningEval("array(2,2)", 1);
+    //Retrieve the first (and only) element from the returned arguments
+    Object firstArgument = returnArguments[0];
+    //Like before, cast and index to retrieve the double value
+    double innerValue = ((double[]) firstArgument)[0];
+    //Print the result
+    System.out.println("Result: " + innerValue);
+
+    //Or all in one step
+    double val = ((double[]) proxy.returningEval("array(2,2)", 1)[0])[0];
+    System.out.println("Result: " + val);
+    
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+Like before, a certain amount of casting is required to retrieve the desired value. Using the returning form of `eval` is particularly convenient when needing to reference variables in the MATLAB environment such as `array` in the above example or when performing actions that are not functions such as indexing into an array. As we'll see next, to directly invoke a function a different approach may be used.
