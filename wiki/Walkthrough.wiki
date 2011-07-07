@@ -170,7 +170,7 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 To send the array to MATLAB we constructed a `MatlabNumericArray` using `array` as the first argument and `null` as the second. The `null` meant the numeric array had no imaginary component. The real component is not optional and cannot be `null`. Convenience constructors exist for `double[][]`, `double[][][]`, and `double[][][][]`, but a `MatlabNumericArray` may be constructed with any dimension greater than two.
 
 =Returning `eval`=
-So far when we've used `eval` we have not been to get back the result. matlabcontrol is capable of getting the results of `eval` by providing one providing piece of information. In MATLAB functions may have a variable number of return arguments and the number of arguments that will be returned can effect how the function behaves. Therefore, when returning values from `eval` it is necessary to specify the number of return arguments. Java cannot receive a variable number of return arguments so instead a `Object[]` is returned with length equal to the number of return arguments specified. In the following example we will use `eval` to return an entry in an array:
+So far when we've used `eval` we have not been to get back the result. matlabcontrol is capable of getting the results of `eval` by providing one additional piece of information. In MATLAB functions may have a variable number of return arguments and the number of arguments that will be returned can effect how the function behaves. Therefore, when returning values from `eval` it is necessary to specify the number of return arguments. Java cannot receive a variable number of return arguments so instead a `Object[]` is returned with length equal to the number of return arguments specified. In the following example we will use `eval` to return an entry in an array:
 
 {{{
 public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
@@ -201,3 +201,62 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 }}}
 
 Like before, a certain amount of casting is required to retrieve the desired value. Using the returning form of `eval` is particularly convenient when needing to reference variables in the MATLAB environment such as `array` in the above example or when performing actions that are not functions such as indexing into an array. As we'll see next, to directly invoke a function a different approach may be used.
+
+=Hello World, `feval` Edition=
+
+We return once again to Hello World. However, this time we are going to make 'hello world' appear by using `feval` instead of `eval`. 
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Display 'hello world' like before, but this time using feval
+    proxy.feval("disp", "hello world");
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+What is occurring here is that the function named `disp` is being called with one argument `hello world`. `feval(...)` takes in a variable number of arguments after the function name, including none. For instance the following is valid:
+
+{{{
+proxy.feval("clear");
+}}}
+
+=Returning `feval`=
+Just like there is returning version of `eval`, there is also a returning version of `feval`. Similarly it requires that the number of return arguments be specified as it can effect the behavior of the called function. For example, we can use returning `feval` to find out some information about the current MATLAB environment:
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+     //By specifying 3 return arguments, returns as String arrays the loaded M-files, MEX files, and Java classes
+     Object[] inmem = proxy.returningFeval("inmem", 3);
+     System.out.println("Java classes loaded:");
+     System.out.println(Arrays.toString((String[]) inmem[2]));
+        
+     //Retrieve MATLAB's release date by providing the -date argument
+     Object[] releaseDate = proxy.returningFeval("version", 1, "-date");
+     System.out.println("MATLAB Release Date: " + releaseDate[0]);
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+Like the non-returning variety of `feval`, the number of arguments provided is variable and can be 0 as is the case for `inmem`. By specifying there are 3 return arguments for `inmem` the loaded Java classes were returned.
+
+`feval` interrupts its arguments literally. This means that Java `String`s become MATLAB `char` arrays, they never reference a MATLAB variable. The following will *not* add together variables `a` and `b`:
+
+{{{
+proxy.feval("+", "a", "b");
+}}}
+
+Instead what will occur is that `a` and `b` will be converted to MATLAB  char values which have corresponding numeric values, and so MATLAB will compute `195` as the result.
