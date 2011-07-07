@@ -30,7 +30,7 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 
 /**
- * Handles retrieving and sending MATLAB matrices.
+ * Converts between MATLAB and Java types. Currently only supports numeric arrays.
  * <br><br>
  * This class is unconditionally thread-safe.
  * 
@@ -38,80 +38,77 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatrixProcessor
+public class MatlabTypeConverter
 {
     private final MatlabProxy _proxy;
     
     /**
-     * Constructs the processor.
+     * Constructs the converter.
      * 
      * @param proxy
      */
-    public MatrixProcessor(MatlabProxy proxy)
+    public MatlabTypeConverter(MatlabProxy proxy)
     {
         _proxy = proxy;
     }
     
     /**
-     * Retrieves the matrix with the variable name {@code matrixName}.
-     * <br><br>
-     * In order to retrieve the necessary information, several MATLAB functions must be called. If the matrix is
-     * modified in between the function calls, then issues may arise.
+     * Retrieves the MATLAB numeric array with the variable name {@code arrayName}.
      * 
-     * @param matrixName
-     * @return the retrieved matrix
+     * @param arrayName
+     * @return the retrieved numeric array
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public MatlabMatrix getMatrix(String matrixName) throws MatlabInvocationException
+    public MatlabNumericArray getNumericArray(String arrayName) throws MatlabInvocationException
     {
-        MatrixInfo info = _proxy.invokeAndWait(new GetMatrixCallable(matrixName));
+        ArrayInfo info = _proxy.invokeAndWait(new GetArrayCallable(arrayName));
         
-        return new MatlabMatrix(info.real, info.imaginary, info.lengths);
+        return new MatlabNumericArray(info.real, info.imaginary, info.lengths);
     }
     
-    private static class GetMatrixCallable implements MatlabThreadCallable<MatrixInfo>, Serializable
+    private static class GetArrayCallable implements MatlabThreadCallable<ArrayInfo>, Serializable
     {
-        private final String _matrixName;
+        private final String _arrayName;
         
-        public GetMatrixCallable(String matrixName)
+        public GetArrayCallable(String arrayName)
         {
-            _matrixName = matrixName;
+            _arrayName = arrayName;
         }
 
         @Override
-        public MatrixInfo call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        public ArrayInfo call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             //Retrieve real values
-            Object realObject = proxy.returningEval("real(" + _matrixName + ");", 1)[0];
+            Object realObject = proxy.returningEval("real(" + _arrayName + ");", 1)[0];
             double[] realValues = (double[]) realObject;
             
             //Retrieve imaginary values if present
-            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + _matrixName + ");", 1)[0])[0];
+            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + _arrayName + ");", 1)[0])[0];
             double[] imaginaryValues = null;
             if(!isReal)
             {
-                Object imaginaryObject = proxy.returningEval("imag(" + _matrixName + ");", 1);
+                Object imaginaryObject = proxy.returningEval("imag(" + _arrayName + ");", 1);
                 imaginaryValues = (double[]) imaginaryObject;
             }
 
             //Retrieve lengths of array
-            double[] size = (double[]) proxy.returningEval("size(" + _matrixName + ");", 1)[0];
+            double[] size = (double[]) proxy.returningEval("size(" + _arrayName + ");", 1)[0];
             int[] lengths = new int[size.length];
             for(int i = 0; i < size.length; i++)
             {
                 lengths[i] = (int) size[i];
             }
 
-            return new MatrixInfo(realValues, imaginaryValues, lengths);
+            return new ArrayInfo(realValues, imaginaryValues, lengths);
         }
     }
     
-    private static class MatrixInfo implements Serializable
+    private static class ArrayInfo implements Serializable
     {
         private final double[] real, imaginary;
         private final int[] lengths;
         
-        public MatrixInfo(double[] real, double[] imaginary, int[] lengths)
+        public ArrayInfo(double[] real, double[] imaginary, int[] lengths)
         {
             this.real = real;
             this.imaginary = imaginary;
@@ -120,51 +117,51 @@ public class MatrixProcessor
     }
     
     /**
-     * Stores the {@code matrix} in MATLAB with the variable name {@code matrixName}.
+     * Stores the {@code array} in MATLAB with the variable name {@code arrayName}.
      * 
-     * @param matrixName the variable name
-     * @param matrix
+     * @param arrayName the variable name
+     * @param array
      * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
      */
-    public void setMatrix(String matrixName, MatlabMatrix matrix) throws MatlabInvocationException
+    public void setNumericArray(String arrayName, MatlabNumericArray array) throws MatlabInvocationException
     {
-        _proxy.invokeAndWait(new SetMatrixCallable(matrixName, matrix));
+        _proxy.invokeAndWait(new SetArrayCallable(arrayName, array));
     }
     
-    private static class SetMatrixCallable implements MatlabThreadCallable<Object>, Serializable
+    private static class SetArrayCallable implements MatlabThreadCallable<Object>, Serializable
     {
-        private final String _matrixName;
+        private final String _arrayName;
         private final double[] _realArray, _imaginaryArray;
         private final int[] _lengths;
         
-        private SetMatrixCallable(String matrixName, MatlabMatrix matrix)
+        private SetArrayCallable(String arrayName, MatlabNumericArray array)
         {
-            _matrixName = matrixName;
-            _realArray = matrix.getRealLinearArray();
-            _imaginaryArray = matrix.getImaginaryLinearArray();
-            _lengths = matrix.getLengths();
+            _arrayName = arrayName;
+            _realArray = array.getRealLinearArray();
+            _imaginaryArray = array.getImaginaryLinearArray();
+            _lengths = array.getLengths();
         }
         
         @Override
         public Object call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             //Store real array in the MATLAB environment
-            String realArray = (String) proxy.returningEval("genvarname('" + _matrixName + "_real', who);", 1)[0];
+            String realArray = (String) proxy.returningEval("genvarname('" + _arrayName + "_real', who);", 1)[0];
             proxy.setVariable(realArray, _realArray);
             
             //If present, store the imaginary array in the MATLAB environment
             String imagArray = null;
             if(_imaginaryArray != null)
             {
-                imagArray = (String) proxy.returningEval("genvarname('" + _matrixName + "_imag', who);", 1)[0];
+                imagArray = (String) proxy.returningEval("genvarname('" + _arrayName + "_imag', who);", 1)[0];
                 proxy.setVariable(imagArray, _imaginaryArray);
             }
 
             //Build a statement to eval
             // - If imaginary array exists, combine the real and imaginary arrays
             // - Set the proper dimension length metadata
-            // - Store as matrixName
-            String evalStatement = _matrixName + " = reshape(" + realArray;
+            // - Store as arrayName
+            String evalStatement = _arrayName + " = reshape(" + realArray;
             if(_imaginaryArray != null)
             {
                 evalStatement += " + " + imagArray + " * i";
@@ -185,7 +182,7 @@ public class MatrixProcessor
     }
     
     /**
-     * Returns a brief description of this processor. The exact details of this representation are unspecified and are
+     * Returns a brief description of this converter. The exact details of this representation are unspecified and are
      * subject to change.
      * 
      * @return 

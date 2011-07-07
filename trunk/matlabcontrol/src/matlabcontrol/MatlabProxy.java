@@ -118,10 +118,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * object in the MATLAB environment.
  * <br><br>
  * <b>Help transferring data</b><br>
- * The {@link matlabcontrol.extensions.MatlabProxyLogger} exists to record what is being returned from MATLAB. To
- * easily transfer between MATLAB matrices and Java multi-dimensional arrays a
- * {@link matlabcontrol.extensions.MatlabMatrix} may be used. These matrices can be sent to and retrieved from MATLAB
- * with a {@link matlabcontrol.extensions.MatrixProcessor}.
+ * The {@link matlabcontrol.extensions.MatlabProxyLogger} exists to record what is being returned from MATLAB. 
+ * The {@link matlabcontrol.extensions.MatlabTypeConverter} can convert between complicated Java and MATLAB types.
+ * Currently only MATLAB numeric arrays are supported.
  * <h3>Exceptions</h3>
  * Proxy methods that are relayed to MATLAB can throw {@link MatlabInvocationException}s. They will be thrown if:
  * <ul>
