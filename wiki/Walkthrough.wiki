@@ -1,0 +1,20 @@
+#summary Walkthrough for using matlabcontrol
+
+<font color="red">*This page refers to a not yet released version*</font>
+
+= Introduction =
+
+This is a walkthrough for how to use matlabcontrol. The matlabcontrol API can be used both running inside MATLAB and running outside MATLAB. While the same classes and methods are used for both situations, there are times when this walkthrough will explicitly distinguish between the two situations.
+
+This walkthrough assumes basic applicable Java knowledge. Additionally, if running inside MATLAB this walkthrough assumes knowledge of how to use third-party code in MATLAB. The MathWorks provides [http://www.mathworks.com/help/techdoc/matlab_external/f4863.html documentation] on how to use Java classes in MATLAB.
+
+This guide refers to matlabcontrol v4.0.0. It is possible that at times this walkthrough will for a short while refer to a prior version after a new version has been released.
+
+= Running the Demo =
+
+To start, we are going to run the matlabcontrol demo. If you added a previous version of matlabcontrol to MATLAB's static class path file, you will need to remove it. This version of matlabcontrol requires Java 6. To check if your version of MATLAB supports this, run MATLAB and enter `java.lang.System.getProperty('java.class.version')`. If the returned version is `50` or higher, matlabcontrol should be compatible.
+
+If you wish to use matlabcontrol from outside MATLAB, run the demo however you would normally run a Java application. (On Windows and OS X you can double click the jar; this can also be done on many Linux distributions.) Click 'Connect' - a session of MATLAB will be launched. If a session was not launched an exception will be displayed in the bottom part of the demo. The demo uses your operating system's default MATLAB installation configuration to launch MATLAB. If you have a different configuration you will still be able to use matlabcontrol, you will just need to specify MATLAB's location. Consult the javadocs for `matlabcontrol.MatlabProxyFactoryOptions.Builder` for more information.
+
+If you wish to use matlabcontrol from inside MATLAB, add the matlabcontrol demo to MATLAB's classpath. You are strongly encouraged to add it using [http://www.mathworks.com/help/techdoc/ref/javaaddpath.html javaaddpath] because the demo includes all of the code in the matlabcontrol library, and problems can arise if they are both added. Once added, in MATLAB enter `matlabcontroldemo`. The demo should appear momentarily.
+
