@@ -237,14 +237,14 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
     MatlabProxyFactory factory = new MatlabProxyFactory();
     MatlabProxy proxy = factory.getProxy();
 
-     //By specifying 3 return arguments, returns as String arrays the loaded M-files, MEX files, and Java classes
-     Object[] inmem = proxy.returningFeval("inmem", 3);
-     System.out.println("Java classes loaded:");
-     System.out.println(Arrays.toString((String[]) inmem[2]));
+    //By specifying 3 return arguments, returns as String arrays the loaded M-files, MEX files, and Java classes
+    Object[] inmem = proxy.returningFeval("inmem", 3);
+    System.out.println("Java classes loaded:");
+    System.out.println(Arrays.toString((String[]) inmem[2]));
         
-     //Retrieve MATLAB's release date by providing the -date argument
-     Object[] releaseDate = proxy.returningFeval("version", 1, "-date");
-     System.out.println("MATLAB Release Date: " + releaseDate[0]);
+    //Retrieve MATLAB's release date by providing the -date argument
+    Object[] releaseDate = proxy.returningFeval("version", 1, "-date");
+    System.out.println("MATLAB Release Date: " + releaseDate[0]);
 
     //Disconnect the proxy from MATLAB
     proxy.disconnect();
