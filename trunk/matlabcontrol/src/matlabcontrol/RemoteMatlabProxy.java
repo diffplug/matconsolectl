@@ -112,8 +112,12 @@ class RemoteMatlabProxy extends MatlabProxy
             }
         }
     }
-    
-    // Methods defined in MatlabProxy
+        
+    @Override
+    public boolean isRunningInsideMatlab()
+    {
+        return false;
+    }
     
     @Override
     public boolean isConnected()

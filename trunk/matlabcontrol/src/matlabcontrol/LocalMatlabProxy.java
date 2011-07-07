@@ -44,7 +44,11 @@ class LocalMatlabProxy extends MatlabProxy
         super(id, true);
     }
     
-    // Methods defined in MatlabProxy
+    @Override
+    public boolean isRunningInsideMatlab()
+    {
+        return true;
+    }
     
     @Override
     public boolean isConnected()
@@ -62,6 +66,8 @@ class LocalMatlabProxy extends MatlabProxy
         
         return true;
     }
+    
+    // Methods which interact with MATLAB
         
     @Override
     public void exit() throws MatlabInvocationException
@@ -75,8 +81,6 @@ class LocalMatlabProxy extends MatlabProxy
             throw MatlabInvocationException.Reason.PROXY_NOT_CONNECTED.asException();
         }
     }
-    
-    // Methods defined in MatlabInteractor
 
     @Override
     public void eval(String command) throws MatlabInvocationException

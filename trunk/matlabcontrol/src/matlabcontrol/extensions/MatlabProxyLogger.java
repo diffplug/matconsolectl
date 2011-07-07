@@ -424,6 +424,23 @@ public class MatlabProxyLogger
             }
         });
     }
+        
+    /**
+     * Delegates to the proxy; logs the interaction.
+     * 
+     * @return 
+     */
+    public boolean isRunningInsideMatlab()
+    {
+        return this.invoke(new ReturnBooleanInvocation("isRunningInsideMatlab")
+        {
+            @Override
+            public boolean invoke()
+            {
+                return _proxy.isRunningInsideMatlab();
+            }
+        });
+    }
 
     /**
      * Delegates to the proxy; logs the interaction.
