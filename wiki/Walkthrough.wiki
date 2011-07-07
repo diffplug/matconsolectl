@@ -95,6 +95,42 @@ Run this modified code and we will now get the expected result:
 Result: 11
 }}}
 
-In many situations you will need to determine the returned type and cast the result. `matlabcontrol.extensions.MatlabProxyLogger` can record exactly what was returned by MATLAB to help you figure out how to cast the returned value. `matlabcontrol.extensions.MatlabTypeConverter` can convert between Java and MATLAB numeric arrays, and there are plans to add support for additional types in the future.
+In many situations you will need to determine the returned type and cast the result. `matlabcontrol.extensions.MatlabProxyLogger` can record exactly what was returned by MATLAB to help you figure out how to cast the returned value. 
+
+== Numeric Arrays ==
+
+`matlabcontrol.extensions.MatlabTypeConverter` can convert between Java and MATLAB numeric arrays. To fully understand the difference between MATLAB and Java arrays you can read the javadocs for `matlabcontrol.extensions.MatlabNumericArray`. The important takeaway is that directly retrieving an array using `getVariable(...)` would return a Java `double[]` regardless of the dimensions of the MATLAB array, and also that any imaginary values would be completely ignored. Using `MatlabTypeConverter`'s `getNumericArray(...)` method solves all of these problems. Let's see it in action:
+
+{{{
+public static void main(String[] args) throws MatlabConnectionException, MatlabInvocationException
+{
+    //Create a proxy, which we will use to control MATLAB
+    MatlabProxyFactory factory = new MatlabProxyFactory();
+    MatlabProxy proxy = factory.getProxy();
+
+    //Create a 4x3x2 array filled with random values
+    proxy.eval("array = randn(4,3,2)");
+
+    //Print a value of the array into the MATLAB Command Window
+    proxy.eval("disp(['entry: ' num2str(array(3, 2, 1))])");
+
+    //Get the array from MATLAB
+    MatlabTypeConverter processor = new MatlabTypeConverter(proxy);
+    MatlabNumericArray array = processor.getNumericArray("array");
+    
+    //Print out the same entry, using Java's 0-based indexing
+    System.out.println("entry: " + array.getRealValue(2, 1, 0));
+    
+    //Convert to a Java array and print the same value again    
+    double[][][] javaArray = array.getRealArray3D();
+    System.out.println("entry: " + javaArray[2][1][0]);
+
+    //Disconnect the proxy from MATLAB
+    proxy.disconnect();
+}
+}}}
+
+
+
 
 = Hello World, `feval` Edition =
