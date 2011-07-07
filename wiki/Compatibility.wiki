@@ -5,15 +5,18 @@
 Below is a chart of known compatibility for version 3.1.0 when running outside MATLAB:
 
 ||              || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
-|| OS X 10.5    || ? ||    Yes   ||    ?   ||   Yes  ||    ?   ||   Yes  ||    ?   ||    ?   ||
+|| OS X 10.5    || ? ||    Yes   ||    ?   ||   Yes  ||   No^†^  || No^†^  || No^†^  || No^†^  ||
 || OS X 10.6    || ? ||    ?   ||    Yes  ||    ?   ||    ?   ||    ?   ||    ?   ||    ?   ||
 || Windows XP   || ? ||   `*`   ||    Yes  ||   Yes  ||    Yes   ||   Yes  ||    Yes   ||   Yes  ||
 || Windows Vista|| ? ||    `*`   ||   Yes  ||    ?   ||    ?   ||   Yes  ||    ?   ||    ?   ||
 || Windows 7    ||  `*` ||   `*`   ||    `*`  ||   Yes  ||    ?   ||   Yes  ||    ?   ||    Yes   ||
 
-*`*`* Yes for some, No for others.
-
 *?* No reports. If you have this configuration please leave a comment with the relevant data and the table will be updated.
+
+*`*`* Yes for some, No for others. The reason for this is not understood. If matlabcontrol does not work for you with this setup, any information you could provide would be greatly appreciated.
+
+*^†^* matlabcontrol requires Java 6. OS X versions of MATLAB R2009a and earlier are 32-bit only. Apple only released 64-bit Java 6 for OS X 10.5. There are unofficial ways to run 32-bit Java on OS X 10.5.
+
 
 ----
 
