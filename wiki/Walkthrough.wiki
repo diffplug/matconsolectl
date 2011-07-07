@@ -45,7 +45,7 @@ To run this code outside MATLAB, run it as you would any other Java code.
 
 To run this code inside MATLAB, add the class you place this main method in to MATLAB's class path. Then you can run this code from MATLAB's Command Window by entering `thepackage.TheClass.main([])`.  Yes, you have just used MATLAB to communicate with Java to communicate with MATLAB. Doing this is actually very useful for testing, but is by no means required. Pure Java code can call matlabcontrol methods inside MATLAB without issue. There is an important limitation when running inside of MATLAB, matlabcontrol cannot be called from the Event Dispatch Thread (EDT) used by AWT and Swing. More details can be found in the javadocs for `matlabcontrol.MatlabProxy` including a workaround.
 
-The code you just ran was identical to using `eval` in MATLAB except that no values were returned. There is way to return values from MATLAB, we'll get to that next.
+The code you just ran was identical to using `eval` in MATLAB except that no values were returned. There is a way to return values from MATLAB using `eval`, we'll get to that later.
 
 = Setting and Getting Variables =
 
@@ -83,7 +83,18 @@ But instead saw something like:
 Result: [D@1e9e5c73
 }}}
 
-You very reasonably expected to be returned a `Number`; however, instead you were returned a `double[]`. This is because in MATLAB numeric types are always an array, even when there is just a single value. What was returned was a `double[]` with just one element. How MATLAB converts its types to Java types is documented in detail in the javadocs for `matlabcontrol.MatlabProxy`, and classes exist to help convert MATLAB arrays to Java arrays. But for now, let's just get out the result we want.
+You very reasonably expected to be returned a `Number`; however, instead you were returned a `double[]`. This is because in MATLAB numeric types are always an array, even when there is just a single value. What was returned was a `double[]` with just one element. How MATLAB converts its types to Java types is documented in detail in the javadocs for `matlabcontrol.MatlabProxy`. But for now, let's just get out the result we want. We will need to cast the result as a `double[]` and index into the first element of the array. Replace the line where `getVariable("a")` is called with:
 
+{{{
+double result = ((double[]) proxy.getVariable("a"))[0];
+}}}
+
+Run this modified code and we will now get the expected result:
+
+{{{
+Result: 11
+}}}
+
+In many situations you will need to determine the returned type and cast the result. `matlabcontrol.extensions.MatlabProxyLogger` can record exactly what was returned by MATLAB. `matlabcontrol.extensions.MatlabTypeConverter` can convert between Java and MATLAB numeric arrays, and there are plans to add support for additional types in the future.
 
 = Hello World, `feval` Edition =
