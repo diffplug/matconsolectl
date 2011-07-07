@@ -9,3 +9,34 @@ New versions of matlabcontrol are released periodically. The capabilities and re
 Versions use a `α.β.γ` format to indicate information about the release. `α` indicates a major new release which is incompatible with releases with a different `α`. `β` introduces new or improved features while retaining full binary compatibility. For example an application making use of 1.3.2 could upgrade to 1.4.0 without changing their code. `γ` is a bug fix and retains full binary compatibility. For instance an application could upgrade from 1.4.0 to 1.4.1 without changing their code.
 
 == Releases == 
+
+===4.0.0===
+_Not yet released. The following information is subject to change._
+
+A major overhaul of matlabcontrol, it includes the following:
+  * Dramatically improved reliability, with a complete rewrite of the MATLAB interaction logic
+  * Transparent unification of control from inside MATLAB and outside MATLAB
+  * Unconditionally thread-safe
+  * Highly configurable MATLAB settings, including running hidden
+  * Ability to reconnect to a previously controlled session
+  * Can disconnect from a MATLAB session without exiting MATLAB
+  * Detailed documentation which includes how types are converted between MATLAB and Java
+  * Numeric array conversion between MATLAB and Java arrays
+  * Non-interference with any other Remote Method Invocation uses in the application (when running outside MATLAB)
+  * Transfer non-JRE classes between MATLAB and the Java application (when running outside MATLAB)
+  * Fixes bugs preventing a Java application from terminating properly (when running outside MATLAB)
+
+===3.1.0===
+Improves reliability and documentation. Fixes issue with incorrectly determining matlabcontrol's location when loaded by custom class loaders.
+
+===3.0.1===
+Fixes issues with Windows paths being determined incorrectly.
+
+===3.0.0===
+Introduces ability to control MATLAB from inside MATLAB. Package renamed from `matlab` to `matlabcontrol`. Adds Windows compatibility.
+
+===2.0.0===
+First public release. Added improved documentation. Interaction with MATLAB now essentially a refactored version of Kamin Whitehouse's MatlabControl.
+
+===1.0.0===
+The initial proof of concept. This version was never publicly released. It was essentially a thin Remote Method Invocation (RMI) wrapper around [http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html Kamin Whitehouse's MatlabControl class].
