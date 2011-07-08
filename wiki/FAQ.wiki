@@ -20,7 +20,7 @@ Maybe. You should check out ApproachesToControl to see lots of related projects.
 
 * The methods that call into MATLAB have a return type of `Object` or `Object[]`, what are they actually returning? *
 
-They can return anything, it depends on how you are using the method. The javadocs for `matlabcontrol.MatlabProxy` detail how MATLAB types are converted to Java types. Additionally, you may make use of `matlabcontrol.extensions.MatlabProxyLogger` to see a detailed breakdown of what is being returned from MATLAB, including what is inside of arrays.
+They can return anything, it depends on how you are using the methods. The javadocs for `matlabcontrol.MatlabProxy` detail how MATLAB types are converted to Java types. Additionally, you may make use of `matlabcontrol.extensions.MatlabProxyLogger` to see a detailed breakdown of what is being returned from MATLAB, including what is inside of arrays.
 
 * When running outside MATLAB can I have it control an already running session of MATLAB? *
 
