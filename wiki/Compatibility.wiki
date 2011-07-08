@@ -2,6 +2,45 @@
 
 = Known Compatibility =
 
+<font color="red>* The following refers to a not yet released version, matlabcontrol 4.0.0 *</font>
+
+matlabcontrol 4.0.0 runs both inside MATLAB and outside MATLAB. If matlabcontrol runs properly outside MATLAB for a given configuration it should also work inside MATLAB; the reverse may not be true. Compatibility in this chart is reported by using the demo and confirming a connection to MATLAB can be established.
+
+You can contribute to this chart by leaving a comment on this page. Please test by using the demo and specifying if you ran the demo outside MATLAB, inside MATLAB, or both, your operating system (please be specific - particularly if running on Linux), and your version of MATLAB.
+
+*Inside MATLAB:*
+
+||                       || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
+|| OS X 10.5       || N/A          || Yes            || ?             || Yes         || No^†^     || No^†^    || No^†^     || No^†^     ||      
+|| OS X 10.6       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| OS X 10.7       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows XP    || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows Vista|| ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows 7      || ?               || ?               || Yes          || ?              || ?             || ?             || ?             || Yes          ||
+
+*Outside MATLAB:*
+
+||                       || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
+|| OS X 10.5       || N/A          || Yes            || ?             || Yes         || No^†^     || No^†^    || No^†^     || No^†^     ||      
+|| OS X 10.6       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| OS X 10.7       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows XP    || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows Vista|| ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows 7      || ?               || ?               || Yes          || ?              || ?             || ?             || ?             || Yes          ||
+
+_Versions of MATLAB prior to `R2007b` [http://www.mathworks.com/support/solutions/en/data/1-1812J/ do not make use of Java 6] and are therefore incompatible with matlabcontrol._
+
+*^†^* matlabcontrol requires Java 6. OS X versions of MATLAB R2009a and earlier are [http://www.mathworks.com/support/sysreq/release2009a/macintosh.html 32-bit only]. Apple only released 64-bit Java 6 for OS X 10.5. There are unofficial ways to run 32-bit Java on OS X 10.5.
+
+Due to the large diversity of Linux distributions, Linux is not included in the above chart. However, the following configurations have been reported to work:
+  * Debian 2.6 & `R2008b`
+  * Debian 2.6 & `R2010a`
+  * Debian 2.6 & `R2010b`
+
+If when matlabcontrol launches MATLAB, MATLAB displays the error <font color="red">`??? Undefined variable "matlabcontrol" or class "matlabcontrol.MatlabConnector.connectFromMatlab"`</font> this is most likely because your version of MATLAB is using a Java Virtual Machine (JVM) that is too old to be compatible with matlabcontrol. matlabcontrol 4.0.0 makes use of Java 6, which is Java Class Version 50. To check which Java Class Version your MATLAB JVM supports, in MATLAB enter `java.lang.System.getProperty('java.class.version')`. If it is less than 50, matlabcontrol is not compatible with your version of MATLAB.
+
+----
+
 Below is a chart of known compatibility for version 3.1.0 when running outside MATLAB:
 
 ||              || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
@@ -19,7 +58,5 @@ Below is a chart of known compatibility for version 3.1.0 when running outside M
 
 Due to the large diversity of Linux distributions, Linux is not shown in the above table. However, the following combinations are known to work:
 Debian 2.6 & `R2008b`, Ubuntu 9.10 & `R2010a`, unknown Linux distro & `R2011a`
-
-----
 
 If when matlabcontrol launches MATLAB, MATLAB displays the error <font color="red">`??? Undefined variable "matlabcontrol" or class "matlabcontrol.MatlabConnector.connectFromMatlab"`</font> this is most likely because your version of MATLAB is using a Java Virtual Machine (JVM) that is too old to be compatible with matlabcontrol. matlabcontrol 3.1.0 makes use of Java 5, which is Java Class Version 49. To check which Java Class Version your MATLAB JVM supports, in MATLAB enter `java.lang.System.getProperty('java.class.version')`. If it is less than 49, you must either upgrade to a newer version of MATLAB (which uses a newer JVM) or upgrade your MATLAB's JVM. [http://www.mathworks.com/support/solutions/en/data/1-1812J/ More information] is available from The MathWorks on which JVM your version of MATLAB is using and how to upgrade the JVM. By default, all of the versions of MATLAB in the above table use a compatible JVM.
