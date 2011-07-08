@@ -24,7 +24,6 @@ package matlabcontrol.internal;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.rmi.server.RMIClassLoader;
 import java.rmi.server.RMIClassLoaderSpi;
 
