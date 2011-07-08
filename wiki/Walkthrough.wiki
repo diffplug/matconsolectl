@@ -1,7 +1,5 @@
 #summary Walkthrough for using matlabcontrol
 
-<font color="red">*This page refers to a not yet released version*</font>
-
 = Introduction =
 
 This is a walkthrough for how to use matlabcontrol. The matlabcontrol API can be used both running inside MATLAB and running outside MATLAB. While the same classes and methods are used for both situations, there are times when this walkthrough will explicitly distinguish between the two situations.
