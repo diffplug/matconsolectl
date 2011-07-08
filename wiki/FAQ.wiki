@@ -4,8 +4,6 @@
 
 Below are questions that I have frequently been asked via email or as comments to this page. If you have a question not answered here, please either email me or comment on this page.
 
-<font color="red">*The following refers to an unreleased version, 4.0.0</font>
-
 * Is there a tutorial / walkthrough of how to use matlabcontrol? *
 
 Yes, it can be found [http://code.google.com/p/matlabcontrol/wiki/Walkthrough here].
@@ -37,42 +35,3 @@ No, and there are no plans to add this functionality. However, the code is open 
 * Why was matlabcontrol created? *
 
 It was created to allow for a grading program written in Java used by teaching assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
-----
-
-The following refers to matlabcontrol 3.1.0.
-
-* Is there a tutorial / walkthrough of how to use matlabcontrol? *
-
-Yes, it can be found [http://code.google.com/p/matlabcontrol/wiki/RemoteWalkthrough here].
-
-* Is the source code for the demo available? *
-
-Yes. The source code can be downloaded under the Downloads tab; this contains both the source for the library and demo. The source code can also be viewed without downloading it by using the Source tab.
-
-* I'm trying to do {your project here}, is matlabcontrol what I am looking for? *
-
-Maybe. You should check out ApproachesToControl to see lots of related projects. matlabcontrol was originally created to allow for programmatic control of the MATLAB GUI; however, it can also be used for doing computation in MATLAB and retrieving the results in Java. If doing computation in MATLAB is your primary goal then you should consider the officially supported [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] created by The MathWorks.
-
-* The methods that call into MATLAB have a return type of `Object`, what are they actually returning? *
-
-The reason the return type is `Object` is because MATLAB can return anything. For instance the expression "sqrt(5)" will return an array of `double`s, "pwd" will return a `java.lang.String`, and "whos" will return a complicated array of arrays with a variety of base types and `Object`s in it. The above is what occurs in MATLAB `R2009b`, but not necessarily in past or future versions. You will have to experiment to find out what is being returned. The demo can help as it lists everything returned, including what is inside of arrays.
-
-* When controlling a local session sometimes MATLAB hangs indefinitely, why? *
-
-This can occur if you are calling from the Event Dispatch Thread (EDT) used by AWT/Swing components. The EDT is used extensively by MATLAB when accessing graphical components such as a figure window, uicontrols or plots. When you call into matlabcontrol it pauses the thread you are calling from until MATLAB is done with your request. However, if MATLAB is trying to use the EDT and you called from the EDT it will be unable to complete the request as the EDT is paused. To avoid this you will have to call matlabcontrol from a different thread. An easy way to call from a different thread is to make use of a [http://java.sun.com/javase/6/docs/api/java/util/concurrent/Executors.html#newSingleThreadExecutor%28%29 single thread executor].
-
-* Why was matlabcontrol created? *
-
-It was created to allow for a grading program written in Java used by teaching assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
-
-* When controlling a remote session can I have it control an already open instance of MATLAB? *
-
-No. This functionality is planned for a future release.
-
-* Can the Java program and MATLAB be on separate computers on the same network? *
-
-No, and there are no plans to add this functionality. However, the code is open source so feel free to modify it to do so.
-
-* Is matlabcontrol thread-safe?* 
-
-No. This functionality is planned for a future release.
