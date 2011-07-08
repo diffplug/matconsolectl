@@ -22,7 +22,9 @@ package matlabcontrol.internal;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.File;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.rmi.server.RMIClassLoader;
 import java.rmi.server.RMIClassLoaderSpi;
 
@@ -114,7 +116,16 @@ public class MatlabRMIClassLoaderSpi extends RMIClassLoaderSpi
         //If the class has a code source, meaning it is not part of the Java Runtime Environment
         if(clazz.getProtectionDomain().getCodeSource() != null)
         {
-            annotation = clazz.getProtectionDomain().getCodeSource().getLocation().toString();
+            //This convoluted way of determining the code source location is necessary due to a bug in early versions of
+            //Java 6 on Windows (such as what is used by MATLAB R2007b) which puts a space in the code source's URL.
+            //A space in the URL will cause the receiver of this annotation to treat it as a path separator, which would
+            //be very problematic and likely cause invalid protocol exceptions.
+            try
+            {
+                File file = new File(clazz.getProtectionDomain().getCodeSource().getLocation().getPath());
+                annotation = file.toURI().toURL().toString();
+            }
+            catch(MalformedURLException e) { }
         }
         
         return annotation;
