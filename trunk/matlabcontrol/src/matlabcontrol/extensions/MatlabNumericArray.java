@@ -701,7 +701,7 @@ public final class MatlabNumericArray
      */
     private static int[] computeBoundingLengths(Object array)
     {   
-        DoubleArrayType<?> type = DoubleArrayType.getInstance(array.getClass());
+        DoubleArrayType<?> type = DoubleArrayType.getInstanceUnsafe(array.getClass());
         int[] maxLengths = new int[type.getDimensions()];
 
         //The length of this array
@@ -895,15 +895,11 @@ public final class MatlabNumericArray
          * Constructs a representation of a multidimensional array of {@code double}s.
          * 
          * @param arrayClass
-         * @throws IllegalArgumentException if the type is not an array holding {@code double}s or the type is of less
-         * than two dimensions
+         * @throws IllegalArgumentException if the type is not an array holding {@code double}s
          */
         private DoubleArrayType(Class<T> arrayClass)
         {
-            if(arrayClass.equals(double[].class))
-            {
-                throw new IllegalArgumentException(arrayClass + " not supported, muset be 2 or more dimensions");
-            }
+
             
             if(!isDoubleArrayType(arrayClass))
             {
@@ -932,6 +928,20 @@ public final class MatlabNumericArray
          */
         public static <T> DoubleArrayType<T> getInstance(Class<T> arrayType)
         {
+            if(arrayType.equals(double[].class))
+            {
+                throw new IllegalArgumentException(arrayType + " not supported, must be 2 or more dimensions");
+            }
+            
+            return getInstanceUnsafe(arrayType);
+        }
+        
+        /**
+         * Behaves the same as {@link #getInstance(java.lang.Class)} except that {@code double[]} is valid. This is
+         * needed by some of the recursive algorithms in {@code MatlabNumericArray}.
+         */
+        static <T> DoubleArrayType<T> getInstanceUnsafe(Class<T> arrayType)
+        {
             if(!CLASS_TO_ARRAY_TYPE.containsKey(arrayType))
             {
                 DoubleArrayType<T> type = new DoubleArrayType<T>(arrayType);
@@ -956,7 +966,7 @@ public final class MatlabNumericArray
             //Retrieve the class, and then getInstance the corresponding DoubleArrayType
             try
             {
-                type = getInstance(Class.forName(className));
+                type = getInstanceUnsafe(Class.forName(className));
             }
             catch(ClassNotFoundException e)
             {
