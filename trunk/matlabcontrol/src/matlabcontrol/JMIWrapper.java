@@ -213,7 +213,7 @@ class JMIWrapper
                 @Override
                 public void run()
                 {
-                    MatlabReturn matlabReturn;
+                    MatlabReturn<T> matlabReturn;
                     
                     try
                     {

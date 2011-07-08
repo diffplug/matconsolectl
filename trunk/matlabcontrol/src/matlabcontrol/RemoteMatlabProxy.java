@@ -246,7 +246,7 @@ class RemoteMatlabProxy extends MatlabProxy
     @Override
     public void eval(final String command) throws MatlabInvocationException
     {
-        this.invoke(new RemoteInvocation()
+        this.invoke(new RemoteInvocation<Void>()
         {
             @Override
             public Void invoke() throws RemoteException, MatlabInvocationException
@@ -272,7 +272,7 @@ class RemoteMatlabProxy extends MatlabProxy
     }
 
     @Override
-    public void feval(final String functionName, final Object[] args) throws MatlabInvocationException
+    public void feval(final String functionName, final Object... args) throws MatlabInvocationException
     {
         this.invoke(new RemoteInvocation<Void>()
         {

@@ -838,8 +838,8 @@ public final class MatlabNumericArray
         /**
          * Caches loaded {@code DoubleArrayType}s.
          */
-        private static final Map<Class, DoubleArrayType> CLASS_TO_ARRAY_TYPE =
-                new ConcurrentHashMap<Class, DoubleArrayType>();
+        private static final Map<Class<?>, DoubleArrayType> CLASS_TO_ARRAY_TYPE =
+                new ConcurrentHashMap<Class<?>, DoubleArrayType>();
         
         /**
          * Representation of {@code double[][]} class.
@@ -899,8 +899,6 @@ public final class MatlabNumericArray
          */
         private DoubleArrayType(Class<T> arrayClass)
         {
-
-            
             if(!isDoubleArrayType(arrayClass))
             {
                 throw new IllegalArgumentException(arrayClass + " does not hold doubles");
