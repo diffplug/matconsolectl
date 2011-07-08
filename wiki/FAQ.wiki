@@ -12,7 +12,7 @@ Yes, it can be found [http://code.google.com/p/matlabcontrol/wiki/Walkthrough he
 
 * Is the source code for the demo available? *
 
-Yes. The source code can be downloaded under the Downloads tab; this contains both the source for the library and demo. The source code can also be viewed without downloading it by using the Source tab. The demo is not intended to be an example of how to use matlabcontrol, but instead an interactive demonstration of its capabilities. See the Walkthrough for example.
+Yes. The source code can be downloaded under the Downloads tab; this contains both the source for the library and demo. The source code can also be viewed without downloading it by using the Source tab. The demo is not intended to be an example of how to use matlabcontrol, but instead an interactive demonstration of its capabilities. See the [Walkthrough walkthrough] for examples.
 
 * I'm trying to do {your project here}, is matlabcontrol what I am looking for? *
 
