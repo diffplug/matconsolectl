@@ -95,7 +95,14 @@ class ArrayPanel extends JPanel
             {
                 if(_optionBoxes[i].getSelectedIndex() == DOUBLE_INDEX)
                 {
-                    entries.add(Double.parseDouble(_entryFields[i].getText()));
+                    try
+                    {
+                        entries.add(Double.parseDouble(_entryFields[i].getText()));
+                    }
+                    catch(Exception e)
+                    {
+                        entries.add(0);
+                    }
                 }
                 if(_optionBoxes[i].getSelectedIndex() == STRING_INDEX)
                 {
@@ -118,7 +125,14 @@ class ArrayPanel extends JPanel
         {
             if(_optionBoxes[0].getSelectedIndex() == DOUBLE_INDEX)
             {
-                return Double.parseDouble(_entryFields[0].getText());
+                try
+                {
+                    return Double.parseDouble(_entryFields[0].getText());
+                }
+                catch(Exception e)
+                {
+                    return 0;
+                }
             }
             if(_optionBoxes[0].getSelectedIndex() == STRING_INDEX)
             {

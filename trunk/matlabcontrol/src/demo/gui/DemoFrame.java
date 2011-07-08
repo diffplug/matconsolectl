@@ -57,7 +57,9 @@ import matlabcontrol.extensions.CallbackMatlabProxy.MatlabCallback;
 import matlabcontrol.extensions.CallbackMatlabProxy.MatlabDataCallback;
 
 /**
- * A GUI example to demonstrate the main functionality of controlling MATLAB with matlabcontrol.
+ * A GUI example to demonstrate the main functionality of controlling MATLAB with matlabcontrol. The code in this
+ * class (and the rest of the package) is not intended to serve as an example for how to use matlabcontrol, instead
+ * the application exists to interactively demonstrate the API's capabilities.
  * <br><br>
  * The icon is part of the Um collection created by <a href="mailto:mattahan@gmail.com">mattahan (Paul Davey)</a>. It is
  * licensed under the <a href="http://creativecommons.org/licenses/by-nc-sa/3.0/">CC Attribution-Noncommercial-Share
@@ -91,10 +93,9 @@ public class DemoFrame extends JFrame
                                                                                 COMMAND_PANEL_SIZE.height + 
                                                                                 RETURN_PANEL_SIZE.height);
     //Factory to create proxy
-    private MatlabProxyFactory _factory;
+    private final MatlabProxyFactory _factory;
     
     //Proxy to communicate with MATLAB
-    private MatlabProxy _proxy;
     private CallbackMatlabProxy _interactor;
     
     //UI components
@@ -105,7 +106,7 @@ public class DemoFrame extends JFrame
     /**
      * Create the main GUI.
      */
-    public DemoFrame(String title)
+    public DemoFrame(String title, String matlabLocation)
     {
         super(title);
         
@@ -161,6 +162,7 @@ public class DemoFrame extends JFrame
         //Create proxy factory
         MatlabProxyFactoryOptions options = new MatlabProxyFactoryOptions.Builder()
                 .setUsePreviouslyControlledSession(true)
+                .setMatlabLocation(matlabLocation)
                 .build();
         _factory = new MatlabProxyFactory(options);
 
@@ -178,7 +180,6 @@ public class DemoFrame extends JFrame
                         @Override
                         public void proxyCreated(final MatlabProxy proxy)
                         {
-                            _proxy = proxy;
                             _interactor = new CallbackMatlabProxy(proxy);
                         
                             proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener()
@@ -188,6 +189,7 @@ public class DemoFrame extends JFrame
                                 {
                                     _interactor = null;
     
+                                    //Visual update
                                     EventQueue.invokeLater(new Runnable()
                                     {
                                         @Override
@@ -307,11 +309,11 @@ public class DemoFrame extends JFrame
         methodLowerPanel.add(field);
         
         //Return count
-        final JFormattedTextField returnCountField = new JFormattedTextField(NumberFormat.INTEGER_FIELD);
-        returnCountField.setBackground(methodPanel.getBackground());
-        returnCountField.setColumns(8);
-        returnCountField.setBorder(BorderFactory.createTitledBorder("returnCount"));
-        methodLowerPanel.add(returnCountField);
+        final JFormattedTextField nargoutField = new JFormattedTextField(NumberFormat.INTEGER_FIELD);
+        nargoutField.setBackground(methodPanel.getBackground());
+        nargoutField.setColumns(8);
+        nargoutField.setBorder(BorderFactory.createTitledBorder("nargout"));
+        methodLowerPanel.add(nargoutField);
         
         //Array entries
         final ArrayPanel arrayPanel = new ArrayPanel();
@@ -343,13 +345,13 @@ public class DemoFrame extends JFrame
                 //Disable/enable return count and update text appropriately
                 if(method.returnCountEnabled)
                 {
-                    returnCountField.setText("1");
-                    returnCountField.setEnabled(true);
+                    nargoutField.setText("1");
+                    nargoutField.setEnabled(true);
                 }
                 else
                 {
-                    returnCountField.setText("N/A");
-                    returnCountField.setEnabled(false);
+                    nargoutField.setText("N/A");
+                    nargoutField.setEnabled(false);
                 }
                 
                 //Disable/enable array input appropriately
@@ -427,7 +429,7 @@ public class DemoFrame extends JFrame
                     int nargout = 0;
                     try
                     {
-                        nargout = Integer.parseInt(returnCountField.getText());
+                        nargout = Integer.parseInt(nargoutField.getText());
                     }
                     catch(Exception ex) { }
                     
@@ -448,7 +450,7 @@ public class DemoFrame extends JFrame
                     int nargout = 0;
                     try
                     {
-                        nargout = Integer.parseInt(returnCountField.getText());
+                        nargout = Integer.parseInt(nargoutField.getText());
                     }
                     catch(Exception ex) { }
                             

@@ -37,12 +37,14 @@ public class RemoteMain
     {   
         OSXAppearance.applyIfApplicable();
         
+        final String matlabLocation = (args.length == 1 ? args[0] : null);
+        
         EventQueue.invokeLater(new Runnable()
         {
             @Override
             public void run()
             {
-                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB");
+                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB", matlabLocation);
                 frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
                 frame.setVisible(true);
             }
