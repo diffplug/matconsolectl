@@ -11,7 +11,7 @@ Versions use a `α.β.γ` format to indicate information about the release. `α`
 == Releases == 
 
 ===4.0.0===
-_Not yet released. The following information is subject to change._
+<font color="red">*Not yet released. The following information is subject to change.*</font>
 
 A major overhaul of matlabcontrol, it includes the following:
   * Dramatically improved reliability, with a complete rewrite of the MATLAB interaction logic
