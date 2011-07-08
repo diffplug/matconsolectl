@@ -109,7 +109,7 @@ class LocalMatlabProxy extends MatlabProxy
     }
     
     @Override
-    public void feval(String functionName, Object[] args) throws MatlabInvocationException
+    public void feval(String functionName, Object... args) throws MatlabInvocationException
     {
         if(this.isConnected())
         {
