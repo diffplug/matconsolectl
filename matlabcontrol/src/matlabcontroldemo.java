@@ -47,7 +47,7 @@ class matlabcontroldemo
             @Override
             public void run()
             {
-                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Inside MATLAB");
+                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Inside MATLAB", null);
                 frame.setDefaultCloseOperation(WindowConstants.HIDE_ON_CLOSE);
                 frame.setVisible(true);
             }

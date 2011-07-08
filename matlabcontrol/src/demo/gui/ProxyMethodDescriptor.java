@@ -29,12 +29,18 @@ package demo.gui;
  */
 enum ProxyMethodDescriptor
 {   
-    EVAL("void eval(String command)", Documentation.EVAL, "command", "args (disabled)", false, 0),
-    RETURNING_EVAL("Object returningEval(String command, int returnCount)", Documentation.RETURNING_EVAL, "comamnd", "args (disabled)", true, 0),
-    FEVAL("void feval(String functionName, Object[] args)", Documentation.FEVAL, "functionName", "args", false, ArrayPanel.NUM_ENTRIES),
-    RETURNING_FEVAL("Object returningFeval(String functionName, Object[] args, int returnCount)", Documentation.RETURNING_FEVAL, "functionName", "args", true, ArrayPanel.NUM_ENTRIES),
-    SET_VARIABLE("void setVariable(String variableName, Object value)", Documentation.SET_VARIABLE, "variableName", "value", false, 1),
-    GET_VARIABLE("Object getVariable(String variableName)", Documentation.GET_VARIABLE, "variableName", "args (disabled)", false, 0);
+    EVAL("void eval(String command)",
+            Documentation.EVAL, "command", "args (disabled)", false, 0),
+    RETURNING_EVAL("Object[] returningEval(String command, int nargout)",
+            Documentation.RETURNING_EVAL, "comamnd", "args (disabled)", true, 0),
+    FEVAL("void feval(String functionName, Object... args)",
+            Documentation.FEVAL, "functionName", "args", false, ArrayPanel.NUM_ENTRIES),
+    RETURNING_FEVAL("Object[] returningFeval(String functionName, int nargout, Object... args)",
+            Documentation.RETURNING_FEVAL, "functionName", "args", true, ArrayPanel.NUM_ENTRIES),
+    SET_VARIABLE("void setVariable(String variableName, Object value)",
+            Documentation.SET_VARIABLE, "variableName", "value", false, 1),
+    GET_VARIABLE("Object getVariable(String variableName)",
+            Documentation.GET_VARIABLE, "variableName", "args (disabled)", false, 0);
 
     private ProxyMethodDescriptor(String signature, String message, String stringInputName,
             String argsInputName, boolean returnCountEnabled, int argsInputNumberEnabled)
@@ -87,45 +93,61 @@ enum ProxyMethodDescriptor
     {
         private static final String
         EVAL =
-        "<html>Evaluates a command in MATLAB. This is equivalent to MATLAB's <tt>eval('command')</tt>.</html>",
+        "<html>Evaluates a command in MATLAB. This is equivalent to MATLAB's <code>eval('command')</code>.</html>",
 
         RETURNING_EVAL =
-        "<html>Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's <tt>eval('command')</tt>." +
+        "<html>Evaluates a command in MATLAB, returning the result. This is equivalent to MATLAB's " +
+        "<code>eval('command')</code>." +
         "<br><br>" +
-        "In order for the result of this command to be returned the number of arguments to be returned must be specified " +
-        "by <tt>returnCount</tt>. If the command you are evaluating is a MATLAB function you can determine the amount of " +
-        "arguments it returns by using the <tt>nargout</tt> function in the MATLAB Command Window. If it returns " +
-        "<tt>-1</tt> that means the function returns a variable number of arguments. In that case, you will need to " +
-        "manually determine the appropriate number of arguments returned for your use. If the number of arguments MATLAB " +
-        "attempts to return differs <tt>returnCount</tt> an undefined behavior will occur. Among the behaviors possible " +
-        "is an exception being thrown, <tt>null</tt> being returned, or an empty <tt>String</tt> being returned.</html>",
+        "In order for the result of this command to be returned the number of arguments to be returned must be " +
+        "specified by <code>nargout</code>. This is equivalent in MATLAB to the number of variables placed on the " +
+        "left hand side of an expression. For example, in MATLAB the <code>inmem</code> function may be used with " +
+        "either 1, 2, or 3 return values each resulting in a different behavior:" +
+        "<pre><code>" +
+        "M = inmem;\n" +
+        "[M, X] = inmem;\n" +
+        "[M, X, J] = inmem;\n" +
+        "</code></pre>" +
+        "The returned <code>Object</code> array will be of length <code>nargout</code> with each return argument " +
+        "placed into the corresponding array position." +
+        "<br><br>" +
+        "If the command cannot return the number of arguments specified by <code>nargout</code> then an exception " +
+        "will be thrown.</html>",
 
         FEVAL =
-        "<html>Calls a MATLAB function with the name <tt>functionName</tt>. Arguments to the function may be provided as " +
-        "<tt>args</tt>, if you wish to call the function with no arguments pass in <tt>null</tt>." +
+        "<html>Calls a MATLAB function with the name <code>functionName</code>. Arguments to the function may be " +
+        "provided as <code>args</code>, but are not required if the function needs no arguments." +
         "<br><br>" +
-        "The <tt>Object</tt>s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this " +
-        "means that a <tt>String</tt> will be converted to a MATLAB <tt>char</tt> array, not a variable name.</html>",
+        "The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means " +
+        "that a <code>String</code> will be converted to a MATLAB <code>char</code> array, not a variable name.</html>",
 
         RETURNING_FEVAL =
-        "<html>Calls a MATLAB function with the name <tt>functionName</tt>, returning the result. Arguments to the function may " +
-        "be provided as <tt>args</tt>, if you wish to call the function with no arguments pass in <tt>null</tt>." +
+        "<html>Calls a MATLAB function with the name <code>functionName</code>, returning the result. Arguments to " +
+        "the function may be provided as <code>args</code>, but are not required if the function needs no arguments." +
         "<br><br>" +
-        "The <tt>Object</tt>s in the array will be converted into MATLAB equivalents as appropriate. Importantly, this " +
-        "means that a <tt>String</tt> will be converted to a MATLAB <tt>char</tt> array, not a variable name. " +
+        "The function arguments will be converted into MATLAB equivalents as appropriate. Importantly, this means " +
+        "that a <code>String</code> will be converted to a MATLAB <code>char</code> array, not a variable name." +
         "<br><br>" +
-        "In order for the result of this function to be returned the number of arguments to be returned must be specified " +
-        "by <tt>returnCount</tt>. You can use the <tt>nargout</tt> function in the MATLAB Command Window to determine the " +
-        "number of arguments that will be returned. If <tt>nargout</tt> returns <tt>-1</tt> that means the function returns " + 
-        "a variable number of arguments. In that case, you will need to manually determine the appropriate number of " +
-        "arguments returned for your use. If the number of arguments MATLAB attempts to return differs <tt>returnCount</tt> " +
-        "an undefined behavior will occur. Among the behaviors possible is an exception being thrown, <tt>null</tt> being " +
-        "returned, or an empty <tt>String</tt> being returned.</html>",
+        "In order for the result of this function to be returned the number of arguments to be returned must be " +
+        "specified by <code>nargout</code>. This is equivalent in MATLAB to the number of variables placed on the " +
+        "left hand side of an expression. For example, in MATLAB the <code>inmem</code> function may be used with " +
+        "either 1, 2, or 3 return values each resulting in a different behavior:" +
+        "<pre><code>" +
+        "M = inmem;\n" +
+        "[M, X] = inmem;\n" +
+        "[M, X, J] = inmem;\n" +
+        "</code></pre>" +
+        "The returned <code>Object</code> array will be of length <code>nargout</code> with each return argument " +
+        "placed into the corresponding array position." +
+        "<br><br>" +
+        "If the function is not capable of returning the number of arguments specified by <code>nargout</code> then " +
+        "an exception will be thrown.</html>",
 
         SET_VARIABLE = 
-        "<html>Sets <tt>variableName</tt> to <tt>value</tt> in MATLAB, creating the variable if it does not yet exist.</html>",
+        "<html>Sets <code>variableName</code> to <code>value</code> in MATLAB, creating the variable if it does not " +
+        "yet exist.</html>",
 
         GET_VARIABLE = 
-        "<html>Gets the value of <tt>variableName</tt> in MATLAB.</html>";
+        "<html>Gets the value of <code>variableName</code> in MATLAB.</html>";
     }
 }
