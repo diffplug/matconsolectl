@@ -14,7 +14,7 @@ Yes. The source code can be downloaded under the Downloads tab; this contains bo
 
 * I'm trying to do {your project here}, is matlabcontrol what I am looking for? *
 
-Maybe. You should check out ApproachesToControl to see lots of related projects. matlabcontrol was originally created to allow for programmatic control of the MATLAB GUI; however, it can also be used for doing computation in MATLAB and retrieving the results in Java. If doing computation in MATLAB is your primary goal then you should consider the officially supported [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] created by The MathWorks.
+Maybe. You should check out ApproachesToControl to see lots of related projects. matlabcontrol was originally created to allow for programmatic control of the MATLAB application; however, it can also be used for doing computation in MATLAB and retrieving the results in Java. If doing computation in MATLAB is your primary goal then you should consider the officially supported [http://www.mathworks.com/products/javabuilder/ MATLAB Builder JA] created by The MathWorks.
 
 * The methods that call into MATLAB have a return type of `Object` or `Object[]`, what are they actually returning? *
 
