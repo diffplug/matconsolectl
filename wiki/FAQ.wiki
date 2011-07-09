@@ -29,6 +29,7 @@ Yes, if the session was previously launched by matlabcontrol and is not currentl
 Yes, it is almost entirely unconditionally thread-safe. However, MATLAB itself is single-threaded so if you are performing concurrent calls on a `matlabcontrol.MatlabProxy` expect a lot of blocking. The one exception to thread-safety in matlabcontrol is when inside of a `MatlabThreadCallable` passed to `matlabcontrol.MatlabProxy`'s `invokeAndWait(...)` method. See the documentation for details.
 
 * Does matlabcontrol implement the [http://download.oracle.com/javase/6/docs/technotes/guides/scripting/programmer_guide/index.html Java Scripting API] (JSR223)? *
+
 No, it does not. There are currently no plans to add support for it. However, if enough interest is shown, support might be added. If anyone is particularly interested in adding support and has experience with implementing the Java Scripting API, feel free to get in contact.
 
 * Can the Java program and MATLAB be on separate computers on the same network? *
