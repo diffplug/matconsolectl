@@ -18,15 +18,15 @@ Maybe. You should check out ApproachesToControl to see lots of related projects.
 
 * The methods that call into MATLAB have a return type of `Object` or `Object[]`, what are they actually returning? *
 
-They can return anything, it depends on how you are using the methods. The javadocs for `matlabcontrol.MatlabProxy` detail how MATLAB types are converted to Java types. Additionally, you may make use of `matlabcontrol.extensions.MatlabProxyLogger` to see a detailed breakdown of what is being returned from MATLAB, including what is inside of arrays.
+They can return anything, it depends on how you are using the methods. The [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/MatlabProxy.html javadocs for MatlabProxy] detail how MATLAB types are converted to Java types. Additionally, you may make use of [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/extensions/MatlabProxyLogger.html MatlabProxyLogger] to see a detailed breakdown of what is being returned from MATLAB, including what is inside of arrays.
 
 * When running outside MATLAB can I have it control an already running session of MATLAB? *
 
-Yes, if the session was previously launched by matlabcontrol and is not currently being controlled by any other external Java applications. The feature is off by default, it can be enabled by use of the `matlabcontrol.MatlabProxyFactoryOptions`.
+Yes, if the session was previously launched by matlabcontrol and is not currently being controlled by any other external Java applications. The feature is off by default, it can be enabled by use of the [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/MatlabProxyFactoryOptions.html MatlabProxyFactoryOptions].
 
 * Is matlabcontrol thread-safe?* 
 
-Yes, it is almost entirely unconditionally thread-safe. However, MATLAB itself is single-threaded so if you are performing concurrent calls on a `matlabcontrol.MatlabProxy` expect a lot of blocking. The one exception to thread-safety in matlabcontrol is when inside of a `MatlabThreadCallable` passed to `matlabcontrol.MatlabProxy`'s `invokeAndWait(...)` method. See the documentation for details.
+Yes, it is almost entirely unconditionally thread-safe. However, MATLAB itself is single-threaded so if you are performing concurrent calls on a  [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/MatlabProxy.html MatlabProxy] expect a lot of blocking. The one exception to thread-safety in matlabcontrol is when inside of a [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/MatlabProxy.MatlabThreadProxy.html MatlabThreadCallable] passed to `MatlabProxy`'s [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/MatlabProxy.html#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) invokeAndWait(...)] method. See the linked documentation for details.
 
 * Does matlabcontrol implement the [http://download.oracle.com/javase/6/docs/technotes/guides/scripting/programmer_guide/index.html Java Scripting API] (JSR223)? *
 
