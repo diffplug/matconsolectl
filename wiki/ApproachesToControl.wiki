@@ -10,13 +10,15 @@ There are a variety of approaches to MATLAB control with Java. At a high level t
 
 If you know of, or are working on, a solution not listed here please leave a comment and I will update this page.
 
-= Approach 1: Controlling the MATLAB GUI =
+= Approach 1: Controlling the MATLAB application =
 
-This approach is for those that want to control a MATLAB session (or multiple sessions) that will also be used by a user. All of the solutions in this approach rely on the [http://code.google.com/p/matlabcontrol/wiki/JMI Java MATLAB Interface (JMI)].
+This approach is for those that want to control a MATLAB session (or multiple sessions) that can also be used by a user. All of the solutions in this approach rely on the [http://code.google.com/p/matlabcontrol/wiki/JMI Java MATLAB Interface (JMI)].
 
   * matlabcontrol was created to control either a MATLAB session from within it, or one or more sessions of the MATLAB from a Java program not launched from within MATLAB. Those launched from Java are done without any need for user interaction: the user does not need to change MATLAB configurations, launch MATLAB, or type any special commands into MATLAB so that it can be controlled.
 
   * This project is inspired by code from Kamin Whitehouse from the University of Virginia. His code allows for controlling MATLAB from Java, but the Java program must be launched from MATLAB. For more details see his [http://www.cs.virginia.edu/~whitehouse/matlab/JavaMatlab.html webpage] explaining his solution.
+
+  * Inhee Oh of Syndey has a [http://home.pusan.ac.kr/~oneman93/my_java/calling_matlab.htm page] describing his uses of Kamin's code.
 
   * Bowen Hui from the University of Toronto [http://www.cs.utoronto.ca/~bowen/code/code.html#matjav wrote code] that uses Kamin Whitehouse's code to allow for controlling MATLAB from Java. Like the code on this website, his code can control MATLAB from a Java program that is not launched from within MATLAB. However, his code requires configuration on the part of the user, and it writes the results to a text file as opposed to returning those results as Java objects.
 
