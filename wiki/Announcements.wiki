@@ -1,0 +1,25 @@
+#summary Announcements that have been made for matlabcontrol
+
+This is a record of announcements that have been made regarding the development of matlabcontrol.
+
+=Announcements=
+
+==July 8, 2011==
+
+Version 4.0.0 has been released! It is a massive overhaul of matlabcontrol and includes many new features and far better documentation. See the [VersionHistory version history] page for more information.
+
+==June 4, 2011==
+
+Development of the next version has begun. If you have used matlabcontrol, I would greatly appreciate hearing what you used it for and any difficulties you encountered. You can do so by filling out the  [https://spreadsheets.google.com/viewform?formkey=dENLNHB0YUotVUpHQUxqNHVremZveWc6MA survey].
+
+==November 14, 2010==
+
+The developer has tested against `R2010b` successfully. However, `R2010b` can take longer to initialize which means that the default timeout of 60 seconds when using getProxy() for connecting the proxy may not be enough. If proxy timeout is encountered with `R2010b` please use [http://matlabcontrol.googlecode.com/svn/javadocs/doc/matlabcontrol/RemoteMatlabProxyFactory.html#getProxy(long) RemoteMatlabProxyFactory's getProxy(long timeout) method] and specify a longer timeout. If other problems with `R2010b` are encountered please communicate them via the [https://spreadsheets.google.com/viewform?formkey=dENLNHB0YUotVUpHQUxqNHVremZveWc6MA survey].
+
+==September 25, 2010==
+
+Several reports have been received that matlabcontrol is not compatible with `R2010b`. Efforts will be made to make matlabcontrol compatible with `R2010b`, but until the developer has `R2010b` the work will not be able to begin.
+
+==June 14, 2010==
+
+matlabcontrol-3.1.0 has just been released. The main focus of the release was increased documentation, better stability, and improved exceptions. Additionally, there is now support for more types of non-default class loading such as those used in Cytoscape plug-ins. One class, `RemoteMatlabProxyController`, has been deprecated as its structure does not fit with future plans for matlabcontrol; it will likely be removed in the next release of matlabcontrol.
