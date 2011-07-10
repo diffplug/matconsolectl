@@ -22,15 +22,24 @@ package matlabcontrol.extensions;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
@@ -53,123 +62,316 @@ public class MatlabFunctionLinker
             throw new LinkingException(functionInterface.getName() + " is not an interface");
         }
         
-        //Validate all of the methods in the interface
+        //Information about the functions
+        Map<Method, ResolvedFunctionInfo> functionsInfo = new ConcurrentHashMap<Method, ResolvedFunctionInfo>();
+        
+        //Validate and retrieve information about all of the methods in the interface
         for(Method method : functionInterface.getMethods())
         {
-            MatlabFunctionInfo functionInfo = method.getAnnotation(MatlabFunctionInfo.class);
+            MatlabFunctionInfo annotation = method.getAnnotation(MatlabFunctionInfo.class);
             
-            //Check method is annotated
-            if(functionInfo == null)
-            {
-                throw new LinkingException(method + " is not annotated with a " +
-                        MatlabFunctionInfo.class.getName() + ". All methods defined or inherited in " + 
-                        functionInterface.getName() + " must be annotated with " + MatlabFunctionInfo.class.getName());
-            }
+            //Check that all invariants are held
+            checkMethodAnnotation(method, annotation);
+            checkMethodReturn(method, annotation);
+            checkMethodExceptions(method);
             
-            //Validate path & name info
-            if(functionInfo.path().isEmpty())
-            {
-                if(functionInfo.name().isEmpty())
-                {
-                    throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + " must specify " +
-                            "either a name or a path.");
-                }
-            }
-            else
-            {
-                if(!functionInfo.name().isEmpty())
-                {
-                    throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + " must specify " +
-                            "either a name or a path, not both.");
-                }
-                
-                File file = new File(functionInfo.path());
-                if(!file.exists())
-                {
-                    throw new LinkingException("Specified location of m-file does not exist: " + functionInfo.path());
-                }
-                
-                if(!file.isFile())
-                {
-                    throw new LinkingException("Specified  m-file is not a file: " + functionInfo.path());
-                }
-                
-                if(!file.getName().endsWith(".m"))
-                {
-                    throw new LinkingException("Specified m-file does not end with .m: " + functionInfo.path());
-                }
-            }
-            
-            //Returned arguments must be 0 or greater
-            if(functionInfo.nargout() < 0)
-            {
-                throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + 
-                        " annotation specifies a negative nargout [" + functionInfo.nargout() + "]. nargout must be " +
-                        " 0 or greater.");
-            }
-            
-            //Validate return type & nargout info 
-            Class<?> returnType = method.getReturnType();
-            
-            //If a return type is specified then nargout must be greater than 0
-            if(!returnType.equals(Void.TYPE) && functionInfo.nargout() == 0)
-            {
-                throw new LinkingException(method + " has a non-void return type but does not " +
-                        "specify the number of return arguments or specified 0.");
-            }
-            
-            //If void return type then nargout must be 0
-            if(returnType.equals(Void.TYPE) && functionInfo.nargout() != 0)
-            {
-                throw new LinkingException(method + " has a void return type but has a non-zero nargout [" +
-                        functionInfo.nargout() + "] value");
-            }
-            
-            //If multiple values are returned, the return type must be an array of objects
-            if(functionInfo.nargout() > 1 &&
-                    (!returnType.isArray() || (returnType.isArray() && returnType.getComponentType().isPrimitive())))
-            {
-                throw new LinkingException(method + " must have a return type of an array of objects.");
-            }
-            
-            //If eval then the only allowed argument is a Single string
-            if(functionInfo.eval())
-            {
-                Class<?>[] parameters = method.getParameterTypes();
-                if(parameters.length != 1 || !parameters[0].equals(String.class))
-                {
-                    throw new LinkingException(method + " must have String as its only parameter " +
-                            "because the function will be invoked using eval.");
-                }
-            }
-            
-            //Check the method throws MatlabInvocationException
-            if(!Arrays.asList(method.getExceptionTypes()).contains(MatlabInvocationException.class))
-            {
-                throw new LinkingException(method.getName() + " must throw " +
-                        MatlabInvocationException.class);
-            }
+            functionsInfo.put(method, resolveMatlabFunctionInfo(functionInterface, method, annotation));
         }
         
         T functionProxy = (T) Proxy.newProxyInstance(functionInterface.getClassLoader(),
-                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy));
+                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy, functionsInfo));
         
         return functionProxy;
+    }
+    
+    private static ResolvedFunctionInfo resolveMatlabFunctionInfo(Class<?> functionInterface, Method method,
+            MatlabFunctionInfo annotation)
+    {
+        String functionName;
+        String containingDirectory;
+
+        //If no path was provided for the function, meaning the function is expected to be on MATLAB's path
+        if(annotation.path().isEmpty())
+        {
+            functionName = annotation.name();
+            containingDirectory = null;
+        }
+        //Else, the path is relative to the provided interface
+        else
+        {
+            File mFile;
+            
+            //Relative path
+            if(annotation.isRelativePath())
+            {   
+                File interfaceLocation = getClassLocation(functionInterface);
+                try
+                {   
+                    //If this line succeeds then, then the interface is inside of a jar, so the m-file is as well
+                    JarFile jar = new JarFile(interfaceLocation);
+                    
+                    try
+                    {
+                        JarEntry entry = jar.getJarEntry(annotation.path());
+
+                        if(entry == null)
+                        {
+                             throw new LinkingException("Unable to find m-file inside of jar\n" +
+                                "method: " + method.getName() + "\n" +
+                                "path: " + annotation.path() + "\n" +
+                                "jar location: " + interfaceLocation.getAbsolutePath());
+                        }
+
+                        String entryName = entry.getName();
+                        if(!entryName.endsWith(".m"))
+                        {
+                            throw new LinkingException("Specified m-file does not end in .m\n" +
+                                    "method: " + method.getName() + "\n" +
+                                    "path: " + annotation.path() + "\n" +
+                                    "jar location: " + interfaceLocation.getAbsolutePath());
+                        }
+
+                        functionName = entryName.substring(entryName.lastIndexOf("/") + 1, entryName.length() - 2);
+                        mFile = extractFromJar(jar, entry, functionName);
+                        jar.close();
+                    }
+                    catch(IOException e)
+                    {
+                        throw new LinkingException("Unable to extract m-file from jar\n" +
+                                "method: " + method.getName() + "\n" +
+                                "path: " + annotation.path() + "\n" +
+                                "jar location: " + interfaceLocation, e);
+                    }
+                }
+                //Interface is not located inside a jar, so neither is the m-file
+                catch(IOException e)
+                {
+                    mFile = new File(interfaceLocation, annotation.path());
+                }
+            }
+            //Absolute path
+            else
+            {
+                mFile = new File(annotation.path());
+            }
+            
+            //Resolve canonical path
+            try
+            {
+                mFile = mFile.getCanonicalFile();
+            }
+            catch(IOException ex)
+            {
+                throw new LinkingException("Unable to resolve canonical path of specified function\n" +
+                        "method: " + method.getName() + "\n" +
+                        "path:" + annotation.path() + "\n" +
+                        "non-canonical path: " + mFile.getAbsolutePath(), ex);
+            }
+            
+            //Validate file location
+            if(!mFile.exists())
+            {
+                throw new LinkingException("Specified m-file does not exist\n" + 
+                        "method: " + method.getName() + "\n" +
+                        "path: " + annotation.path() + "\n" +
+                        "resolved as: " + mFile.getAbsolutePath());
+            }
+            if(!mFile.isFile())
+            {
+                throw new LinkingException("Specified m-file is not a file\n" + 
+                        "method: " + method.getName() + "\n" +
+                        "path: " + annotation.path() + "\n" +
+                        "resolved as: " + mFile.getAbsolutePath());
+            }
+            if(!mFile.getName().endsWith(".m"))
+            {
+                throw new LinkingException("Specified m-file does not end in .m\n" + 
+                        "method: " + method.getName() + "\n" +
+                        "path: " + annotation.path() + "\n" +
+                        "resolved as: " + mFile.getAbsolutePath());
+            }
+            
+            //Parse out the name of the function and the directory containing it
+            containingDirectory = mFile.getParent();
+            functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
+        }
+
+        return new ResolvedFunctionInfo(functionName, annotation.nargout(), annotation.eval(), containingDirectory);
+    }
+    
+    private static File extractFromJar(JarFile jar, JarEntry entry, String functionName) throws IOException
+    {
+        //Source
+        InputStream entryStream = jar.getInputStream(entry);
+
+        //Destination
+        File tempDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+        File destFile = new File(tempDir, functionName + ".m");
+        if(destFile.exists())
+        {
+            throw new IOException("Unable to extract m-file, randomly generated path already defined\n" +
+                    "function: " + functionName + "\n" +
+                    "generated path: " + destFile.getAbsolutePath());
+        }
+        destFile.getParentFile().mkdirs();
+        destFile.deleteOnExit();
+
+        //Copy source to destination
+        final int BUFFER_SIZE = 2048;
+        byte[] buffer = new byte[BUFFER_SIZE];
+        BufferedOutputStream dest = new BufferedOutputStream(new FileOutputStream(destFile), BUFFER_SIZE);
+        int count;
+        while((count = entryStream.read(buffer, 0, BUFFER_SIZE)) != -1)
+        {
+           dest.write(buffer, 0, count);
+        }
+        dest.flush();
+        dest.close();
+
+        return destFile;
+    }
+    
+    /**
+     * A simple holder of information which closely matches {@link MatlabFunctionInfo}. However, it further resolves
+     * the information provider by users of {@code MatlabFunctionInfo}.
+     */
+    private static class ResolvedFunctionInfo implements Serializable
+    {
+        /**
+         * The name of the function.
+         */
+        final String name;
+        
+        /**
+         * Number of return arguments.
+         */
+        final int nargout;
+        
+        /**
+         * Whether {@code eval} instead of {@code feval} should be used.
+         */
+        final boolean eval;
+        
+        /**
+         * The directory containing the function. Will be {@code null} if the function has been specified as being on
+         * MATLAB's path.
+         */
+        final String containingDirectory;
+        
+        private ResolvedFunctionInfo(String name, int nargout, boolean eval, String containingDirectory)
+        {
+            this.name = name;
+            this.nargout = nargout;
+            this.eval = eval;
+            this.containingDirectory = containingDirectory;
+        }
+    }
+    
+    private static void checkMethodAnnotation(Method method, MatlabFunctionInfo annotation)
+    {
+        if(annotation == null)
+        {
+            throw new LinkingException(method + " does not have a " + MatlabFunctionInfo.class.getName() +
+                    " annotation.");
+        }
+        
+        if( (annotation.name().isEmpty() && annotation.path().isEmpty()) || 
+            (!annotation.name().isEmpty() && !annotation.path().isEmpty()) )
+        {
+            throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + " annotation must " +
+                    "specify either a name or a path. It may not specify both.");
+        }
+    }
+    
+    private static void checkMethodReturn(Method method, MatlabFunctionInfo annotation)
+    {
+        //Returned arguments must be 0 or greater
+        if(annotation.nargout() < 0)
+        {
+            throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + 
+                    " annotation specifies a negative nargout of " + annotation.nargout() + ". nargout must be " +
+                    " 0 or greater.");
+        }
+
+        //Validate return type & nargout info 
+        Class<?> returnType = method.getReturnType();
+
+        //If a return type is specified then nargout must be greater than 0
+        if(!returnType.equals(Void.TYPE) && annotation.nargout() == 0)
+        {
+            throw new LinkingException(method + " has a non-void return type but does not " +
+                    "specify the number of return arguments or specified 0.");
+        }
+
+        //If void return type then nargout must be 0
+        if(returnType.equals(Void.TYPE) && annotation.nargout() != 0)
+        {
+            throw new LinkingException(method + " has a void return type but has a non-zero nargout [" +
+                    annotation.nargout() + "] value");
+        }
+
+        //If multiple values are returned, the return type must be an array of objects
+        if(annotation.nargout() > 1 &&
+                (!returnType.isArray() || (returnType.isArray() && returnType.getComponentType().isPrimitive())))
+        {
+            throw new LinkingException(method + " must have a return type of an array of objects.");
+        }
+
+        //If eval then the only allowed argument is a single string
+        if(annotation.eval())
+        {
+            Class<?>[] parameters = method.getParameterTypes();
+            if(parameters.length != 1 || !parameters[0].equals(String.class))
+            {
+                throw new LinkingException(method + " must have String as its only parameter " +
+                        "because the function will be invoked using eval.");
+            }
+        }
+    }
+    
+    private static void checkMethodExceptions(Method method)
+    {
+        //Check the method throws MatlabInvocationException
+        if(!Arrays.asList(method.getExceptionTypes()).contains(MatlabInvocationException.class))
+        {
+            throw new LinkingException(method.getName() + " must throw " + MatlabInvocationException.class);
+        }
+    }
+    
+    private static File getClassLocation(Class<?> clazz)
+    {
+        try
+        {
+            URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+            File file = new File(url.toURI().getPath()).getCanonicalFile();
+            
+            return file;
+        }
+        catch(IOException e)
+        {
+            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+        }
+        catch(URISyntaxException e)
+        {
+            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+        }
     }
     
     private static class MatlabFunctionInvocationHandler implements InvocationHandler
     {
         private final MatlabProxy _proxy;
+        private final Map<Method, ResolvedFunctionInfo> _functionsInfo;
         
-        private MatlabFunctionInvocationHandler(MatlabProxy proxy)
+        private MatlabFunctionInvocationHandler(MatlabProxy proxy, Map<Method, ResolvedFunctionInfo> functionsInfo)
         {
             _proxy = proxy;
+            _functionsInfo = functionsInfo;
         }
 
         @Override
         public Object invoke(Object o, Method method, Object[] args) throws MatlabInvocationException
-        {
-            MatlabFunctionInfo functionInfo = method.getAnnotation(MatlabFunctionInfo.class);
+        {   
+            ResolvedFunctionInfo functionInfo = _functionsInfo.get(method);
             Object[] functionResult = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
             
             Object result;
@@ -314,10 +516,10 @@ public class MatlabFunctionLinker
     
     private static class CustomFunctionInvocation implements MatlabProxy.MatlabThreadCallable<Object[]>, Serializable
     {
-        private final MatlabFunctionInfo _functionInfo;
+        private final ResolvedFunctionInfo _functionInfo;
         private final Object[] _args;
         
-        private CustomFunctionInvocation(MatlabFunctionInfo functionInfo, Object[] args)
+        private CustomFunctionInvocation(ResolvedFunctionInfo functionInfo, Object[] args)
         {
             _functionInfo = functionInfo;
             _args = args;
@@ -327,23 +529,23 @@ public class MatlabFunctionLinker
         public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             String initialDir = null;
-            String functionName;
             
-            //If no path was specified, meaning the function is expected to be on MATLAB's path
-            if(_functionInfo.path().isEmpty())
+            //If the function was specified as not being on MATLAB's path
+            if(_functionInfo.containingDirectory != null)
             {
-                functionName = _functionInfo.name();
-            }
-            else
-            {
-                //Function name is the file name without the terminating '.m'
-                File file = new File(_functionInfo.path());
-                functionName = file.getName().substring(0, file.getName().length() - 2); 
-                
-                //Change directory to where the function is located
+                //Initial directory before cding
                 initialDir = (String) proxy.returningFeval("pwd", 1)[0];
-                File path = new File(_functionInfo.path());
-                proxy.feval("cd", path.getParent());
+                
+                //No need to change directory
+                if(initialDir.equals(_functionInfo.containingDirectory))
+                {
+                    initialDir = null;
+                }
+                //Change directory to where the function is located
+                else
+                {
+                    proxy.feval("cd", _functionInfo.containingDirectory);
+                }
             }
             
             //Invoke function
@@ -352,37 +554,37 @@ public class MatlabFunctionLinker
                 Object[] result;
                 
                 //If using eval
-                if(_functionInfo.eval())
+                if(_functionInfo.eval)
                 {
-                    String command = _functionInfo.name() + "(" + _args[0] + ");";
+                    String command = _functionInfo.name + "(" + _args[0] + ");";
                     
-                    if(_functionInfo.nargout() == 0)
+                    if(_functionInfo.nargout == 0)
                     {
                         proxy.eval(command);
                         result = null;
                     }
                     else
                     {
-                        result = proxy.returningEval(command, _functionInfo.nargout());
+                        result = proxy.returningEval(command, _functionInfo.nargout);
                     }
                 }
                 //If using feval
                 else
                 {
-                    if(_functionInfo.nargout() == 0)
+                    if(_functionInfo.nargout == 0)
                     {
-                        proxy.feval(_functionInfo.name(), _args);
+                        proxy.feval(_functionInfo.name, _args);
                         result = null;
                     }
                     else
                     {
-                        result = proxy.returningFeval(functionName, _functionInfo.nargout(), _args);
+                        result = proxy.returningFeval(_functionInfo.name, _functionInfo.nargout, _args);
                     }
                 }
             
                 return result;
             }
-            //Change back to the directory MATLAB was in before the function was invoked
+            //If necessary, change back to the directory MATLAB was in before the function was invoked
             finally
             {
                 if(initialDir != null)
@@ -399,9 +601,14 @@ public class MatlabFunctionLinker
         {
             super(msg);
         }
+        
+        private LinkingException(String msg, Throwable cause)
+        {
+            super(msg, cause);
+        }
     }
     
-    private static class IncompatibleReturnException extends RuntimeException
+    public static class IncompatibleReturnException extends RuntimeException
     {
         private IncompatibleReturnException(String msg)
         {

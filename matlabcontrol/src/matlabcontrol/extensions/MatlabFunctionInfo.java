@@ -28,6 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
+ * Information about a MATLAB function.
  *
  * @since 4.1.0
  * 
@@ -52,6 +53,14 @@ public @interface MatlabFunctionInfo
      * @return 
      */
     String path() default "";
+    
+    /**
+     * If the specified {@code path} element is relative to the interface. This allows for bundling m-files inside of
+     * jars.
+     * 
+     * @return 
+     */
+    boolean isRelativePath() default false;
     
     /**
      * The number of arguments to be returned from the function. This element does not need to be set, but if it is not
