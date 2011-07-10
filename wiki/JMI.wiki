@@ -13,7 +13,7 @@ The article has since been removed for the website, the [http://www.mathworks.co
 
 = The Interface =
 
-The interface comes in the form of a jar file called jmi.jar with MATLAB. It is found at `matlabroot`/java/jar/jmi.jar where `matlabroot` is the location of your MATLAB installation (on Windows it is located at `matlabroot`/java/java/jmi.jar). For instance, on OS X with MATLAB `R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB is installed. All of the code in it has the root package `com.mathworks.jmi`, and there are a number of subpackages. Subsequent releases of MATLAB have seen successive additions to jmi.jar
+The interface comes in the form of a jar file called jmi.jar distributed with MATLAB. It is found at `matlabroot`/java/jar/jmi.jar where `matlabroot` is the location of your MATLAB installation (on Windows it is located at `matlabroot`\java\jar\jmi.jar). For instance, on OS X with MATLAB `R2009b` it is located at /Applications/MATLAB_R2009b.app/java/jar/jmi.jar. What this jar contains depends exactly on what version of MATLAB is installed. All of the code in it has the root package `com.mathworks.jmi`, and there are a number of subpackages. Subsequent releases of MATLAB have seen additions to jmi.jar
 
 = matlabcontrol's Use of JMI =
 
