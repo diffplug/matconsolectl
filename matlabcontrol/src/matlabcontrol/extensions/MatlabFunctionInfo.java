@@ -39,28 +39,34 @@ import java.lang.annotation.Target;
 public @interface MatlabFunctionInfo
 {   
     /**
-     * The name of a MATLAB function which is on MATLAB's {@code path}. If this element is specified, then the
-     * {@code path} element cannot also be specified.
+     * The name of a MATLAB function which is on MATLAB's {@code path}.
+     * <br><br>
+     * If this element is specified, then {@code absolutePath} and {@code relativePath} cannot also be specified.
      * 
      * @return 
      */
     String name() default "";
     
     /**
-     * The fully qualified path to the MATLAB function's m-file. If this element is specified, then the {@code name}
-     * element cannot also be specified.
+     * The absolute path to the MATLAB function's m-file.
+     * <br><br>
+     * If this element is specified, then {@code name} and {@code relativePath} cannot also be specified.
      * 
      * @return 
      */
-    String path() default "";
+    String absolutePath() default "";
     
     /**
-     * If the specified {@code path} element is relative to the interface. This allows for bundling m-files inside of
-     * jars.
+     * The relative path to the MATLAB function's m-file. The path is relative to the root directory of the interface
+     * which contains the annotated method. For example if the interface is {@code com.example.MyInterface} located
+     * at {@code /projects/code/numera/com/example/MyInterface.java} then path will be resolved relative to
+     * {@code /projects/code/numera/}. Th
+     * <br><br>
+     * If this element is specified, then {@code name} and {@code absolutePath} cannot also be specified.
      * 
      * @return 
      */
-    boolean isRelativePath() default false;
+    String relativePath() default "";
     
     /**
      * The number of arguments to be returned from the function. This element does not need to be set, but if it is not

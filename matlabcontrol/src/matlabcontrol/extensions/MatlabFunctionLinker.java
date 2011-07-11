@@ -55,6 +55,10 @@ public class MatlabFunctionLinker
 {
     private MatlabFunctionLinker() { }
     
+    /**************************************************************************************************************\
+    |*                                        Linking & Validation                                                *|
+    \**************************************************************************************************************/
+    
     public static <T> T link(Class<T> functionInterface, MatlabProxy matlabProxy)
     {
         if(!functionInterface.isInterface())
@@ -90,35 +94,42 @@ public class MatlabFunctionLinker
         String functionName;
         String containingDirectory;
 
-        //If no path was provided for the function, meaning the function is expected to be on MATLAB's path
-        if(annotation.path().isEmpty())
+        //If the name was specified, meaning the function is expected to be on MATLAB's path
+        if(!annotation.name().isEmpty())
         {
             functionName = annotation.name();
             containingDirectory = null;
         }
-        //Else, the path is relative to the provided interface
         else
         {
+            String path; //Only need for exception messages
             File mFile;
             
-            //Relative path
-            if(annotation.isRelativePath())
-            {   
+            if(!annotation.absolutePath().isEmpty())
+            {
+                path = annotation.absolutePath();
+                
+                mFile = new File(annotation.absolutePath());
+            }
+            else
+            {
+                path = annotation.relativePath();
+                
                 File interfaceLocation = getClassLocation(functionInterface);
                 try
                 {   
                     //If this line succeeds then, then the interface is inside of a jar, so the m-file is as well
                     JarFile jar = new JarFile(interfaceLocation);
-                    
+
                     try
                     {
-                        JarEntry entry = jar.getJarEntry(annotation.path());
+                        JarEntry entry = jar.getJarEntry(annotation.relativePath());
 
                         if(entry == null)
                         {
                              throw new LinkingException("Unable to find m-file inside of jar\n" +
                                 "method: " + method.getName() + "\n" +
-                                "path: " + annotation.path() + "\n" +
+                                "path: " + annotation.relativePath() + "\n" +
                                 "jar location: " + interfaceLocation.getAbsolutePath());
                         }
 
@@ -127,7 +138,7 @@ public class MatlabFunctionLinker
                         {
                             throw new LinkingException("Specified m-file does not end in .m\n" +
                                     "method: " + method.getName() + "\n" +
-                                    "path: " + annotation.path() + "\n" +
+                                    "path: " + annotation.relativePath() + "\n" +
                                     "jar location: " + interfaceLocation.getAbsolutePath());
                         }
 
@@ -139,20 +150,15 @@ public class MatlabFunctionLinker
                     {
                         throw new LinkingException("Unable to extract m-file from jar\n" +
                                 "method: " + method.getName() + "\n" +
-                                "path: " + annotation.path() + "\n" +
+                                "path: " + annotation.relativePath() + "\n" +
                                 "jar location: " + interfaceLocation, e);
                     }
                 }
                 //Interface is not located inside a jar, so neither is the m-file
                 catch(IOException e)
                 {
-                    mFile = new File(interfaceLocation, annotation.path());
+                    mFile = new File(interfaceLocation, annotation.relativePath());
                 }
-            }
-            //Absolute path
-            else
-            {
-                mFile = new File(annotation.path());
             }
             
             //Resolve canonical path
@@ -164,7 +170,7 @@ public class MatlabFunctionLinker
             {
                 throw new LinkingException("Unable to resolve canonical path of specified function\n" +
                         "method: " + method.getName() + "\n" +
-                        "path:" + annotation.path() + "\n" +
+                        "path:" + path + "\n" +
                         "non-canonical path: " + mFile.getAbsolutePath(), ex);
             }
             
@@ -173,21 +179,21 @@ public class MatlabFunctionLinker
             {
                 throw new LinkingException("Specified m-file does not exist\n" + 
                         "method: " + method.getName() + "\n" +
-                        "path: " + annotation.path() + "\n" +
+                        "path: " + path + "\n" +
                         "resolved as: " + mFile.getAbsolutePath());
             }
             if(!mFile.isFile())
             {
                 throw new LinkingException("Specified m-file is not a file\n" + 
                         "method: " + method.getName() + "\n" +
-                        "path: " + annotation.path() + "\n" +
+                        "path: " + path + "\n" +
                         "resolved as: " + mFile.getAbsolutePath());
             }
             if(!mFile.getName().endsWith(".m"))
             {
                 throw new LinkingException("Specified m-file does not end in .m\n" + 
                         "method: " + method.getName() + "\n" +
-                        "path: " + annotation.path() + "\n" +
+                        "path: " + path + "\n" +
                         "resolved as: " + mFile.getAbsolutePath());
             }
             
@@ -275,11 +281,18 @@ public class MatlabFunctionLinker
                     " annotation.");
         }
         
-        if( (annotation.name().isEmpty() && annotation.path().isEmpty()) || 
-            (!annotation.name().isEmpty() && !annotation.path().isEmpty()) )
+        //Verify exactly one of name, absolutePath, and relativePath has been specified
+        boolean hasName = !annotation.name().isEmpty();
+        boolean hasAbsolutePath = !annotation.absolutePath().isEmpty();
+        boolean hasRelativePath = !annotation.relativePath().isEmpty();
+        if( (hasName && (hasAbsolutePath || hasRelativePath)) ||
+            (hasAbsolutePath && (hasName || hasRelativePath)) ||
+            (hasRelativePath && (hasAbsolutePath || hasName)) ||
+            (!hasName && !hasAbsolutePath && !hasRelativePath) )
         {
             throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + " annotation must " +
-                    "specify either a name or a path. It may not specify both.");
+                    "specify either a function name, an absolute path, or a relative path. It must specify exactly " +
+                    "one.");
         }
     }
     
@@ -356,6 +369,31 @@ public class MatlabFunctionLinker
             throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
         }
     }
+    
+    /**
+     * Represents an issue linking a Java method to a MATLAB function.
+     * 
+     * @since 4.1.0
+     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+     */
+    public static class LinkingException extends RuntimeException
+    {
+        private LinkingException(String msg)
+        {
+            super(msg);
+        }
+        
+        private LinkingException(String msg, Throwable cause)
+        {
+            super(msg, cause);
+        }
+    }
+    
+    
+    /**************************************************************************************************************\
+    |*                                        Function Invocation                                                 *|
+    \**************************************************************************************************************/
+    
     
     private static class MatlabFunctionInvocationHandler implements InvocationHandler
     {
@@ -593,19 +631,6 @@ public class MatlabFunctionLinker
                 }
             }
         }     
-    }
-    
-    public static class LinkingException extends RuntimeException
-    {
-        private LinkingException(String msg)
-        {
-            super(msg);
-        }
-        
-        private LinkingException(String msg, Throwable cause)
-        {
-            super(msg, cause);
-        }
     }
     
     public static class IncompatibleReturnException extends RuntimeException
