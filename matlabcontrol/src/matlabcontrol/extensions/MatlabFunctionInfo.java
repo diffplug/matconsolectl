@@ -75,12 +75,4 @@ public @interface MatlabFunctionInfo
      * @return 
      */
     int nargout() default 0;
-    
-    /**
-     * Whether the function should be invoked using {@code eval}. This element does not to need to be set, by default it
-     * is set to {@code false}. 
-     * 
-     * @return 
-     */
-    boolean eval() default false;
 }

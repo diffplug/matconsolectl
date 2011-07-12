@@ -34,8 +34,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
@@ -44,6 +48,7 @@ import java.util.jar.JarFile;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
 
 /**
  *
@@ -53,6 +58,66 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  */
 public class MatlabFunctionLinker
 {
+    
+    public static final class MatlabVariable extends MatlabType
+    {
+        private final String _name;
+        
+        public MatlabVariable(String name)
+        {
+            //Validate variable name
+            
+            if(name.isEmpty())
+            {
+                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+            }
+            
+            char[] nameChars = name.toCharArray();
+            
+            if(!Character.isLetter(nameChars[0]))
+            {
+                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+            }
+            
+            for(char element : nameChars)
+            {
+                if(!(Character.isLetter(element) || Character.isDigit(element) || element == '_'))
+                {
+                    throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+                }
+            }
+            
+            _name = name;
+        }
+        
+        String getName()
+        {
+            return _name;
+        }
+
+        @Override
+        MatlabTypeSerializedSetter getSerializedSetter()
+        {
+            return new MatlabVariableSerializedSetter(_name);
+        }
+        
+        private static class MatlabVariableSerializedSetter implements MatlabTypeSerializedSetter
+        {
+            private final String _name;
+            
+            private MatlabVariableSerializedSetter(String name)
+            {
+                _name = name;
+            }
+
+            @Override
+            public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+            {
+                proxy.eval(variableName + " = " + _name + ";");
+            }
+        }
+    }
+    
     private MatlabFunctionLinker() { }
     
     /**************************************************************************************************************\
@@ -201,8 +266,11 @@ public class MatlabFunctionLinker
             containingDirectory = mFile.getParent();
             functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
         }
+        
+        ResolvedFunctionInfo info = new ResolvedFunctionInfo(functionName, annotation.nargout(), containingDirectory,
+                method.getReturnType(), method.getParameterTypes());
 
-        return new ResolvedFunctionInfo(functionName, annotation.nargout(), annotation.eval(), containingDirectory);
+        return info;
     }
     
     private static File extractFromJar(JarFile jar, JarEntry entry, String functionName) throws IOException
@@ -254,22 +322,51 @@ public class MatlabFunctionLinker
         final int nargout;
         
         /**
-         * Whether {@code eval} instead of {@code feval} should be used.
-         */
-        final boolean eval;
-        
-        /**
          * The directory containing the function. Will be {@code null} if the function has been specified as being on
          * MATLAB's path.
          */
         final String containingDirectory;
         
-        private ResolvedFunctionInfo(String name, int nargout, boolean eval, String containingDirectory)
+        /**
+         * If the method is making uses of classes as either a return value or parameters which are to be specially
+         * handled so that they interact with MATLAB differently.
+         */
+        final boolean usesMatlabTypes;
+        
+        final Class<?> returnType;
+        
+        final Class<?>[] parameterTypes;
+        
+        private ResolvedFunctionInfo(String name, int nargout, String containingDirectory,
+                Class<?> returnType, Class<?>[] parameterTypes)
         {
             this.name = name;
             this.nargout = nargout;
-            this.eval = eval;
             this.containingDirectory = containingDirectory;
+            this.returnType = returnType;
+            this.parameterTypes = parameterTypes;
+            
+            this.usesMatlabTypes = usesMatlabTypes(returnType, parameterTypes);
+        }
+        
+        private static boolean usesMatlabTypes(Class<?> returnType, Class<?>[] parameterTypes)
+        {
+            boolean usesMatlabTypes = false;
+
+            List<Class<?>> types = new ArrayList<Class<?>>();
+            types.add(returnType);
+            types.addAll(Arrays.asList(parameterTypes));
+
+            for(Class<?> type : types)
+            {
+                if(MatlabType.class.isAssignableFrom(type))
+                {
+                    usesMatlabTypes = true;
+                    break;
+                }
+            }
+
+            return usesMatlabTypes;
         }
     }
     
@@ -306,8 +403,12 @@ public class MatlabFunctionLinker
                     " 0 or greater.");
         }
 
-        //Validate return type & nargout info 
         Class<?> returnType = method.getReturnType();
+        
+        if(returnType.equals(MatlabVariable.class))
+        {
+            throw new LinkingException(method + " cannot have a return type of " + MatlabVariable.class.getName());
+        }
 
         //If a return type is specified then nargout must be greater than 0
         if(!returnType.equals(Void.TYPE) && annotation.nargout() == 0)
@@ -328,17 +429,6 @@ public class MatlabFunctionLinker
                 (!returnType.isArray() || (returnType.isArray() && returnType.getComponentType().isPrimitive())))
         {
             throw new LinkingException(method + " must have a return type of an array of objects.");
-        }
-
-        //If eval then the only allowed argument is a single string
-        if(annotation.eval())
-        {
-            Class<?>[] parameters = method.getParameterTypes();
-            if(parameters.length != 1 || !parameters[0].equals(String.class))
-            {
-                throw new LinkingException(method + " must have String as its only parameter " +
-                        "because the function will be invoked using eval.");
-            }
         }
     }
     
@@ -394,7 +484,7 @@ public class MatlabFunctionLinker
     |*                                        Function Invocation                                                 *|
     \**************************************************************************************************************/
     
-    
+
     private static class MatlabFunctionInvocationHandler implements InvocationHandler
     {
         private final MatlabProxy _proxy;
@@ -410,11 +500,41 @@ public class MatlabFunctionLinker
         public Object invoke(Object o, Method method, Object[] args) throws MatlabInvocationException
         {   
             ResolvedFunctionInfo functionInfo = _functionsInfo.get(method);
-            Object[] functionResult = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
             
-            Object result;
+            Object[] functionResult;
+            
+            if(functionInfo.usesMatlabTypes)
+            {
+                //Replace all MatlabTypes with their serialized setters
+                for(int i = 0; i < args.length; i++)
+                {
+                    MatlabType matlabType = (MatlabType) args[i];
+                    MatlabType.MatlabTypeSerializedSetter setter = matlabType.getSerializedSetter();
+                    args[i] = setter;
+                }
+                
+                functionResult = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
+                
+                //For each returned value that was serialized getter, deserialize it
+                Object[] transformedResult = new Object[functionResult.length];
+                for(int i = 0; i < functionResult.length; i++)
+                {
+                    Object result = functionResult[i];
+                    if(result instanceof MatlabTypeSerializedGetter)
+                    {
+                        result = ((MatlabType.MatlabTypeSerializedGetter) result).deserialize();
+                    }
+                    transformedResult[i] = result;
+                }
+                functionResult = transformedResult;
+            }
+            else
+            {
+                functionResult = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
+            }
             
             //If the method is using return type inference
+            Object result;
             Class<?> returnType = method.getReturnType();
             if(!returnType.equals(Object[].class))
             {
@@ -562,6 +682,189 @@ public class MatlabFunctionLinker
             _functionInfo = functionInfo;
             _args = args;
         }
+
+        @Override
+        public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        {
+            String initialDir = null;
+            
+            //If the function was specified as not being on MATLAB's path
+            if(_functionInfo.containingDirectory != null)
+            {
+                //Initial directory before cding
+                initialDir = (String) proxy.returningFeval("pwd", 1)[0];
+                
+                //No need to change directory
+                if(initialDir.equals(_functionInfo.containingDirectory))
+                {
+                    initialDir = null;
+                }
+                //Change directory to where the function is located
+                else
+                {
+                    proxy.feval("cd", _functionInfo.containingDirectory);
+                }
+            }
+            
+            String[] parameterNames = new String[0];
+            String[] returnNames = new String[0];
+            try
+            {
+                //Set all arguments as MATLAB variables and build a function call using those variables
+                String functionStr = _functionInfo.name + "(";
+                parameterNames = generateNames(proxy, "args_", _args.length);
+                for(int i = 0; i < _args.length; i++)
+                {
+                    Object arg = _args[i];
+                    String name = parameterNames[i];
+                    
+                    if(arg instanceof MatlabType.MatlabTypeSerializedSetter)
+                    {
+                        ((MatlabType.MatlabTypeSerializedSetter) arg).setInMatlab(proxy, name);
+                    }
+                    else
+                    {
+                        proxy.setVariable(name, arg);
+                    }
+                    
+                    functionStr += name;
+                    if(i != _args.length - 1)
+                    {
+                        functionStr += ", ";
+                    }
+                }
+                functionStr += ");";
+                
+                //Return arguments
+                if(_functionInfo.nargout != 0)
+                {
+                    returnNames = generateNames(proxy, "return_", _functionInfo.nargout);
+                    String returnStr = "[";
+                    for(int i = 0; i < returnNames.length; i++)
+                    {
+                        returnStr += returnNames[i];
+                        
+                        if(i != returnNames.length - 1)
+                        {
+                            returnStr += ", ";
+                        }
+                    }
+                    returnStr += "]";
+                    
+                    functionStr = returnStr + " = " + functionStr;
+                }
+                
+                System.out.println(functionStr); //Testing
+                
+                //Invoke the function
+                proxy.eval(functionStr);
+                
+                //Get the results
+                Object[] results;
+                if(MatlabType.class.isAssignableFrom(_functionInfo.returnType) ||
+                   (_functionInfo.returnType.isArray() &&
+                    MatlabType.class.isAssignableFrom(_functionInfo.returnType.getComponentType())))
+                {
+                    Class<? extends MatlabType> matlabTypeClass;
+                    if(_functionInfo.returnType.isArray())
+                    {
+                        matlabTypeClass = (Class<? extends MatlabType>) _functionInfo.returnType.getComponentType();
+                    }
+                    else
+                    {
+                        matlabTypeClass = (Class<? extends MatlabType>) _functionInfo.returnType;
+                    }
+                    
+                    MatlabTypeSerializedGetter[] getters = new MatlabTypeSerializedGetter[_functionInfo.nargout];
+                    for(int i = 0; i < _functionInfo.nargout; i++)
+                    {
+                        getters[i] = MatlabType.createSerializedGetter(matlabTypeClass);
+                        getters[i].getInMatlab(proxy, returnNames[i]);
+                    }
+                    results = getters;
+                }
+                else if(_functionInfo.nargout != 0)
+                {
+                    results = new Object[_functionInfo.nargout];
+                    for(int i = 0; i < _functionInfo.nargout; i++)
+                    {
+                        results[i] = proxy.getVariable(returnNames[i]);
+                    }
+                }
+                else
+                {
+                    results = new Object[0];
+                }
+                
+                return results;
+            }
+            //Restore MATLAB's state to what it was before the function call happened
+            finally
+            {
+                try
+                {
+                    //Clear all variables used
+                    List<String> createdVariables = new ArrayList<String>();
+                    createdVariables.addAll(Arrays.asList(parameterNames));
+                    createdVariables.addAll(Arrays.asList(returnNames));
+                    String variablesStr = "";
+                    for(int i = 0; i < createdVariables.size(); i++)
+                    {
+                        variablesStr += createdVariables.get(i);
+
+                        if(i != createdVariables.size() - 1)
+                        {
+                            variablesStr += " ";
+                        }
+                    }
+                    proxy.eval("clear " + variablesStr);
+                }
+                finally
+                {
+                    //If necessary, change back to the directory MATLAB was in before the function was invoked
+                    if(initialDir != null)
+                    {
+                        proxy.feval("cd", initialDir);
+                    }
+                }
+            }
+        }
+        
+        private String[] generateNames(MatlabThreadProxy proxy, String root, int amount)
+                throws MatlabInvocationException
+        {
+            //Build set of currently taken names
+            Set<String> takenNames = new HashSet<String>(Arrays.asList((String[]) proxy.returningEval("who", 1)[0]));
+            
+            //Generate names
+            List<String> generatedNames = new ArrayList<String>();
+            int genSequenence = 0;
+            while(generatedNames.size() != amount)
+            {
+                String generatedName = root + genSequenence;
+                while(takenNames.contains(generatedName))
+                {
+                    genSequenence++;
+                    generatedName = root + genSequenence;
+                }
+                genSequenence++;
+                generatedNames.add(generatedName);
+            }
+            
+            return generatedNames.toArray(new String[generatedNames.size()]);
+        }
+    }
+    
+    private static class StandardFunctionInvocation implements MatlabProxy.MatlabThreadCallable<Object[]>, Serializable
+    {
+        private final ResolvedFunctionInfo _functionInfo;
+        private final Object[] _args;
+        
+        private StandardFunctionInvocation(ResolvedFunctionInfo functionInfo, Object[] args)
+        {
+            _functionInfo = functionInfo;
+            _args = args;
+        }
         
         @Override
         public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
@@ -591,33 +894,14 @@ public class MatlabFunctionLinker
             {
                 Object[] result;
                 
-                //If using eval
-                if(_functionInfo.eval)
+                if(_functionInfo.nargout == 0)
                 {
-                    String command = _functionInfo.name + "(" + _args[0] + ");";
-                    
-                    if(_functionInfo.nargout == 0)
-                    {
-                        proxy.eval(command);
-                        result = null;
-                    }
-                    else
-                    {
-                        result = proxy.returningEval(command, _functionInfo.nargout);
-                    }
+                    proxy.feval(_functionInfo.name, _args);
+                    result = null;
                 }
-                //If using feval
                 else
                 {
-                    if(_functionInfo.nargout == 0)
-                    {
-                        proxy.feval(_functionInfo.name, _args);
-                        result = null;
-                    }
-                    else
-                    {
-                        result = proxy.returningFeval(_functionInfo.name, _functionInfo.nargout, _args);
-                    }
+                    result = proxy.returningFeval(_functionInfo.name, _functionInfo.nargout, _args);
                 }
             
                 return result;
@@ -630,14 +914,6 @@ public class MatlabFunctionLinker
                     proxy.feval("cd", initialDir);
                 }
             }
-        }     
-    }
-    
-    public static class IncompatibleReturnException extends RuntimeException
-    {
-        private IncompatibleReturnException(String msg)
-        {
-            super(msg);
         }
     }
 }

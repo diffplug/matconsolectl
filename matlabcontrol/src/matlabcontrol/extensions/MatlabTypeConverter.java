@@ -28,6 +28,8 @@ import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
+import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
 
 /**
  * Converts between MATLAB and Java types. Currently only supports numeric arrays.
@@ -57,63 +59,12 @@ public class MatlabTypeConverter
      * 
      * @param arrayName
      * @return the retrieved numeric array
-     * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
+     * @throws MatlabInvocationException if thrown by the proxy
+     * @throws IncompatibleReturnException if the variable specified by {@code arrayName} is not a MATLAB numeric array
      */
     public MatlabNumericArray getNumericArray(String arrayName) throws MatlabInvocationException
     {
-        ArrayInfo info = _proxy.invokeAndWait(new GetArrayCallable(arrayName));
-        
-        return new MatlabNumericArray(info.real, info.imaginary, info.lengths);
-    }
-    
-    private static class GetArrayCallable implements MatlabThreadCallable<ArrayInfo>, Serializable
-    {
-        private final String _arrayName;
-        
-        public GetArrayCallable(String arrayName)
-        {
-            _arrayName = arrayName;
-        }
-
-        @Override
-        public ArrayInfo call(MatlabThreadProxy proxy) throws MatlabInvocationException
-        {
-            //Retrieve real values
-            Object realObject = proxy.returningEval("real(" + _arrayName + ");", 1)[0];
-            double[] realValues = (double[]) realObject;
-            
-            //Retrieve imaginary values if present
-            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + _arrayName + ");", 1)[0])[0];
-            double[] imaginaryValues = null;
-            if(!isReal)
-            {
-                Object imaginaryObject = proxy.returningEval("imag(" + _arrayName + ");", 1);
-                imaginaryValues = (double[]) imaginaryObject;
-            }
-
-            //Retrieve lengths of array
-            double[] size = (double[]) proxy.returningEval("size(" + _arrayName + ");", 1)[0];
-            int[] lengths = new int[size.length];
-            for(int i = 0; i < size.length; i++)
-            {
-                lengths[i] = (int) size[i];
-            }
-
-            return new ArrayInfo(realValues, imaginaryValues, lengths);
-        }
-    }
-    
-    private static class ArrayInfo implements Serializable
-    {
-        private final double[] real, imaginary;
-        private final int[] lengths;
-        
-        public ArrayInfo(double[] real, double[] imaginary, int[] lengths)
-        {
-            this.real = real;
-            this.imaginary = imaginary;
-            this.lengths = lengths;
-        }
+        return getMatlabType(MatlabNumericArray.class, arrayName);
     }
     
     /**
@@ -121,61 +72,61 @@ public class MatlabTypeConverter
      * 
      * @param arrayName the variable name
      * @param array
-     * @throws matlabcontrol.MatlabInvocationException if thrown by the proxy
+     * @throws MatlabInvocationException if thrown by the proxy
      */
     public void setNumericArray(String arrayName, MatlabNumericArray array) throws MatlabInvocationException
     {
-        _proxy.invokeAndWait(new SetArrayCallable(arrayName, array));
+        setMatlabType(array, arrayName);
     }
     
-    private static class SetArrayCallable implements MatlabThreadCallable<Object>, Serializable
+    private <T extends MatlabType> T getMatlabType(Class<T> type, String variableName) throws MatlabInvocationException
     {
-        private final String _arrayName;
-        private final double[] _realArray, _imaginaryArray;
-        private final int[] _lengths;
+        MatlabTypeSerializedGetter<T> getter = MatlabType.createSerializedGetter(type);
+        _proxy.invokeAndWait(new GetTypeCallable(getter, variableName));
         
-        private SetArrayCallable(String arrayName, MatlabNumericArray array)
+        return getter.deserialize();
+    }
+    
+    private static class GetTypeCallable implements MatlabThreadCallable<Void>, Serializable
+    {
+        private final MatlabType.MatlabTypeSerializedGetter _getter;
+        private final String _variableName;
+        
+        private GetTypeCallable(MatlabTypeSerializedGetter getter, String variableName)
         {
-            _arrayName = arrayName;
-            _realArray = array.getRealLinearArray();
-            _imaginaryArray = array.getImaginaryLinearArray();
-            _lengths = array.getLengths();
+            _getter = getter;
+            _variableName = variableName;
         }
-        
-        @Override
-        public Object call(MatlabThreadProxy proxy) throws MatlabInvocationException
-        {
-            //Store real array in the MATLAB environment
-            String realArray = (String) proxy.returningEval("genvarname('" + _arrayName + "_real', who);", 1)[0];
-            proxy.setVariable(realArray, _realArray);
-            
-            //If present, store the imaginary array in the MATLAB environment
-            String imagArray = null;
-            if(_imaginaryArray != null)
-            {
-                imagArray = (String) proxy.returningEval("genvarname('" + _arrayName + "_imag', who);", 1)[0];
-                proxy.setVariable(imagArray, _imaginaryArray);
-            }
 
-            //Build a statement to eval
-            // - If imaginary array exists, combine the real and imaginary arrays
-            // - Set the proper dimension length metadata
-            // - Store as arrayName
-            String evalStatement = _arrayName + " = reshape(" + realArray;
-            if(_imaginaryArray != null)
-            {
-                evalStatement += " + " + imagArray + " * i";
-            }
-            for(int length : _lengths)
-            {
-                evalStatement += ", " + length;
-            }
-            evalStatement += ");";
-            proxy.eval(evalStatement);
+        @Override
+        public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        {
+            _getter.getInMatlab(proxy, _variableName);
             
-            //Clear variables holding separate real and imaginary arrays
-            proxy.eval("clear " + realArray + ";");
-            proxy.eval("clear " + imagArray + ";");
+            return null;
+        }
+    }
+    
+    private void setMatlabType(MatlabType type, String variableName) throws MatlabInvocationException
+    {
+        _proxy.invokeAndWait(new SetTypeCallable(type.getSerializedSetter(), variableName));
+    }
+    
+    private static class SetTypeCallable implements MatlabThreadCallable<Void>, Serializable
+    {
+        private final MatlabTypeSerializedSetter _setter;
+        private final String _variableName;
+        
+        private SetTypeCallable(MatlabTypeSerializedSetter setter, String variableName)
+        {
+            _setter = setter;
+            _variableName = variableName;
+        }
+
+        @Override
+        public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        {
+            _setter.setInMatlab(proxy, _variableName);
             
             return null;
         }
