@@ -2,7 +2,7 @@
 
 = Version History =
 
-New versions of matlabcontrol are released periodically. The capabilities and reliability of matlabcontrol have improved as underlying [JMI Java MATLAB Interface] has become better understood.
+New versions of matlabcontrol are released periodically. The capabilities and reliability of matlabcontrol have improved as the underlying [JMI Java MATLAB Interface] has become better understood.
 
 == Versioning Format ==
 
