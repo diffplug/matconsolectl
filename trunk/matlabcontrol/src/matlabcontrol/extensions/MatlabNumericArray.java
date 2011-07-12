@@ -26,6 +26,9 @@ import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
 
 /**
  * Acts as a MATLAB array of doubles. MATLAB arrays of any numeric type may be represented by a
@@ -76,7 +79,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class MatlabNumericArray
+@MatlabType.MatlabTypeSerializationProvider(MatlabNumericArray.MatlabNumericArrayGetter.class)
+public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
 {   
     /**
      * Linear array of real values.
@@ -782,6 +786,127 @@ public final class MatlabNumericArray
                 
                 linearize_internal(linearArray, Array.get(array, i), lengths, nextIndices);
             }
+        }
+    }
+
+    @Override
+    MatlabTypeSerializedSetter<MatlabNumericArray> getSerializedSetter()
+    {
+        return new MatlabNumericArraySetter(this);
+    }
+    
+    static class MatlabNumericArraySetter implements MatlabTypeSerializedSetter<MatlabNumericArray>
+    {
+        private final double[] _real, _imaginary;
+        private final int[] _lengths;
+        
+        public MatlabNumericArraySetter(MatlabNumericArray array)
+        {
+            _real = array.getRealLinearArray();
+            _imaginary = array.getImaginaryLinearArray();
+            _lengths = array.getLengths();
+        }
+        
+        @Override
+        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        {
+            String realName = null;
+            String imagName = null;
+            try
+            {
+                //Store real array in the MATLAB environment
+                realName = (String) proxy.returningEval("genvarname('" + variableName + "_real', who);", 1)[0];
+                proxy.setVariable(realName, _real);
+
+                //If present, store the imaginary array in the MATLAB environment
+                if(_imaginary != null)
+                {
+                    imagName = (String) proxy.returningEval("genvarname('" + variableName + "_imag', who);", 1)[0];
+                    proxy.setVariable(imagName, _imaginary);
+                }
+
+                //Build a statement to eval
+                // - If imaginary array exists, combine the real and imaginary arrays
+                // - Set the proper dimension length metadata
+                // - Store as variableName
+                String evalStatement = variableName + " = reshape(" + imagName;
+                if(_imaginary != null)
+                {
+                    evalStatement += " + " + imagName + " * i";
+                }
+                for(int length : _lengths)
+                {
+                    evalStatement += ", " + length;
+                }
+                evalStatement += ");";
+                proxy.eval(evalStatement);
+            }
+            //Clear variables holding separate real and imaginary arrays
+            finally
+            {
+                if(realName != null && imagName != null)
+                {
+                    String clearStr = "clear " + realName;
+                    if(imagName != null)
+                    {
+                        clearStr += " " + imagName;
+                    }
+                    clearStr += ";";
+                    proxy.eval(clearStr);
+                }
+            }
+        }
+    }
+    
+    static class MatlabNumericArrayGetter implements MatlabTypeSerializedGetter<MatlabNumericArray>
+    {
+        private boolean _retrieved = false;
+        private double[] _real, _imaginary;
+        private int[] _lengths;
+        
+        @Override
+        public MatlabNumericArray deserialize()
+        {
+            if(_retrieved)
+            {
+                return new MatlabNumericArray(_real, _imaginary, _lengths);
+            }
+            else
+            {
+                throw new IllegalStateException("MatlabNumericArray cannot be deserialized until the data has been " +
+                        "retrieved from MATLAB");
+            }
+        }
+
+        @Override
+        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        {
+            //Retrieve real values
+            Object realObject = proxy.returningEval("real(" + variableName + ");", 1)[0];
+            if(realObject == null || !realObject.getClass().equals(double[].class))
+            {
+                throw new IncompatibleReturnException(variableName + " is not a MATLAB numeric array");
+            }
+            _real = (double[]) realObject;
+            
+            //Retrieve imaginary values if present
+            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + variableName + ");", 1)[0])[0];
+            _imaginary = null;
+            if(!isReal)
+            {
+                Object imaginaryObject = proxy.returningEval("imag(" + variableName + ");", 1);
+                _imaginary = (double[]) imaginaryObject;
+            }
+
+            //Retrieve lengths of array
+            double[] size = (double[]) proxy.returningEval("size(" + variableName + ");", 1)[0];
+            _lengths = new int[size.length];
+            for(int i = 0; i < size.length; i++)
+            {
+                _lengths[i] = (int) size[i];
+            }
+            
+            _retrieved = true;
         }
     }
     
