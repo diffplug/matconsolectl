@@ -12,7 +12,7 @@ You can contribute to this chart by leaving a comment on this page. Please test 
 || OS X 10.6       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || OS X 10.7       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows XP    || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
-|| Windows Vista|| ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows Vista|| ?               || Yes           || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows 7      || ?               || ?               || Yes          || ?              || ?             || ?             || ?             || Yes          ||
 
 *Outside MATLAB:*
@@ -22,14 +22,14 @@ You can contribute to this chart by leaving a comment on this page. Please test 
 || OS X 10.6       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || OS X 10.7       || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows XP    || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
-|| Windows Vista|| ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| Windows Vista|| ?               || Yes           || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows 7      || ?               || ?               || Yes          || ?              || ?             || ?             || ?             || Yes          ||
 
 _Versions of MATLAB prior to `R2007b` [http://www.mathworks.com/support/solutions/en/data/1-1812J/ do not make use of Java 6] and are therefore incompatible with matlabcontrol._
 
 *?* No reports. If you have this configuration please leave a comment with the relevant data and the table will be updated.
 
-*^†^* matlabcontrol requires Java 6. OS X versions of MATLAB R2009a and earlier are [http://www.mathworks.com/support/sysreq/release2009a/macintosh.html 32-bit only]. Apple only released 64-bit Java 6 for OS X 10.5. There are unofficial ways to run 32-bit Java on OS X 10.5.
+*^†^* matlabcontrol requires Java 6. OS X versions of MATLAB R2009a and earlier are [http://www.mathworks.com/support/sysreq/release2009a/macintosh.html 32-bit only]. Apple only released 64-bit Java 6 for OS X 10.5. There are unofficial ways to run 32-bit Java 6 on OS X 10.5.
 
 Due to the large diversity of Linux distributions, Linux is not included in the above chart. However, the following configurations have been reported to work:
   * Debian 2.6 & `R2008b`
