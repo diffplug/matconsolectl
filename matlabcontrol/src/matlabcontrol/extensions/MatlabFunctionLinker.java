@@ -58,71 +58,14 @@ import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabFunctionLinker
-{
-    public static final class MatlabVariable extends MatlabType
-    {
-        private final String _name;
-        
-        public MatlabVariable(String name)
-        {
-            //Validate variable name
-            
-            if(name.isEmpty())
-            {
-                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-            }
-            
-            char[] nameChars = name.toCharArray();
-            
-            if(!Character.isLetter(nameChars[0]))
-            {
-                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-            }
-            
-            for(char element : nameChars)
-            {
-                if(!(Character.isLetter(element) || Character.isDigit(element) || element == '_'))
-                {
-                    throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-                }
-            }
-            
-            _name = name;
-        }
-        
-        String getName()
-        {
-            return _name;
-        }
-
-        @Override
-        MatlabTypeSerializedSetter getSerializedSetter()
-        {
-            return new MatlabVariableSerializedSetter(_name);
-        }
-        
-        private static class MatlabVariableSerializedSetter implements MatlabTypeSerializedSetter
-        {
-            private final String _name;
-            
-            private MatlabVariableSerializedSetter(String name)
-            {
-                _name = name;
-            }
-
-            @Override
-            public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
-            {
-                proxy.eval(variableName + " = " + _name + ";");
-            }
-        }
-    }
-    
+{    
     private MatlabFunctionLinker() { }
+    
     
     /**************************************************************************************************************\
     |*                                        Linking & Validation                                                *|
     \**************************************************************************************************************/
+    
     
     public static <T> T link(Class<T> functionInterface, MatlabProxy matlabProxy)
     {
@@ -806,8 +749,6 @@ public class MatlabFunctionLinker
                     functionStr = returnStr + " = " + functionStr;
                 }
                 
-                System.out.println(functionStr); //Testing
-                
                 //Invoke the function
                 proxy.eval(functionStr);
                 
@@ -831,43 +772,6 @@ public class MatlabFunctionLinker
                         results[i] = proxy.getVariable(returnName);
                     }
                 }
-                /*
-                if(MatlabType.class.isAssignableFrom(_functionInfo.returnType) ||
-                   (_functionInfo.returnType.isArray() &&
-                    MatlabType.class.isAssignableFrom(_functionInfo.returnType.getComponentType())))
-                {
-                    Class<? extends MatlabType> matlabTypeClass;
-                    if(_functionInfo.returnType.isArray())
-                    {
-                        matlabTypeClass = (Class<? extends MatlabType>) _functionInfo.returnType.getComponentType();
-                    }
-                    else
-                    {
-                        matlabTypeClass = (Class<? extends MatlabType>) _functionInfo.returnType;
-                    }
-                    
-                    MatlabTypeSerializedGetter[] getters = new MatlabTypeSerializedGetter[_functionInfo.nargout];
-                    for(int i = 0; i < _functionInfo.nargout; i++)
-                    {
-                        getters[i] = MatlabType.createSerializedGetter(matlabTypeClass);
-                        getters[i].getInMatlab(proxy, returnNames[i]);
-                    }
-                    results = getters;
-                }
-                else if(_functionInfo.nargout != 0)
-                {
-                    results = new Object[_functionInfo.nargout];
-                    for(int i = 0; i < _functionInfo.nargout; i++)
-                    {
-                        results[i] = proxy.getVariable(returnNames[i]);
-                    }
-                }
-                else
-                {
-                    results = new Object[0];
-                }
-                 * 
-                 */
                 
                 return results;
             }
@@ -880,17 +784,20 @@ public class MatlabFunctionLinker
                     List<String> createdVariables = new ArrayList<String>();
                     createdVariables.addAll(Arrays.asList(parameterNames));
                     createdVariables.addAll(Arrays.asList(returnNames));
-                    String variablesStr = "";
-                    for(int i = 0; i < createdVariables.size(); i++)
+                    if(!createdVariables.isEmpty())
                     {
-                        variablesStr += createdVariables.get(i);
-
-                        if(i != createdVariables.size() - 1)
+                        String variablesStr = "";
+                        for(int i = 0; i < createdVariables.size(); i++)
                         {
-                            variablesStr += " ";
+                            variablesStr += createdVariables.get(i);
+
+                            if(i != createdVariables.size() - 1)
+                            {
+                                variablesStr += " ";
+                            }
                         }
+                        proxy.eval("clear " + variablesStr);
                     }
-                    proxy.eval("clear " + variablesStr);
                 }
                 finally
                 {
