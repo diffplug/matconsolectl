@@ -59,7 +59,6 @@ import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
  */
 public class MatlabFunctionLinker
 {
-    
     public static final class MatlabVariable extends MatlabType
     {
         private final String _name;
@@ -268,8 +267,27 @@ public class MatlabFunctionLinker
             functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
         }
         
+        //Return type information
+        Class<?>[] returnTypes = getReturnTypes(method, annotation);
+        int nargout;
+        if(returnTypes.length == 1)
+        {
+            if(returnTypes[0].equals(Void.TYPE))
+            {
+                nargout = 0;
+            }
+            else
+            {
+                nargout = 1;
+            }
+        }
+        else
+        {
+            nargout = returnTypes.length;
+        }
+        
         ResolvedFunctionInfo info = new ResolvedFunctionInfo(functionName, containingDirectory,
-                annotation.nargout(), getReturnTypes(method, annotation), method.getParameterTypes());
+                nargout, returnTypes, method.getParameterTypes());
 
         return info;
     }
@@ -402,117 +420,60 @@ public class MatlabFunctionLinker
     
     private static void checkMethodReturn(Method method, MatlabFunctionInfo annotation)
     {
-        //Returned arguments must be 0 or greater
-        if(annotation.nargout() < 0)
-        {
-            throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + 
-                    " annotation specifies a negative nargout of " + annotation.nargout() + ". nargout must be " +
-                    " 0 or greater.");
-        }
-
         //The return type of the method
         Class<?> methodReturn = method.getReturnType();
         
-        //MatlabVariable is a special class that can never be a return type
-        if(methodReturn.equals(MatlabVariable.class))
-        {
-            throw new LinkingException(method + " cannot have a return type of " + MatlabVariable.class.getName());
-        }
-        
-        //If void return type then nargout must be 0
-        if(methodReturn.equals(Void.TYPE) && annotation.nargout() != 0)
-        {
-            throw new LinkingException(method + " has a void return type but has a non-zero nargout value: " +
-                    annotation.nargout());
-        }
-
-        //If a return type is specified then nargout must be greater than 0
-        if(!methodReturn.equals(Void.TYPE) && annotation.nargout() == 0)
-        {
-            throw new LinkingException(method + " has a non-void return type but does not " +
-                    "specify the number of return arguments or specified 0.");
-        }
-        
-        //The types of the returns, does not need to be specified unless the return type is a subclass of MatlabReturnN
+        //The types to be returned from the MATLAB function
         Class<?>[] annotatedReturns = annotation.returnTypes();
         
-        //If return types were specified
+        //Return types provided
         if(annotatedReturns.length != 0)
         {
-            if(!(MatlabReturnN.class.isAssignableFrom(methodReturn) || Object[].class.equals(methodReturn)))
+            if(methodReturn.isArray())
             {
-                throw new LinkingException(method + " has annotated return types but provides an incompatible method " +
-                        "return type. The method's return type must either be Object[] or a MatlabReturnN class " + 
-                        "where N is an integer.");
-            }
-            
-            if(annotatedReturns.length != annotation.nargout())
-            {
-                throw new LinkingException(method + " has a differing amount of return arguments specified by " +
-                        "nargout and the number of annotated return types.\n" +
-                        "nargout: " + annotation.nargout() + "\n" +
-                        "number of annotated return types: " + annotatedReturns.length);
-            }
-            
-            for(Class<?> type : annotatedReturns)
-            {
-                if(type.isPrimitive())
+                //Check that the array return type can hold all of the annotated return types
+                Class<?> arrayType = methodReturn.getComponentType();
+                for(Class<?> annotatedReturn : annotatedReturns)
                 {
-                    throw new LinkingException(method + " has annotated a primitive return type. Primitive types are " +
-                            "not supported");
+                    if(!arrayType.isAssignableFrom(annotatedReturn))
+                    {
+                        throw new LinkingException(method + "'s return type of " + methodReturn.getCanonicalName() +
+                                " cannot hold the annotated return type " + annotatedReturn.getCanonicalName());
+                    }
                 }
             }
-        }
-        
-        //If using a MatlabReturnN subclass as a return type
-        if(MatlabReturnN.class.isAssignableFrom(methodReturn))
-        {
-            int numReturns = MatlabReturns.getNumberOfReturns((Class<? extends MatlabReturnN>) methodReturn);
-            
-            if(annotatedReturns.length != numReturns)
+            else if(MatlabReturnN.class.isAssignableFrom(methodReturn))
             {
-                throw new LinkingException(method + " has a return type for " + numReturns + " return arguments, " +
-                        "but has " + annotatedReturns.length + " return types annotated");
+                int returnAmount = MatlabReturns.getNumberOfReturns((Class<? extends MatlabReturnN>) methodReturn);
+                if(returnAmount != annotatedReturns.length)
+                {
+                    throw new LinkingException(method + " has a differing amount of return arguments specified by " +
+                            "the return type and the number of annotated types\n" +
+                            "Return Type: " + methodReturn.getCanonicalName() + "\n" +
+                            "Return Type Count: " + returnAmount + "\n" +
+                            "Annotated Return Types: " + Arrays.toString(annotatedReturns) + "\n" +
+                            "Annotated Return Types Count: " + annotatedReturns.length);
+                }
             }
-            
-            if(numReturns != annotation.nargout())
+            else
             {
-                throw new LinkingException(method + " has a return type for " + numReturns  + " return arguments, " +
-                        "but specifies an nargout of " + annotation.nargout());
+                throw new LinkingException(method + " has annotated return types but provides an incompatible method " +
+                        "return type. The method's return type must either be an array or a MatlabReturN class where " +
+                        "N is an integer");
             }
-        }
-        //Otherwise if multiple return values, the return type must be an array
-        else if(annotation.nargout() > 1 && !methodReturn.isArray())
-        {
-            throw new LinkingException(method + " must have a return type of an array or MatlabReturnN where N is an " +
-                    "integer");
         }
     }
     
     //Only to be called after checkMethodReturn(...) has been called
     private static Class<?>[] getReturnTypes(Method method, MatlabFunctionInfo annotation)
     {
-        Class<?>[] returnTypes;
-        
-        Class<?> methodReturn = method.getReturnType();
         Class<?>[] annotatedReturns = annotation.returnTypes();
         
-        //For 0 or 1 return types, the return type is the method return type
-        if(annotation.nargout() == 0 || annotation.nargout() == 1)
+        Class<?>[] returnTypes;
+        if(annotatedReturns.length == 0)
         {
-            returnTypes = new Class<?>[] { methodReturn };
+            returnTypes = new Class<?>[] { method.getReturnType() };
         }
-        //If no annotated return types then the method return type is an array and each return type is the component type
-        else if(annotatedReturns.length == 0)
-        {
-            Class<?> componentType = methodReturn.getComponentType();
-            returnTypes = new Class<?>[annotation.nargout()];
-            for(int i = 0; i < returnTypes.length; i++)
-            {
-                returnTypes[i] = componentType;
-            }
-        }
-        //Otherwise the return types are the annotated returns
         else
         {
             returnTypes = annotatedReturns;
