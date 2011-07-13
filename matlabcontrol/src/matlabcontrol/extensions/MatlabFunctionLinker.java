@@ -424,11 +424,10 @@ public class MatlabFunctionLinker
                     annotation.nargout() + "] value");
         }
 
-        //If multiple values are returned, the return type must be an array of objects
-        if(annotation.nargout() > 1 &&
-                (!returnType.isArray() || (returnType.isArray() && returnType.getComponentType().isPrimitive())))
+        //If multiple values are returned, the return type must be an array
+        if(annotation.nargout() > 1 && !returnType.isArray())
         {
-            throw new LinkingException(method + " must have a return type of an array of objects.");
+            throw new LinkingException(method + " must have a return type of an array");
         }
     }
     
@@ -555,43 +554,32 @@ public class MatlabFunctionLinker
         {
             Object toReturn;
             
-            if(result.length == 1)
+            if(result.length == 0)
             {
-                toReturn = convertSingleReturn(result[0], returnType);
+                toReturn = result;
+            }
+            else if(result.length == 1)
+            {
+                toReturn = coerceToType(result[0], returnType);
             }
             else
             {
-                toReturn = convertMultipleReturn(result, returnType);
+                Class<?> componentType = returnType.getComponentType();
+                Object newValuesArray = Array.newInstance(returnType.getComponentType(), result.length);
+                for(int i = 0; i < result.length; i++)
+                {
+                    if(result[i] != null)
+                    {
+                        Array.set(newValuesArray, i, coerceToType(result[i], componentType));
+                    }
+                }
+                toReturn = newValuesArray;
             }
             
             return toReturn;
         }
         
-        private Object convertMultipleReturn(Object[] values, Class<?> returnType)
-        {
-            //Determine if each element of values can be assigned to the component type of returnType
-            for(Object value : values)
-            {
-                if(value != null && !returnType.getComponentType().isAssignableFrom(value.getClass()))
-                {
-                    throw new IncompatibleReturnException("Required return type " + returnType.getCanonicalName() +
-                            " requires that each returned argument be assignable to "  + 
-                            returnType.getComponentType().getCanonicalName() + ". Argument type " + 
-                            value.getClass().getCanonicalName() + " returned by MATLAB is unassignable.");
-                }
-            }
-            
-            //Build an array of the return type's component type, place the values in it
-            Object newValuesArray = Array.newInstance(returnType.getComponentType(), values.length);
-            for(int i = 0; i < values.length; i++)
-            {
-                Array.set(newValuesArray, i, values[i]);
-            }
-            
-            return newValuesArray;
-        }
-        
-        private Object convertSingleReturn(Object value, Class<?> returnType)
+        private Object coerceToType(Object value, Class<?> returnType)
         {
             Object toReturn;
             if(value == null)
