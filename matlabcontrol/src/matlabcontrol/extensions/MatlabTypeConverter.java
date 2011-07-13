@@ -55,39 +55,51 @@ public class MatlabTypeConverter
     }
     
     /**
-     * Retrieves the MATLAB numeric array with the variable name {@code arrayName}.
+     * Retrieves the MATLAB numeric array with the variable name {@code variableName}.
      * 
-     * @param arrayName
+     * @param variableName
      * @return the retrieved numeric array
      * @throws MatlabInvocationException if thrown by the proxy
      * @throws IncompatibleReturnException if the variable specified by {@code arrayName} is not a MATLAB numeric array
      */
-    public MatlabNumericArray getNumericArray(String arrayName) throws MatlabInvocationException
+    public MatlabNumericArray getNumericArray(String variableName) throws MatlabInvocationException
     {
-        return getMatlabType(MatlabNumericArray.class, arrayName);
+        return getMatlabType(MatlabNumericArray.class, variableName);
     }
     
     /**
-     * Stores the {@code array} in MATLAB with the variable name {@code arrayName}.
+     * Stores the {@code array} in MATLAB with the variable name {@code variableName}.
      * 
-     * @param arrayName the variable name
+     * @param variableName the variable name
      * @param array
      * @throws MatlabInvocationException if thrown by the proxy
      */
-    public void setNumericArray(String arrayName, MatlabNumericArray array) throws MatlabInvocationException
+    public void setNumericArray(String variableName, MatlabNumericArray array) throws MatlabInvocationException
     {
-        setMatlabType(array, arrayName);
+        setMatlabType(array, variableName);
     }
+    
+    public MatlabFunctionHandle getFunctionHandle(String variableName) throws MatlabInvocationException
+    {
+        return getMatlabType(MatlabFunctionHandle.class, variableName);
+    }
+    
+    public void setFunctionHandle(String variableName, MatlabFunctionHandle handle) throws MatlabInvocationException
+    {
+        setMatlabType(handle, variableName);
+    }
+    
+    
     
     private <T extends MatlabType> T getMatlabType(Class<T> type, String variableName) throws MatlabInvocationException
     {
         MatlabTypeSerializedGetter<T> getter = MatlabType.createSerializedGetter(type);
-        _proxy.invokeAndWait(new GetTypeCallable(getter, variableName));
+        getter = _proxy.invokeAndWait(new GetTypeCallable(getter, variableName));
         
         return getter.deserialize();
     }
     
-    private static class GetTypeCallable implements MatlabThreadCallable<Void>, Serializable
+    private static class GetTypeCallable implements MatlabThreadCallable<MatlabTypeSerializedGetter>, Serializable
     {
         private final MatlabType.MatlabTypeSerializedGetter _getter;
         private final String _variableName;
@@ -99,11 +111,11 @@ public class MatlabTypeConverter
         }
 
         @Override
-        public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        public MatlabTypeSerializedGetter call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             _getter.getInMatlab(proxy, _variableName);
             
-            return null;
+            return _getter;
         }
     }
     

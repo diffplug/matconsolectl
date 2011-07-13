@@ -829,7 +829,7 @@ public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
                 // - If imaginary array exists, combine the real and imaginary arrays
                 // - Set the proper dimension length metadata
                 // - Store as variableName
-                String evalStatement = variableName + " = reshape(" + imagName;
+                String evalStatement = variableName + " = reshape(" + realName;
                 if(_imaginary != null)
                 {
                     evalStatement += " + " + imagName + " * i";
@@ -844,7 +844,7 @@ public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
             //Clear variables holding separate real and imaginary arrays
             finally
             {
-                if(realName != null && imagName != null)
+                if(!(realName == null && imagName == null))
                 {
                     String clearStr = "clear " + realName;
                     if(imagName != null)
