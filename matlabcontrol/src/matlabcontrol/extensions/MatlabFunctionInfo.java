@@ -75,4 +75,11 @@ public @interface MatlabFunctionInfo
      * @return 
      */
     int nargout() default 0;
+    
+    /**
+     * The types of the values to be returned.
+     * 
+     * @return 
+     */
+    Class[] returnTypes() default {};
 }

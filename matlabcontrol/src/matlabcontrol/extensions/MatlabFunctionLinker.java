@@ -48,6 +48,7 @@ import java.util.jar.JarFile;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.extensions.MatlabReturns.MatlabReturnN;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
 
 /**
@@ -267,8 +268,8 @@ public class MatlabFunctionLinker
             functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
         }
         
-        ResolvedFunctionInfo info = new ResolvedFunctionInfo(functionName, annotation.nargout(), containingDirectory,
-                method.getReturnType(), method.getParameterTypes());
+        ResolvedFunctionInfo info = new ResolvedFunctionInfo(functionName, containingDirectory,
+                annotation.nargout(), getReturnTypes(method, annotation), method.getParameterTypes());
 
         return info;
     }
@@ -322,6 +323,11 @@ public class MatlabFunctionLinker
         final int nargout;
         
         /**
+         * The types of each returned argument. The length of this array will always match nargout.
+         */
+        final Class<?>[] returnTypes;
+        
+        /**
          * The directory containing the function. Will be {@code null} if the function has been specified as being on
          * MATLAB's path.
          */
@@ -333,28 +339,29 @@ public class MatlabFunctionLinker
          */
         final boolean usesMatlabTypes;
         
-        final Class<?> returnType;
-        
+        /**
+         * The declared types of the arguments of the method associated with the function.
+         */
         final Class<?>[] parameterTypes;
         
-        private ResolvedFunctionInfo(String name, int nargout, String containingDirectory,
-                Class<?> returnType, Class<?>[] parameterTypes)
+        private ResolvedFunctionInfo(String name, String containingDirectory, int nargout, Class<?>[] returnTypes,
+                Class<?>[] parameterTypes)
         {
             this.name = name;
             this.nargout = nargout;
             this.containingDirectory = containingDirectory;
-            this.returnType = returnType;
+            this.returnTypes = returnTypes;
             this.parameterTypes = parameterTypes;
             
-            this.usesMatlabTypes = usesMatlabTypes(returnType, parameterTypes);
+            this.usesMatlabTypes = usesMatlabTypes(returnTypes, parameterTypes);
         }
         
-        private static boolean usesMatlabTypes(Class<?> returnType, Class<?>[] parameterTypes)
+        private static boolean usesMatlabTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
         {
             boolean usesMatlabTypes = false;
 
             List<Class<?>> types = new ArrayList<Class<?>>();
-            types.add(returnType);
+            types.addAll(Arrays.asList(returnTypes));
             types.addAll(Arrays.asList(parameterTypes));
 
             for(Class<?> type : types)
@@ -403,32 +410,115 @@ public class MatlabFunctionLinker
                     " 0 or greater.");
         }
 
-        Class<?> returnType = method.getReturnType();
+        //The return type of the method
+        Class<?> methodReturn = method.getReturnType();
         
-        if(returnType.equals(MatlabVariable.class))
+        //MatlabVariable is a special class that can never be a return type
+        if(methodReturn.equals(MatlabVariable.class))
         {
             throw new LinkingException(method + " cannot have a return type of " + MatlabVariable.class.getName());
         }
+        
+        //If void return type then nargout must be 0
+        if(methodReturn.equals(Void.TYPE) && annotation.nargout() != 0)
+        {
+            throw new LinkingException(method + " has a void return type but has a non-zero nargout value: " +
+                    annotation.nargout());
+        }
 
         //If a return type is specified then nargout must be greater than 0
-        if(!returnType.equals(Void.TYPE) && annotation.nargout() == 0)
+        if(!methodReturn.equals(Void.TYPE) && annotation.nargout() == 0)
         {
             throw new LinkingException(method + " has a non-void return type but does not " +
                     "specify the number of return arguments or specified 0.");
         }
-
-        //If void return type then nargout must be 0
-        if(returnType.equals(Void.TYPE) && annotation.nargout() != 0)
+        
+        //The types of the returns, does not need to be specified unless the return type is a subclass of MatlabReturnN
+        Class<?>[] annotatedReturns = annotation.returnTypes();
+        
+        //If return types were specified
+        if(annotatedReturns.length != 0)
         {
-            throw new LinkingException(method + " has a void return type but has a non-zero nargout [" +
-                    annotation.nargout() + "] value");
+            if(!(MatlabReturnN.class.isAssignableFrom(methodReturn) || Object[].class.equals(methodReturn)))
+            {
+                throw new LinkingException(method + " has annotated return types but provides an incompatible method " +
+                        "return type. The method's return type must either be Object[] or a MatlabReturnN class " + 
+                        "where N is an integer.");
+            }
+            
+            if(annotatedReturns.length != annotation.nargout())
+            {
+                throw new LinkingException(method + " has a differing amount of return arguments specified by " +
+                        "nargout and the number of annotated return types.\n" +
+                        "nargout: " + annotation.nargout() + "\n" +
+                        "number of annotated return types: " + annotatedReturns.length);
+            }
+            
+            for(Class<?> type : annotatedReturns)
+            {
+                if(type.isPrimitive())
+                {
+                    throw new LinkingException(method + " has annotated a primitive return type. Primitive types are " +
+                            "not supported");
+                }
+            }
         }
-
-        //If multiple values are returned, the return type must be an array
-        if(annotation.nargout() > 1 && !returnType.isArray())
+        
+        //If using a MatlabReturnN subclass as a return type
+        if(MatlabReturnN.class.isAssignableFrom(methodReturn))
         {
-            throw new LinkingException(method + " must have a return type of an array");
+            int numReturns = MatlabReturns.getNumberOfReturns((Class<? extends MatlabReturnN>) methodReturn);
+            
+            if(annotatedReturns.length != numReturns)
+            {
+                throw new LinkingException(method + " has a return type for " + numReturns + " return arguments, " +
+                        "but has " + annotatedReturns.length + " return types annotated");
+            }
+            
+            if(numReturns != annotation.nargout())
+            {
+                throw new LinkingException(method + " has a return type for " + numReturns  + " return arguments, " +
+                        "but specifies an nargout of " + annotation.nargout());
+            }
         }
+        //Otherwise if multiple return values, the return type must be an array
+        else if(annotation.nargout() > 1 && !methodReturn.isArray())
+        {
+            throw new LinkingException(method + " must have a return type of an array or MatlabReturnN where N is an " +
+                    "integer");
+        }
+    }
+    
+    //Only to be called after checkMethodReturn(...) has been called
+    private static Class<?>[] getReturnTypes(Method method, MatlabFunctionInfo annotation)
+    {
+        Class<?>[] returnTypes;
+        
+        Class<?> methodReturn = method.getReturnType();
+        Class<?>[] annotatedReturns = annotation.returnTypes();
+        
+        //For 0 or 1 return types, the return type is the method return type
+        if(annotation.nargout() == 0 || annotation.nargout() == 1)
+        {
+            returnTypes = new Class<?>[] { methodReturn };
+        }
+        //If no annotated return types then the method return type is an array and each return type is the component type
+        else if(annotatedReturns.length == 0)
+        {
+            Class<?> componentType = methodReturn.getComponentType();
+            returnTypes = new Class<?>[annotation.nargout()];
+            for(int i = 0; i < returnTypes.length; i++)
+            {
+                returnTypes[i] = componentType;
+            }
+        }
+        //Otherwise the return types are the annotated returns
+        else
+        {
+            returnTypes = annotatedReturns;
+        }
+        
+        return returnTypes;
     }
     
     private static void checkMethodExceptions(Method method)
@@ -500,8 +590,8 @@ public class MatlabFunctionLinker
         {   
             ResolvedFunctionInfo functionInfo = _functionsInfo.get(method);
             
+            //Invoke the function
             Object[] functionResult;
-            
             if(functionInfo.usesMatlabTypes)
             {
                 //Replace all MatlabTypes with their serialized setters
@@ -535,22 +625,13 @@ public class MatlabFunctionLinker
                 functionResult = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
             }
             
-            //If the method is using return type inference
-            Object result;
-            Class<?> returnType = method.getReturnType();
-            if(!returnType.equals(Object[].class))
-            {
-                result = convertReturnType(functionResult, returnType);
-            }
-            else
-            {
-                result = functionResult;
-            }
+            //Process the result
+            Object result = convertReturnType(functionResult, functionInfo.returnTypes, method.getReturnType()); 
             
             return result;
         }
         
-        private Object convertReturnType(Object[] result, Class<?> returnType)
+        private Object convertReturnType(Object[] result, Class<?>[] returnTypes, Class<?> methodReturn)
         {
             Object toReturn;
             
@@ -560,26 +641,42 @@ public class MatlabFunctionLinker
             }
             else if(result.length == 1)
             {
-                toReturn = coerceToType(result[0], returnType);
+                toReturn = convertToType(result[0], returnTypes[0]);
             }
             else
             {
-                Class<?> componentType = returnType.getComponentType();
-                Object newValuesArray = Array.newInstance(returnType.getComponentType(), result.length);
+                Object newValuesArray;
+                if(methodReturn.isArray())
+                {
+                    newValuesArray = Array.newInstance(methodReturn.getComponentType(), result.length);
+                }
+                else
+                {
+                    newValuesArray = new Object[result.length];
+                }
+                
                 for(int i = 0; i < result.length; i++)
                 {
                     if(result[i] != null)
                     {
-                        Array.set(newValuesArray, i, coerceToType(result[i], componentType));
+                        Array.set(newValuesArray, i, convertToType(result[i], returnTypes[i]));
                     }
                 }
-                toReturn = newValuesArray;
+                
+                if(MatlabReturnN.class.isAssignableFrom(methodReturn))
+                {
+                    toReturn = MatlabReturns.createMatlabReturn((Object[]) newValuesArray);
+                }
+                else
+                {
+                    toReturn = newValuesArray;
+                }
             }
             
             return toReturn;
         }
         
-        private Object coerceToType(Object value, Class<?> returnType)
+        private Object convertToType(Object value, Class<?> returnType)
         {
             Object toReturn;
             if(value == null)
@@ -594,9 +691,10 @@ public class MatlabFunctionLinker
             {
                 if(!returnType.isAssignableFrom(value.getClass()))
                 {
-                    throw new IncompatibleReturnException("Required return type [" + returnType.getCanonicalName() +
-                            "] is incompatible with type returned from MATLAB [" + value.getClass().getCanonicalName() +
-                            "].");
+                    throw new IncompatibleReturnException("Required return type is incompatible with the type " +
+                            "actually returned\n" +
+                            "Required type: " + returnType.getCanonicalName() + "\n" +
+                            "Returned type: " + value.getClass().getCanonicalName());
                 }
                 
                 toReturn = value;
@@ -655,8 +753,10 @@ public class MatlabFunctionLinker
             }
             else
             {
-                throw new IncompatibleReturnException("Required return type [" + returnType.getCanonicalName() + "] " +
-                        "is incompatible with the type returned from MATLAB [" + actualType.getCanonicalName() + "].");
+                throw new IncompatibleReturnException("Required return type is incompatible with the type actually " +
+                        "returned\n" +
+                        "Required type: " + returnType.getCanonicalName() + "\n" +
+                        "Returned type: " + actualType.getCanonicalName());
             }
             
             return result;
@@ -751,7 +851,26 @@ public class MatlabFunctionLinker
                 proxy.eval(functionStr);
                 
                 //Get the results
-                Object[] results;
+                Object[] results = new Object[_functionInfo.nargout];
+                
+                for(int i = 0; i < results.length; i++)
+                {
+                    Class<?> returnType = _functionInfo.returnTypes[i];
+                    String returnName = returnNames[i];
+                    
+                    if(MatlabType.class.isAssignableFrom(returnType))
+                    {
+                        MatlabTypeSerializedGetter getter =
+                                MatlabType.createSerializedGetter((Class<? extends MatlabType>) returnType);
+                        getter.getInMatlab(proxy, returnName);
+                        results[i] = getter;
+                    }
+                    else
+                    {
+                        results[i] = proxy.getVariable(returnName);
+                    }
+                }
+                /*
                 if(MatlabType.class.isAssignableFrom(_functionInfo.returnType) ||
                    (_functionInfo.returnType.isArray() &&
                     MatlabType.class.isAssignableFrom(_functionInfo.returnType.getComponentType())))
@@ -786,6 +905,8 @@ public class MatlabFunctionLinker
                 {
                     results = new Object[0];
                 }
+                 * 
+                 */
                 
                 return results;
             }
