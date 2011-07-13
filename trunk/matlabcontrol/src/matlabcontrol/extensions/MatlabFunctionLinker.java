@@ -508,9 +508,12 @@ public class MatlabFunctionLinker
                 //Replace all MatlabTypes with their serialized setters
                 for(int i = 0; i < args.length; i++)
                 {
-                    MatlabType matlabType = (MatlabType) args[i];
-                    MatlabType.MatlabTypeSerializedSetter setter = matlabType.getSerializedSetter();
-                    args[i] = setter;
+                    if(args[i] instanceof MatlabType)
+                    {
+                        MatlabType matlabType = (MatlabType) args[i];
+                        MatlabType.MatlabTypeSerializedSetter setter = matlabType.getSerializedSetter();
+                        args[i] = setter;
+                    }
                 }
                 
                 functionResult = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
