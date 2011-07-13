@@ -60,7 +60,8 @@ public @interface MatlabFunctionInfo
      * The relative path to the MATLAB function's m-file. The path is relative to the root directory of the interface
      * which contains the annotated method. For example if the interface is {@code com.example.MyInterface} located
      * at {@code /projects/code/numera/com/example/MyInterface.java} then path will be resolved relative to
-     * {@code /projects/code/numera/}. Th
+     * {@code /projects/code/numera/}. This path can be resolved properly when both the interface and m-file are inside
+     * of a jar.
      * <br><br>
      * If this element is specified, then {@code name} and {@code absolutePath} cannot also be specified.
      * 
@@ -69,15 +70,8 @@ public @interface MatlabFunctionInfo
     String relativePath() default "";
     
     /**
-     * The number of arguments to be returned from the function. This element does not need to be set, but if it is not
-     * then the method must have a {@code void} return type. This element may not be negative.
-     * 
-     * @return 
-     */
-    int nargout() default 0;
-    
-    /**
-     * The types of the values to be returned.
+     * The types of the values to be returned. To have a function return 2 or more arguments this element must be used.
+     * When 0 or 1 arguments are to be returned this element should not be used.
      * 
      * @return 
      */
