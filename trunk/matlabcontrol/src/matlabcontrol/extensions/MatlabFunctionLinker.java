@@ -71,34 +71,73 @@ public class MatlabFunctionLinker
     {
         if(!functionInterface.isInterface())
         {
-            throw new LinkingException(functionInterface.getName() + " is not an interface");
+            throw new LinkingException(functionInterface.getCanonicalName() + " is not an interface");
         }
         
-        //Information about the functions
-        Map<Method, ResolvedFunctionInfo> functionsInfo = new ConcurrentHashMap<Method, ResolvedFunctionInfo>();
+        //Maps each method to information about the function and method
+        Map<Method, InvocationInfo> resolvedInfo = new ConcurrentHashMap<Method, InvocationInfo>();
         
         //Validate and retrieve information about all of the methods in the interface
         for(Method method : functionInterface.getMethods())
         {
             MatlabFunctionInfo annotation = method.getAnnotation(MatlabFunctionInfo.class);
             
-            //Check that all invariants are held
-            checkMethodAnnotation(method, annotation);
-            checkMethodReturn(method, annotation);
-            checkMethodExceptions(method);
+            if(annotation == null)
+            {
+                throw new LinkingException(method + " is not annotated with " + 
+                        MatlabFunctionInfo.class.getCanonicalName());
+            }
             
-            functionsInfo.put(method, resolveMatlabFunctionInfo(functionInterface, method, annotation));
+            if(!Arrays.asList(method.getExceptionTypes()).contains(MatlabInvocationException.class))
+            {
+                throw new LinkingException(method + " does not throw " +
+                        MatlabInvocationException.class.getCanonicalName());
+            }
+            
+            //Build information about how to invoke the method, performing validation in the process
+            FunctionInfo functionInfo = getFunctionInfo(method, annotation);
+            Class<?>[] returnTypes = getReturnTypes(method, annotation);
+            Class<?>[] parameterTypes = method.getParameterTypes();
+            boolean usesMatlabTypes = usesMatlabTypes(returnTypes, parameterTypes);
+            InvocationInfo invocationInfo = new InvocationInfo(functionInfo.name, functionInfo.containingDirectory,
+                    returnTypes, parameterTypes, usesMatlabTypes);
+            resolvedInfo.put(method, invocationInfo);
         }
         
         T functionProxy = (T) Proxy.newProxyInstance(functionInterface.getClassLoader(),
-                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy, functionsInfo));
+                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy, resolvedInfo));
         
         return functionProxy;
     }
     
-    private static ResolvedFunctionInfo resolveMatlabFunctionInfo(Class<?> functionInterface, Method method,
-            MatlabFunctionInfo annotation)
+    private static class FunctionInfo
     {
+        final String name;
+        final String containingDirectory;
+        
+        public FunctionInfo(String name, String containingDirectory)
+        {
+            this.name = name;
+            this.containingDirectory = containingDirectory;
+        }
+    }
+    
+    private static FunctionInfo getFunctionInfo(Method method, MatlabFunctionInfo annotation)
+    {           
+        //Verify exactly one of name, absolutePath, and relativePath has been specified
+        boolean hasName = !annotation.name().isEmpty();
+        boolean hasAbsolutePath = !annotation.absolutePath().isEmpty();
+        boolean hasRelativePath = !annotation.relativePath().isEmpty();
+        if( (hasName && (hasAbsolutePath || hasRelativePath)) ||
+            (hasAbsolutePath && (hasName || hasRelativePath)) ||
+            (hasRelativePath && (hasAbsolutePath || hasName)) ||
+            (!hasName && !hasAbsolutePath && !hasRelativePath) )
+        {
+            throw new LinkingException(method + "'s annotation must specify either a function name, an absolute " +
+                    "path, or a relative path. It must specify exactly one.");
+        }
+        
+        //Determine the function's name and if applicable, the directory the function is located in
         String functionName;
         String containingDirectory;
 
@@ -123,44 +162,34 @@ public class MatlabFunctionLinker
             {
                 path = annotation.relativePath();
                 
-                File interfaceLocation = getClassLocation(functionInterface);
+                File interfaceLocation = getClassLocation(method.getDeclaringClass());
                 try
                 {   
                     //If this line succeeds then, then the interface is inside of a jar, so the m-file is as well
                     JarFile jar = new JarFile(interfaceLocation);
 
-                    try
-                    {
-                        JarEntry entry = jar.getJarEntry(annotation.relativePath());
+                    JarEntry entry = jar.getJarEntry(annotation.relativePath());
 
-                        if(entry == null)
-                        {
-                             throw new LinkingException("Unable to find m-file inside of jar\n" +
+                    if(entry == null)
+                    {
+                         throw new LinkingException("Unable to find m-file inside of jar\n" +
+                            "method: " + method.getName() + "\n" +
+                            "path: " + annotation.relativePath() + "\n" +
+                            "jar location: " + interfaceLocation.getAbsolutePath());
+                    }
+
+                    String entryName = entry.getName();
+                    if(!entryName.endsWith(".m"))
+                    {
+                        throw new LinkingException("Specified m-file does not end in .m\n" +
                                 "method: " + method.getName() + "\n" +
                                 "path: " + annotation.relativePath() + "\n" +
                                 "jar location: " + interfaceLocation.getAbsolutePath());
-                        }
-
-                        String entryName = entry.getName();
-                        if(!entryName.endsWith(".m"))
-                        {
-                            throw new LinkingException("Specified m-file does not end in .m\n" +
-                                    "method: " + method.getName() + "\n" +
-                                    "path: " + annotation.relativePath() + "\n" +
-                                    "jar location: " + interfaceLocation.getAbsolutePath());
-                        }
-
-                        functionName = entryName.substring(entryName.lastIndexOf("/") + 1, entryName.length() - 2);
-                        mFile = extractFromJar(jar, entry, functionName);
-                        jar.close();
                     }
-                    catch(IOException e)
-                    {
-                        throw new LinkingException("Unable to extract m-file from jar\n" +
-                                "method: " + method.getName() + "\n" +
-                                "path: " + annotation.relativePath() + "\n" +
-                                "jar location: " + interfaceLocation, e);
-                    }
+
+                    functionName = entryName.substring(entryName.lastIndexOf("/") + 1, entryName.length() - 2);
+                    mFile = extractFromJar(jar, entry, functionName, method, interfaceLocation, annotation);
+                    jar.close();
                 }
                 //Interface is not located inside a jar, so neither is the m-file
                 catch(IOException e)
@@ -210,158 +239,87 @@ public class MatlabFunctionLinker
             functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
         }
         
-        //Return type information
-        Class<?>[] returnTypes = getReturnTypes(method, annotation);
-        int nargout;
-        if(returnTypes.length == 1)
-        {
-            if(returnTypes[0].equals(Void.TYPE))
-            {
-                nargout = 0;
-            }
-            else
-            {
-                nargout = 1;
-            }
-        }
-        else
-        {
-            nargout = returnTypes.length;
-        }
-        
-        ResolvedFunctionInfo info = new ResolvedFunctionInfo(functionName, containingDirectory,
-                nargout, returnTypes, method.getParameterTypes());
-
-        return info;
-    }
-    
-    private static File extractFromJar(JarFile jar, JarEntry entry, String functionName) throws IOException
-    {
-        //Source
-        InputStream entryStream = jar.getInputStream(entry);
-
-        //Destination
-        File tempDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
-        File destFile = new File(tempDir, functionName + ".m");
-        if(destFile.exists())
-        {
-            throw new IOException("Unable to extract m-file, randomly generated path already defined\n" +
-                    "function: " + functionName + "\n" +
-                    "generated path: " + destFile.getAbsolutePath());
-        }
-        destFile.getParentFile().mkdirs();
-        destFile.deleteOnExit();
-
-        //Copy source to destination
-        final int BUFFER_SIZE = 2048;
-        byte[] buffer = new byte[BUFFER_SIZE];
-        BufferedOutputStream dest = new BufferedOutputStream(new FileOutputStream(destFile), BUFFER_SIZE);
-        int count;
-        while((count = entryStream.read(buffer, 0, BUFFER_SIZE)) != -1)
-        {
-           dest.write(buffer, 0, count);
-        }
-        dest.flush();
-        dest.close();
-
-        return destFile;
+        return new FunctionInfo(functionName, containingDirectory);
     }
     
     /**
-     * A simple holder of information which closely matches {@link MatlabFunctionInfo}. However, it further resolves
-     * the information provider by users of {@code MatlabFunctionInfo}.
+     * Extracts the {@code entry} belonging to {@code jar} to a file named {@code functionName}.m that is placed in
+     * the directory specified by the property {@code java.io.tmpdir}. It is not placed directly in that directory, but
+     * instead inside a directory with a randomly generated name. The file is deleted upon JVM termination.
+     * 
+     * @param jar
+     * @param entry
+     * @param functionName
+     * @param method  used only for exception message
+     * @param interfaceLocation  used only for exception message
+     * @param annotation   used only for exception message
+     * @return
+     * @throws LinkingException 
      */
-    private static class ResolvedFunctionInfo implements Serializable
+    private static File extractFromJar(JarFile jar, JarEntry entry, String functionName,
+            Method method, File interfaceLocation, MatlabFunctionInfo annotation)
     {
-        /**
-         * The name of the function.
-         */
-        final String name;
-        
-        /**
-         * Number of return arguments.
-         */
-        final int nargout;
-        
-        /**
-         * The types of each returned argument. The length of this array will always match nargout.
-         */
-        final Class<?>[] returnTypes;
-        
-        /**
-         * The directory containing the function. Will be {@code null} if the function has been specified as being on
-         * MATLAB's path.
-         */
-        final String containingDirectory;
-        
-        /**
-         * If the method is making uses of classes as either a return value or parameters which are to be specially
-         * handled so that they interact with MATLAB differently.
-         */
-        final boolean usesMatlabTypes;
-        
-        /**
-         * The declared types of the arguments of the method associated with the function.
-         */
-        final Class<?>[] parameterTypes;
-        
-        private ResolvedFunctionInfo(String name, String containingDirectory, int nargout, Class<?>[] returnTypes,
-                Class<?>[] parameterTypes)
+        try
         {
-            this.name = name;
-            this.nargout = nargout;
-            this.containingDirectory = containingDirectory;
-            this.returnTypes = returnTypes;
-            this.parameterTypes = parameterTypes;
-            
-            this.usesMatlabTypes = usesMatlabTypes(returnTypes, parameterTypes);
-        }
-        
-        private static boolean usesMatlabTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
-        {
-            boolean usesMatlabTypes = false;
+            //Source
+            InputStream entryStream = jar.getInputStream(entry);
 
-            List<Class<?>> types = new ArrayList<Class<?>>();
-            types.addAll(Arrays.asList(returnTypes));
-            types.addAll(Arrays.asList(parameterTypes));
-
-            for(Class<?> type : types)
+            //Destination
+            File tempDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
+            File destFile = new File(tempDir, functionName + ".m");
+            if(destFile.exists())
             {
-                if(MatlabType.class.isAssignableFrom(type))
-                {
-                    usesMatlabTypes = true;
-                    break;
-                }
+                throw new LinkingException("Unable to extract m-file, randomly generated path already defined\n" +
+                        "method: " + method + "\n" +
+                        "function: " + functionName + "\n" +
+                        "generated path: " + destFile.getAbsolutePath());
             }
+            destFile.getParentFile().mkdirs();
+            destFile.deleteOnExit();
 
-            return usesMatlabTypes;
+            //Copy source to destination
+            final int BUFFER_SIZE = 2048;
+            byte[] buffer = new byte[BUFFER_SIZE];
+            BufferedOutputStream dest = new BufferedOutputStream(new FileOutputStream(destFile), BUFFER_SIZE);
+            int count;
+            while((count = entryStream.read(buffer, 0, BUFFER_SIZE)) != -1)
+            {
+               dest.write(buffer, 0, count);
+            }
+            dest.flush();
+            dest.close();
+
+            return destFile;
+        }
+        catch(IOException e)
+        {
+            throw new LinkingException("Unable to extract m-file from jar\n" +
+                "method: " + method.getName() + "\n" +
+                "path: " + annotation.relativePath() + "\n" +
+                "jar location: " + interfaceLocation.getAbsolutePath(), e);
         }
     }
     
-    private static void checkMethodAnnotation(Method method, MatlabFunctionInfo annotation)
+    private static File getClassLocation(Class<?> clazz)
     {
-        if(annotation == null)
+        try
         {
-            throw new LinkingException(method + " does not have a " + MatlabFunctionInfo.class.getName() +
-                    " annotation.");
+            URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+            File file = new File(url.toURI().getPath()).getCanonicalFile();
+            
+            return file;
         }
-        
-        //Verify exactly one of name, absolutePath, and relativePath has been specified
-        boolean hasName = !annotation.name().isEmpty();
-        boolean hasAbsolutePath = !annotation.absolutePath().isEmpty();
-        boolean hasRelativePath = !annotation.relativePath().isEmpty();
-        if( (hasName && (hasAbsolutePath || hasRelativePath)) ||
-            (hasAbsolutePath && (hasName || hasRelativePath)) ||
-            (hasRelativePath && (hasAbsolutePath || hasName)) ||
-            (!hasName && !hasAbsolutePath && !hasRelativePath) )
+        catch(IOException e)
         {
-            throw new LinkingException(method + "'s " + MatlabFunctionInfo.class.getName() + " annotation must " +
-                    "specify either a function name, an absolute path, or a relative path. It must specify exactly " +
-                    "one.");
+            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+        }
+        catch(URISyntaxException e)
+        {
+            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
         }
     }
     
-    private static void checkMethodReturn(Method method, MatlabFunctionInfo annotation)
+    private static Class<?>[] getReturnTypes(Method method, MatlabFunctionInfo annotation)
     {
         //The return type of the method
         Class<?> methodReturn = method.getReturnType();
@@ -369,9 +327,25 @@ public class MatlabFunctionLinker
         //The types to be returned from the MATLAB function
         Class<?>[] annotatedReturns = annotation.returnTypes();
         
-        //Return types provided
-        if(annotatedReturns.length != 0)
+        //The return types to be determined
+        Class<?>[] returnTypes;
+        
+        //Use method's return type
+        if(annotatedReturns.length == 0)
         {
+            if(method.getReturnType().equals(Void.TYPE))
+            {
+                returnTypes = new Class<?>[0];
+            }
+            else
+            {
+                returnTypes = new Class<?>[] { method.getReturnType() };
+            }
+        }
+        //Use annotated returns
+        else
+        {
+            //Validate the data
             if(methodReturn.isArray())
             {
                 //Check that the array return type can hold all of the annotated return types
@@ -404,52 +378,74 @@ public class MatlabFunctionLinker
                         "return type. The method's return type must either be an array or a MatlabReturN class where " +
                         "N is an integer");
             }
-        }
-    }
-    
-    //Only to be called after checkMethodReturn(...) has been called
-    private static Class<?>[] getReturnTypes(Method method, MatlabFunctionInfo annotation)
-    {
-        Class<?>[] annotatedReturns = annotation.returnTypes();
-        
-        Class<?>[] returnTypes;
-        if(annotatedReturns.length == 0)
-        {
-            returnTypes = new Class<?>[] { method.getReturnType() };
-        }
-        else
-        {
-            returnTypes = annotatedReturns;
+            
+            //Return types are the annotated types
+            returnTypes = annotation.returnTypes();
         }
         
         return returnTypes;
     }
     
-    private static void checkMethodExceptions(Method method)
+    private static boolean usesMatlabTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
     {
-        //Check the method throws MatlabInvocationException
-        if(!Arrays.asList(method.getExceptionTypes()).contains(MatlabInvocationException.class))
+        boolean usesMatlabTypes = false;
+
+        List<Class<?>> types = new ArrayList<Class<?>>();
+        types.addAll(Arrays.asList(returnTypes));
+        types.addAll(Arrays.asList(parameterTypes));
+
+        for(Class<?> type : types)
         {
-            throw new LinkingException(method.getName() + " must throw " + MatlabInvocationException.class);
+            if(MatlabType.class.isAssignableFrom(type))
+            {
+                usesMatlabTypes = true;
+                break;
+            }
         }
+
+        return usesMatlabTypes;
     }
     
-    private static File getClassLocation(Class<?> clazz)
+    /**
+     * A holder of information about the Java method and the associated MATLAB function.
+     */
+    private static class InvocationInfo implements Serializable
     {
-        try
+        /**
+         * The name of the function.
+         */
+        final String name;
+        
+        /**
+         * The directory containing the function. This is an absolute path to an m-file on the system, never inside of
+         * a compressed file such as a jar. {@code null} if the function is (supposed to be) on MATLAB's path.
+         */
+        final String containingDirectory;
+        
+        /**
+         * The types of each returned argument. The length of this array is the nargout to call the function with.
+         */
+        final Class<?>[] returnTypes;
+        
+        /**
+         * The declared types of the arguments of the method associated with the function.
+         */
+        final Class<?>[] parameterTypes;
+        
+        /**
+         * If any of {@link #returnTypes} or {@link #parameterTypes} is a subclass of {@link MatlabType}s.
+         */
+        final boolean usesMatlabTypes;
+        
+        private InvocationInfo(String name, String containingDirectory,
+                Class<?>[] returnTypes, Class<?>[] parameterTypes, boolean usesMatlabTypes)
         {
-            URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
-            File file = new File(url.toURI().getPath()).getCanonicalFile();
+            this.name = name;
+            this.containingDirectory = containingDirectory;
             
-            return file;
-        }
-        catch(IOException e)
-        {
-            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
-        }
-        catch(URISyntaxException e)
-        {
-            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+            this.returnTypes = returnTypes;
+            this.parameterTypes = parameterTypes;
+            this.usesMatlabTypes = usesMatlabTypes;
         }
     }
     
@@ -481,9 +477,9 @@ public class MatlabFunctionLinker
     private static class MatlabFunctionInvocationHandler implements InvocationHandler
     {
         private final MatlabProxy _proxy;
-        private final Map<Method, ResolvedFunctionInfo> _functionsInfo;
+        private final Map<Method, InvocationInfo> _functionsInfo;
         
-        private MatlabFunctionInvocationHandler(MatlabProxy proxy, Map<Method, ResolvedFunctionInfo> functionsInfo)
+        private MatlabFunctionInvocationHandler(MatlabProxy proxy, Map<Method, InvocationInfo> functionsInfo)
         {
             _proxy = proxy;
             _functionsInfo = functionsInfo;
@@ -492,50 +488,45 @@ public class MatlabFunctionLinker
         @Override
         public Object invoke(Object o, Method method, Object[] args) throws MatlabInvocationException
         {   
-            ResolvedFunctionInfo functionInfo = _functionsInfo.get(method);
+            InvocationInfo functionInfo = _functionsInfo.get(method);
             
             //Invoke the function
-            Object[] functionResult;
+            Object[] returnValues;
             if(functionInfo.usesMatlabTypes)
             {
-                //Replace all MatlabTypes with their serialized setters
+                //Replace all arguments with parameters of a MatlabType subclass with their serialized setters
+                //(This intentionally means that if the declared type is not a MatlabType but the actual argument is
+                //that it will not be transformed. This makes the behavior consistent with explication declaration for
+                //return types.)
                 for(int i = 0; i < args.length; i++)
                 {
-                    if(args[i] instanceof MatlabType)
+                    if(args[i] != null && MatlabType.class.isAssignableFrom(functionInfo.parameterTypes[i]))
                     {
-                        MatlabType matlabType = (MatlabType) args[i];
-                        MatlabType.MatlabTypeSerializedSetter setter = matlabType.getSerializedSetter();
-                        args[i] = setter;
+                        args[i] = ((MatlabType) args[i]).getSerializedSetter();
                     }
                 }
                 
-                functionResult = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
+                returnValues = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
                 
-                //For each returned value that was serialized getter, deserialize it
-                Object[] transformedResult = new Object[functionResult.length];
-                for(int i = 0; i < functionResult.length; i++)
+                //For each returned value that is a serialized getter, deserialize it
+                for(int i = 0; i < returnValues.length; i++)
                 {
-                    Object result = functionResult[i];
-                    if(result instanceof MatlabTypeSerializedGetter)
+                    if(returnValues[i] instanceof MatlabTypeSerializedGetter)
                     {
-                        result = ((MatlabType.MatlabTypeSerializedGetter) result).deserialize();
+                        returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
                     }
-                    transformedResult[i] = result;
                 }
-                functionResult = transformedResult;
             }
             else
             {
-                functionResult = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
+                returnValues = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
             }
             
-            //Process the result
-            Object result = convertReturnType(functionResult, functionInfo.returnTypes, method.getReturnType()); 
-            
-            return result;
+            //Process the returned values
+            return processReturnValues(returnValues, functionInfo.returnTypes, method.getReturnType()); 
         }
         
-        private Object convertReturnType(Object[] result, Class<?>[] returnTypes, Class<?> methodReturn)
+        private Object processReturnValues(Object[] result, Class<?>[] returnTypes, Class<?> methodReturn)
         {
             Object toReturn;
             
@@ -669,10 +660,10 @@ public class MatlabFunctionLinker
     
     private static class CustomFunctionInvocation implements MatlabProxy.MatlabThreadCallable<Object[]>, Serializable
     {
-        private final ResolvedFunctionInfo _functionInfo;
+        private final InvocationInfo _functionInfo;
         private final Object[] _args;
         
-        private CustomFunctionInvocation(ResolvedFunctionInfo functionInfo, Object[] args)
+        private CustomFunctionInvocation(InvocationInfo functionInfo, Object[] args)
         {
             _functionInfo = functionInfo;
             _args = args;
@@ -707,7 +698,7 @@ public class MatlabFunctionLinker
             {
                 //Set all arguments as MATLAB variables and build a function call using those variables
                 String functionStr = _functionInfo.name + "(";
-                parameterNames = generateNames(proxy, "args_", _args.length);
+                parameterNames = generateNames(proxy, "param_", _args.length);
                 for(int i = 0; i < _args.length; i++)
                 {
                     Object arg = _args[i];
@@ -731,9 +722,9 @@ public class MatlabFunctionLinker
                 functionStr += ");";
                 
                 //Return arguments
-                if(_functionInfo.nargout != 0)
+                if(_functionInfo.returnTypes.length != 0)
                 {
-                    returnNames = generateNames(proxy, "return_", _functionInfo.nargout);
+                    returnNames = generateNames(proxy, "return_", _functionInfo.returnTypes.length);
                     String returnStr = "[";
                     for(int i = 0; i < returnNames.length; i++)
                     {
@@ -752,10 +743,9 @@ public class MatlabFunctionLinker
                 //Invoke the function
                 proxy.eval(functionStr);
                 
-                //Get the results
-                Object[] results = new Object[_functionInfo.nargout];
-                
-                for(int i = 0; i < results.length; i++)
+                //Get the return values
+                Object[] returnValues = new Object[_functionInfo.returnTypes.length];
+                for(int i = 0; i < returnValues.length; i++)
                 {
                     Class<?> returnType = _functionInfo.returnTypes[i];
                     String returnName = returnNames[i];
@@ -763,17 +753,17 @@ public class MatlabFunctionLinker
                     if(MatlabType.class.isAssignableFrom(returnType))
                     {
                         MatlabTypeSerializedGetter getter =
-                                MatlabType.createSerializedGetter((Class<? extends MatlabType>) returnType);
+                                MatlabType.newSerializedGetter((Class<? extends MatlabType>) returnType);
                         getter.getInMatlab(proxy, returnName);
-                        results[i] = getter;
+                        returnValues[i] = getter;
                     }
                     else
                     {
-                        results[i] = proxy.getVariable(returnName);
+                        returnValues[i] = proxy.getVariable(returnName);
                     }
                 }
                 
-                return results;
+                return returnValues;
             }
             //Restore MATLAB's state to what it was before the function call happened
             finally
@@ -837,10 +827,10 @@ public class MatlabFunctionLinker
     
     private static class StandardFunctionInvocation implements MatlabProxy.MatlabThreadCallable<Object[]>, Serializable
     {
-        private final ResolvedFunctionInfo _functionInfo;
+        private final InvocationInfo _functionInfo;
         private final Object[] _args;
         
-        private StandardFunctionInvocation(ResolvedFunctionInfo functionInfo, Object[] args)
+        private StandardFunctionInvocation(InvocationInfo functionInfo, Object[] args)
         {
             _functionInfo = functionInfo;
             _args = args;
@@ -872,19 +862,7 @@ public class MatlabFunctionLinker
             //Invoke function
             try
             {
-                Object[] result;
-                
-                if(_functionInfo.nargout == 0)
-                {
-                    proxy.feval(_functionInfo.name, _args);
-                    result = null;
-                }
-                else
-                {
-                    result = proxy.returningFeval(_functionInfo.name, _functionInfo.nargout, _args);
-                }
-            
-                return result;
+                return proxy.returningFeval(_functionInfo.name, _functionInfo.returnTypes.length, _args);
             }
             //If necessary, change back to the directory MATLAB was in before the function was invoked
             finally

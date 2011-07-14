@@ -93,7 +93,7 @@ public class MatlabTypeConverter
     
     private <T extends MatlabType> T getMatlabType(Class<T> type, String variableName) throws MatlabInvocationException
     {
-        MatlabTypeSerializedGetter<T> getter = MatlabType.createSerializedGetter(type);
+        MatlabTypeSerializedGetter<T> getter = MatlabType.newSerializedGetter(type);
         getter = _proxy.invokeAndWait(new GetTypeCallable(getter, variableName));
         
         return getter.deserialize();
