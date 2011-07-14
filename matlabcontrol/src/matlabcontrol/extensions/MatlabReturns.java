@@ -116,7 +116,7 @@ public final class MatlabReturns
         }
     }
     
-    public static class MatlabReturn2<A, B> extends MatlabReturnN
+    public static final class MatlabReturn2<A, B> extends MatlabReturnN
     {
         MatlabReturn2(Object[] values)
         {
@@ -134,7 +134,7 @@ public final class MatlabReturns
         }
     }
     
-    public static class MatlabReturn3<A, B, C> extends MatlabReturnN
+    public static final class MatlabReturn3<A, B, C> extends MatlabReturnN
     {
         MatlabReturn3(Object[] values)
         {
@@ -157,7 +157,7 @@ public final class MatlabReturns
         }
     }
     
-    public static class MatlabReturn4<A, B, C, D> extends MatlabReturnN
+    public static final class MatlabReturn4<A, B, C, D> extends MatlabReturnN
     {
         MatlabReturn4(Object[] values)
         {
@@ -185,7 +185,7 @@ public final class MatlabReturns
         }
     }
     
-    public static class MatlabReturn5<A, B, C, D, E> extends MatlabReturnN
+    public static final class MatlabReturn5<A, B, C, D, E> extends MatlabReturnN
     {
         MatlabReturn5(Object[] values)
         {
@@ -218,7 +218,7 @@ public final class MatlabReturns
         }
     }    
     
-    public static class MatlabReturn6<A, B, C, D, E, F> extends MatlabReturnN
+    public static final class MatlabReturn6<A, B, C, D, E, F> extends MatlabReturnN
     {
         MatlabReturn6(Object[] values)
         {
@@ -253,6 +253,150 @@ public final class MatlabReturns
         public F getSixth()
         {
             return (F) get(5);
+        }
+    }   
+    
+    public static final class MatlabReturn7<A, B, C, D, E, F, G> extends MatlabReturnN
+    {
+        MatlabReturn7(Object[] values)
+        {
+            super(values);
+        }
+        
+        public A getFirst()
+        {
+            return (A) get(0);
+        }
+        
+        public B getSecond()
+        {
+            return (B) get(1);
+        }
+        
+        public C getThird()
+        {
+            return (C) get(2);
+        }
+        
+        public D getFourth()
+        {
+            return (D) get(3);
+        }
+        
+        public E getFifth()
+        {
+            return (E) get(4);
+        }
+        
+        public F getSixth()
+        {
+            return (F) get(5);
+        }
+        
+        public G getSeventh()
+        {
+            return (G) get(6);
+        }
+    }
+    
+    public static final class MatlabReturn8<A, B, C, D, E, F, G, H> extends MatlabReturnN
+    {
+        MatlabReturn8(Object[] values)
+        {
+            super(values);
+        }
+        
+        public A getFirst()
+        {
+            return (A) get(0);
+        }
+        
+        public B getSecond()
+        {
+            return (B) get(1);
+        }
+        
+        public C getThird()
+        {
+            return (C) get(2);
+        }
+        
+        public D getFourth()
+        {
+            return (D) get(3);
+        }
+        
+        public E getFifth()
+        {
+            return (E) get(4);
+        }
+        
+        public F getSixth()
+        {
+            return (F) get(5);
+        }
+        
+        public G getSeventh()
+        {
+            return (G) get(6);
+        }
+        
+        public H getEighth()
+        {
+            return (H) get(7);
+        }
+    }
+    
+    public static final class MatlabReturn9<A, B, C, D, E, F, G, H, I> extends MatlabReturnN
+    {
+        MatlabReturn9(Object[] values)
+        {
+            super(values);
+        }
+        
+        public A getFirst()
+        {
+            return (A) get(0);
+        }
+        
+        public B getSecond()
+        {
+            return (B) get(1);
+        }
+        
+        public C getThird()
+        {
+            return (C) get(2);
+        }
+        
+        public D getFourth()
+        {
+            return (D) get(3);
+        }
+        
+        public E getFifth()
+        {
+            return (E) get(4);
+        }
+        
+        public F getSixth()
+        {
+            return (F) get(5);
+        }
+        
+        public G getSeventh()
+        {
+            return (G) get(6);
+        }
+        
+        public H getEighth()
+        {
+            return (H) get(7);
+        }
+        
+        public I getNinth()
+        {
+            return (I) get(8);
         }
     }
 }

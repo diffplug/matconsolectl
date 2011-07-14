@@ -346,20 +346,7 @@ public class MatlabFunctionLinker
         else
         {
             //Validate the data
-            if(methodReturn.isArray())
-            {
-                //Check that the array return type can hold all of the annotated return types
-                Class<?> arrayType = methodReturn.getComponentType();
-                for(Class<?> annotatedReturn : annotatedReturns)
-                {
-                    if(!arrayType.isAssignableFrom(annotatedReturn))
-                    {
-                        throw new LinkingException(method + "'s return type of " + methodReturn.getCanonicalName() +
-                                " cannot hold the annotated return type " + annotatedReturn.getCanonicalName());
-                    }
-                }
-            }
-            else if(MatlabReturnN.class.isAssignableFrom(methodReturn))
+            if(MatlabReturnN.class.isAssignableFrom(methodReturn))
             {
                 int returnAmount = MatlabReturns.getNumberOfReturns((Class<? extends MatlabReturnN>) methodReturn);
                 if(returnAmount != annotatedReturns.length)
@@ -374,9 +361,8 @@ public class MatlabFunctionLinker
             }
             else
             {
-                throw new LinkingException(method + " has annotated return types but provides an incompatible method " +
-                        "return type. The method's return type must either be an array or a MatlabReturN class where " +
-                        "N is an integer");
+                throw new LinkingException(method + " has annotated return types but does not have a return type of " +
+                        "MatlabReturnN where N is an integer");
             }
             
             //Return types are the annotated types
@@ -529,7 +515,6 @@ public class MatlabFunctionLinker
         private Object processReturnValues(Object[] result, Class<?>[] returnTypes, Class<?> methodReturn)
         {
             Object toReturn;
-            
             if(result.length == 0)
             {
                 toReturn = result;
@@ -540,32 +525,11 @@ public class MatlabFunctionLinker
             }
             else
             {
-                Object newValuesArray;
-                if(methodReturn.isArray())
-                {
-                    newValuesArray = Array.newInstance(methodReturn.getComponentType(), result.length);
-                }
-                else
-                {
-                    newValuesArray = new Object[result.length];
-                }
-                
                 for(int i = 0; i < result.length; i++)
                 {
-                    if(result[i] != null)
-                    {
-                        Array.set(newValuesArray, i, convertToType(result[i], returnTypes[i]));
-                    }
+                    result[i] = convertToType(result[i], returnTypes[i]);
                 }
-                
-                if(MatlabReturnN.class.isAssignableFrom(methodReturn))
-                {
-                    toReturn = MatlabReturns.createMatlabReturn((Object[]) newValuesArray);
-                }
-                else
-                {
-                    toReturn = newValuesArray;
-                }
+                toReturn = MatlabReturns.createMatlabReturn(result);
             }
             
             return toReturn;
@@ -581,6 +545,10 @@ public class MatlabFunctionLinker
             else if(returnType.isPrimitive())
             {
                 toReturn = convertPrimitiveReturnType(value, returnType);
+            }
+            else if(AUTOBOXED_TO_PRIMITIVE_ARRAY.containsKey(returnType))
+            {
+                toReturn = convertAutoboxedReturnType(value, returnType);
             }
             else
             {
@@ -641,7 +609,7 @@ public class MatlabFunctionLinker
                 if(Array.getLength(value) != 1)
                 {
                     throw new IncompatibleReturnException("Array of " + returnType.getCanonicalName() + " does not " +
-                                "have exactly 1 value.");
+                                "have exactly 1 value");
                 }
                 
                 result = Array.get(value, 0);
@@ -650,6 +618,52 @@ public class MatlabFunctionLinker
             {
                 throw new IncompatibleReturnException("Required return type is incompatible with the type actually " +
                         "returned\n" +
+                        "Required type: " + returnType.getCanonicalName() + "\n" +
+                        "Returned type: " + actualType.getCanonicalName());
+            }
+            
+            return result;
+        }
+        
+        private static final Map<Class<?>, Class<?>> AUTOBOXED_TO_PRIMITIVE_ARRAY = new ConcurrentHashMap<Class<?>, Class<?>>();
+        static
+        {
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Byte.class, byte[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Short.class, short[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Integer.class, int[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Long.class, long[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Double.class, double[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Float.class, float[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Boolean.class, boolean[].class);
+            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Character.class, char[].class);
+        }
+        
+        private Object convertAutoboxedReturnType(Object value, Class<?> returnType)
+        {
+            Class<?> actualType = value.getClass();
+            
+            Class<?> primitiveArrayOfReturnType = AUTOBOXED_TO_PRIMITIVE_ARRAY.get(returnType);
+            
+            Object result;
+            if(actualType.equals(returnType))
+            {
+                result = value;
+            }
+            else if(actualType.equals(primitiveArrayOfReturnType))
+            {
+                if(Array.getLength(value) != 1)
+                {
+                    throw new IncompatibleReturnException("Array of " + 
+                            primitiveArrayOfReturnType.getComponentType().getCanonicalName() + " does not have " +
+                            "exactly 1 value");
+                }
+                
+                result = Array.get(value, 0);
+            }
+            else
+            {
+                throw new IncompatibleReturnException("Required return type is incompatible with the type actually " +
+                        "returned\n" + 
                         "Required type: " + returnType.getCanonicalName() + "\n" +
                         "Returned type: " + actualType.getCanonicalName());
             }
