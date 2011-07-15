@@ -34,4 +34,9 @@ public class IncompatibleReturnException extends RuntimeException
     {
         super(msg);
     }
+
+    IncompatibleReturnException(String msg, Throwable cause)
+    {
+        super(msg, cause);
+    }
 }
