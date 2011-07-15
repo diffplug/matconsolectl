@@ -52,7 +52,7 @@ public @interface MatlabFunctionInfo
      *     declared the method being annotated. For example if the interface is {@code com.example.MyInterface} located
      *     at {@code /projects/code/numera/com/example/MyInterface.java} then path will be resolved relative to
      *     {@code /projects/code/numera/}. This path can be resolved properly when both the interface and m-file are
-     *     inside of a jar. The file's existence will be confirmed.</li>
+     *     inside of a zip file such as a jar or war file. The file's existence will be confirmed.</li>
      * </ol>
      * The validity of this element's value will be determined when the interface containing the method being annotated
      * is provided to {@link MatlabFunctionLinker#link(java.lang.Class, matlabcontrol.MatlabProxy)}.
