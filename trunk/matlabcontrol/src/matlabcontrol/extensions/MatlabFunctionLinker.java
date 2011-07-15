@@ -50,12 +50,15 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.extensions.MatlabReturns.MatlabReturnN;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
+import sun.tools.jar.resources.jar;
 
 /**
  *
@@ -157,17 +160,17 @@ public class MatlabFunctionLinker
                 File interfaceLocation = getClassLocation(method.getDeclaringClass());
                 try
                 {   
-                    //If this line succeeds then, then the interface is inside of a jar, so the m-file is as well
-                    JarFile jar = new JarFile(interfaceLocation);
+                    //If this line succeeds then, then the interface is inside of a zip file, so the m-file is as well
+                    ZipFile zip = new ZipFile(interfaceLocation);
 
-                    JarEntry entry = jar.getJarEntry(path);
+                    ZipEntry entry = zip.getEntry(path);
 
                     if(entry == null)
                     {
                          throw new LinkingException("Unable to find m-file inside of jar\n" +
                             "method: " + method.getName() + "\n" +
                             "path: " + path + "\n" +
-                            "jar location: " + interfaceLocation.getAbsolutePath());
+                            "zip file location: " + interfaceLocation.getAbsolutePath());
                     }
 
                     String entryName = entry.getName();
@@ -176,12 +179,12 @@ public class MatlabFunctionLinker
                         throw new LinkingException("Specified m-file does not end in .m\n" +
                                 "method: " + method.getName() + "\n" +
                                 "path: " + path + "\n" +
-                                "jar location: " + interfaceLocation.getAbsolutePath());
+                                "zip file location: " + interfaceLocation.getAbsolutePath());
                     }
 
                     functionName = entryName.substring(entryName.lastIndexOf("/") + 1, entryName.length() - 2);
-                    mFile = extractFromJar(jar, entry, functionName, method, interfaceLocation, annotation);
-                    jar.close();
+                    mFile = extractFromZip(zip, entry, functionName, method, interfaceLocation, annotation);
+                    zip.close();
                 }
                 //Interface is not located inside a jar, so neither is the m-file
                 catch(IOException e)
@@ -260,11 +263,11 @@ public class MatlabFunctionLinker
     }
     
     /**
-     * Extracts the {@code entry} belonging to {@code jar} to a file named {@code functionName}.m that is placed in
+     * Extracts the {@code entry} belonging to {@code zip} to a file named {@code functionName}.m that is placed in
      * the directory specified by the property {@code java.io.tmpdir}. It is not placed directly in that directory, but
      * instead inside a directory with a randomly generated name. The file is deleted upon JVM termination.
      * 
-     * @param jar
+     * @param zip
      * @param entry
      * @param functionName
      * @param method  used only for exception message
@@ -273,13 +276,13 @@ public class MatlabFunctionLinker
      * @return
      * @throws LinkingException 
      */
-    private static File extractFromJar(JarFile jar, JarEntry entry, String functionName,
+    private static File extractFromZip(ZipFile zip, ZipEntry entry, String functionName,
             Method method, File interfaceLocation, MatlabFunctionInfo annotation)
     {
         try
         {
             //Source
-            InputStream entryStream = jar.getInputStream(entry);
+            InputStream entryStream = zip.getInputStream(entry);
 
             //Destination
             File tempDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
@@ -313,7 +316,7 @@ public class MatlabFunctionLinker
             throw new LinkingException("Unable to extract m-file from jar\n" +
                 "method: " + method.getName() + "\n" +
                 "path: " + annotation.value() + "\n" +
-                "jar location: " + interfaceLocation.getAbsolutePath(), e);
+                "zip file location: " + interfaceLocation.getAbsolutePath(), e);
         }
     }
     
