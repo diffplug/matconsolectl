@@ -68,12 +68,4 @@ public @interface MatlabFunctionInfo
      * @return 
      */
     String relativePath() default "";
-    
-    /**
-     * The types of the values to be returned. To have a function return 2 or more arguments this element must be used.
-     * When 0 or 1 arguments are to be returned this element should not be used.
-     * 
-     * @return 
-     */
-    Class[] returnTypes() default {};
 }

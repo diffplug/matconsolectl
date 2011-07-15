@@ -29,9 +29,15 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Proxy;
+import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
+import java.lang.reflect.WildcardType;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -96,7 +102,7 @@ public class MatlabFunctionLinker
             
             //Build information about how to invoke the method, performing validation in the process
             FunctionInfo functionInfo = getFunctionInfo(method, annotation);
-            Class<?>[] returnTypes = getReturnTypes(method, annotation);
+            Class<?>[] returnTypes = getReturnTypes(method);
             Class<?>[] parameterTypes = method.getParameterTypes();
             boolean usesMatlabTypes = usesMatlabTypes(returnTypes, parameterTypes);
             InvocationInfo invocationInfo = new InvocationInfo(functionInfo.name, functionInfo.containingDirectory,
@@ -319,57 +325,169 @@ public class MatlabFunctionLinker
         }
     }
     
-    private static Class<?>[] getReturnTypes(Method method, MatlabFunctionInfo annotation)
+    private static Class<?>[] getReturnTypes(Method method)
     {
-        //The return type of the method
+        //The type-erasured return type of the method
         Class<?> methodReturn = method.getReturnType();
         
-        //The types to be returned from the MATLAB function
-        Class<?>[] annotatedReturns = annotation.returnTypes();
+        //The return type of the method with type information
+        Type genericReturn = method.getGenericReturnType();
         
         //The return types to be determined
         Class<?>[] returnTypes;
         
-        //Use method's return type
-        if(annotatedReturns.length == 0)
+        //0 return arguments
+        if(methodReturn.equals(Void.TYPE))
         {
-            if(method.getReturnType().equals(Void.TYPE))
-            {
-                returnTypes = new Class<?>[0];
-            }
-            else
-            {
-                returnTypes = new Class<?>[] { method.getReturnType() };
-            }
+            returnTypes = new Class<?>[0];
         }
-        //Use annotated returns
-        else
+        //1 return argument
+        else if(!MatlabReturnN.class.isAssignableFrom(methodReturn))
         {
-            //Validate the data
-            if(MatlabReturnN.class.isAssignableFrom(methodReturn))
+            if(!methodReturn.equals(genericReturn))
             {
-                int returnAmount = MatlabReturns.getNumberOfReturns((Class<? extends MatlabReturnN>) methodReturn);
-                if(returnAmount != annotatedReturns.length)
+                throw new LinkingException(method + " may not have a return type that uses generics");
+            }
+            
+            returnTypes = new Class<?>[]{ methodReturn };
+        }
+        else
+        {   
+            if(genericReturn instanceof ParameterizedType)
+            {
+                Type[] parameterizedTypes = ((ParameterizedType) genericReturn).getActualTypeArguments();
+                returnTypes = new Class<?>[parameterizedTypes.length];
+                
+                for(int i = 0; i < parameterizedTypes.length; i++)
                 {
-                    throw new LinkingException(method + " has a differing amount of return arguments specified by " +
-                            "the return type and the number of annotated types\n" +
-                            "Return Type: " + methodReturn.getCanonicalName() + "\n" +
-                            "Return Type Count: " + returnAmount + "\n" +
-                            "Annotated Return Types: " + Arrays.toString(annotatedReturns) + "\n" +
-                            "Annotated Return Types Count: " + annotatedReturns.length);
+                    Type type = parameterizedTypes[i];
+                
+                    if(type instanceof Class)
+                    {
+                        returnTypes[i] = (Class) type;
+                    }
+                    else if(type instanceof GenericArrayType)
+                    {   
+                        returnTypes[i] = getClassOfArrayType((GenericArrayType) type, method);
+                    }
+                    else if(type instanceof ParameterizedType)
+                    {
+                        throw new LinkingException(method + " may not parameterize " + methodReturn.getCanonicalName() +
+                                " with a parameterized type");
+                    }
+                    else if(type instanceof WildcardType)
+                    {
+                        throw new LinkingException(method + " may not parameterize " + methodReturn.getCanonicalName() +
+                                " with a wild card type");
+                    }
+                    else if(type instanceof TypeVariable)
+                    {
+                        throw new LinkingException(method + " may not parameterize " + methodReturn.getCanonicalName() +
+                                " with a generic type");
+                    }
+                    else
+                    {
+                        throw new LinkingException(method + " may not parameterize " + methodReturn.getCanonicalName() +
+                                " with " + type);
+                    }
                 }
             }
             else
             {
-                throw new LinkingException(method + " has annotated return types but does not have a return type of " +
-                        "MatlabReturnN where N is an integer");
+                throw new LinkingException(method + " must parameterize " + methodReturn.getCanonicalName());
             }
-            
-            //Return types are the annotated types
-            returnTypes = annotation.returnTypes();
         }
         
         return returnTypes;
+    }
+    
+    /**
+     * 
+     * @param type
+     * @param method used for exception message only
+     * @return 
+     */
+    private static Class<?> getClassOfArrayType(GenericArrayType type, Method method)
+    {
+        int dimensions = 1;
+        Type componentType = type.getGenericComponentType();
+        while(!(componentType instanceof Class))
+        {
+            dimensions++;
+            if(componentType instanceof GenericArrayType)
+            {
+                componentType = ((GenericArrayType) componentType).getGenericComponentType();
+            }
+            else if(componentType instanceof TypeVariable)
+            {
+                throw new LinkingException(method + " may not parameterize " + 
+                        method.getReturnType().getCanonicalName() + " with a generic array");
+            }
+            else
+            {
+                throw new LinkingException(method + " may not parameterize " + 
+                        method.getReturnType().getCanonicalName() + " with an array of type " + type);
+            }
+        }
+        
+        return getMultidimensionalArrayClass((Class<?>) componentType, dimensions, method);
+    }
+    
+    private static final Map<Class<?>, String> PRIMITIVE_TO_BINARY_NAME = new ConcurrentHashMap<Class<?>, String>();
+    static
+    {
+        PRIMITIVE_TO_BINARY_NAME.put(byte.class, "B");
+        PRIMITIVE_TO_BINARY_NAME.put(short.class, "S");
+        PRIMITIVE_TO_BINARY_NAME.put(int.class, "I");
+        PRIMITIVE_TO_BINARY_NAME.put(long.class, "J");
+        PRIMITIVE_TO_BINARY_NAME.put(float.class, "F");
+        PRIMITIVE_TO_BINARY_NAME.put(double.class, "D");
+        PRIMITIVE_TO_BINARY_NAME.put(boolean.class, "Z");
+        PRIMITIVE_TO_BINARY_NAME.put(char.class, "C");
+    }
+    
+    /**
+     * 
+     * @param componentType
+     * @param dimensions
+     * @param method used for exception message only
+     * @return 
+     */
+    private static Class<?> getMultidimensionalArrayClass(Class<?> componentType, int dimensions, Method method)
+    {
+        String prefix = "";
+        String suffix = "";
+        String body;
+        
+        for(int i = 0; i < dimensions; i++)
+        {
+            prefix += "[";
+        }
+        
+        if(componentType.isPrimitive())
+        {
+            body = PRIMITIVE_TO_BINARY_NAME.get(componentType);
+        }
+        else
+        {
+            prefix += "L";
+            suffix = ";";
+            body = componentType.getName();
+        }
+        
+        String binaryName = prefix + body + suffix;
+        
+        try
+        {
+            return Class.forName(binaryName, false, componentType.getClassLoader());
+        }
+        catch(ClassNotFoundException e)
+        {
+            throw new LinkingException(method + " has a " + dimensions + " dimension array of " +
+                    componentType.getCanonicalName() + " as a parameter of " +
+                    method.getReturnType().getCanonicalName() + " which could be not be created with the binary name " +
+                    binaryName, e);
+        }
     }
     
     private static boolean usesMatlabTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
@@ -523,13 +641,34 @@ public class MatlabFunctionLinker
             {
                 toReturn = convertToType(result[0], returnTypes[0]);
             }
+            //Return type is a subclass of MatlabReturnN
             else
             {
                 for(int i = 0; i < result.length; i++)
                 {
                     result[i] = convertToType(result[i], returnTypes[i]);
                 }
-                toReturn = MatlabReturns.createMatlabReturn(result);
+                
+                try
+                {
+                    toReturn = methodReturn.getDeclaredConstructor(Object[].class).newInstance(new Object[]{ result });
+                }
+                catch(IllegalAccessException e)
+                {
+                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
+                }
+                catch(InstantiationException e)
+                {
+                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
+                }
+                catch(InvocationTargetException e)
+                {
+                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
+                }
+                catch(NoSuchMethodException e)
+                {
+                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
+                }
             }
             
             return toReturn;
