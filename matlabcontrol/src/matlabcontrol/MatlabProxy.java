@@ -131,16 +131,12 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <br><i>Running outside MATLAB</i>
  * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted (likely due to
  *     closing MATLAB).</li>
- * <li>The class of an object to be sent or returned is not {@link java.io.Serializable} or {@link java.rmi.Remote}.
- *     <sup>1</sup> Java primitives and arrays behave as if they were {@code Serializable}.</li>
+ * <li>The class of an object to be sent or returned is not {@link java.io.Serializable} or
+ *     {@link java.rmi.Remote}.<sup>1</sup> Java primitives and arrays behave as if they were {@code Serializable}.</li>
  * <li>The class of an object to be returned from MATLAB is not defined in your application and no
  *     {@link SecurityManager} has been installed.<sup>2</sup></li>
  * <li>The class of an object to sent to MATLAB is not defined in MATLAB and the class is not on your application's
  *     classpath.<sup>3</sup></li>
- * <br><i>Running inside MATLAB</i>
- * <li>The method call is made from the Event Dispatch Thread (EDT) used by AWT and Swing components.<sup>4</sup> (A
- *     {@link matlabcontrol.extensions.CallbackMatlabProxy} may be used to interact with MATLAB on the EDT.) This
- *     does not apply to {@link #exit()} which may be called from the EDT.</li>
  * </ul>
  * <sup>1</sup>This is a requirement of Remote Method Invocation, which matlabcontrol uses when running outside MATLAB.
  * <br><br>
@@ -153,15 +149,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * application's class path as specified by the {@code java.class.path} property. Some frameworks load classes without
  * placing them on the class path, in that case matlabcontrol will not know about them and cannot tell MATLAB how to
  * load them.
- * <br><br>
- * <sup>4</sup> This is done to prevent MATLAB from hanging indefinitely. When interacting with MATLAB the calling
- * thread (unless it is the main MATLAB thread) is paused until MATLAB completes the requested operation. When a thread
- * is paused, no work can be done on the thread. MATLAB makes extensive use of the EDT when creating or manipulating
- * figure windows, uicontrols, plots, and other graphical elements. For instance, calling {@code plot} from the EDT
- * would never return because the {@code plot} function waits for the EDT to dispatch its event, which will never occur,
- * because the thread has been paused. A related, but far less critical issue, is that pausing the EDT would make the
- * user interface of MATLAB and any other Java GUI code running inside MATLAB non-responsive until MATLAB completed
- * evaluating the command.
  * <h3>Thread Safety</h3>
  * This proxy is unconditionally thread-safe. Methods which interact with MATLAB may be called concurrently; however
  * they will be completed sequentially on MATLAB's main thread. Calls to MATLAB from a given thread will be executed in

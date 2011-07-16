@@ -22,8 +22,13 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.awt.AWTEvent;
 import java.awt.EventQueue;
+import java.awt.Toolkit;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
@@ -187,11 +192,7 @@ class JMIWrapper
     {
         T result;
         
-        if(EventQueue.isDispatchThread())
-        {
-            throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException();
-        }
-        else if(NativeMatlab.nativeIsMatlabThread())
+        if(NativeMatlab.nativeIsMatlabThread())
         {
             try
             {
@@ -201,6 +202,88 @@ class JMIWrapper
             {
                 ThrowableWrapper cause = new ThrowableWrapper(e);
                 throw MatlabInvocationException.Reason.RUNTIME_EXCEPTION.asException(cause);
+            }
+        }
+        else if(EventQueue.isDispatchThread())
+        {
+            final AtomicReference<MatlabReturn<T>> returnRef = new AtomicReference<MatlabReturn<T>>();
+            
+            Matlab.whenMatlabIdle(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    MatlabReturn<T> matlabReturn;
+                    
+                    try
+                    {
+                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_INTERACTOR));
+                    }
+                    catch(MatlabInvocationException e)
+                    {
+                        matlabReturn = new MatlabReturn<T>(e);
+                    }
+                    catch(RuntimeException e)
+                    {
+                        ThrowableWrapper cause = new ThrowableWrapper(e);
+                        MatlabInvocationException userCausedException =
+                                MatlabInvocationException.Reason.RUNTIME_EXCEPTION.asException(cause);
+                        matlabReturn = new MatlabReturn<T>(userCausedException);
+                    }
+                    
+                    returnRef.set(matlabReturn);
+                }
+            });
+            
+            //Pump event queue while waiting for MATLAB to complete the computation
+            try
+            {
+                EventQueue eventQueue = Toolkit.getDefaultToolkit().getSystemEventQueue();
+                Method dispatchMethod = EventQueue.class.getDeclaredMethod("dispatchEvent", AWTEvent.class);
+                dispatchMethod.setAccessible(true);
+                while(returnRef.get() == null)
+                {
+                    AWTEvent nextEvent = eventQueue.peekEvent();
+                    if(nextEvent != null)
+                    {
+                        nextEvent = eventQueue.getNextEvent();
+                        dispatchMethod.invoke(eventQueue, nextEvent);
+                    }
+                }
+            }
+            catch(NoSuchMethodException e)
+            {
+                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
+            }
+            catch(InterruptedException e)
+            {
+                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
+            }
+            catch(IllegalAccessException e)
+            {
+                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
+            }
+            catch(IllegalArgumentException e)
+            {
+                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
+            }
+            catch(InvocationTargetException e)
+            {
+                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
+            }
+            
+            //Process return
+            MatlabReturn<T> matlabReturn = returnRef.get();
+            
+            //If exception was thrown, rethrow it
+            if(matlabReturn.exception != null)
+            {
+                throw matlabReturn.exception;
+            }
+            //Return data computed by MATLAB
+            else
+            {
+                result = matlabReturn.data;
             }
         }
         else
