@@ -1,5 +1,7 @@
 package matlabcontrol.extensions;
 
+import java.util.Arrays;
+
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -23,9 +25,9 @@ package matlabcontrol.extensions;
  */
 
 /**
+ * MATLAB return containers.
  *
  * @since 4.1.0
- * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public final class MatlabReturns
@@ -33,14 +35,15 @@ public final class MatlabReturns
     private MatlabReturns() { }
     
     /**
-     * Hidden super class of all of the {@code MatlabReturn}X classes. This class is hidden in part because it is not
-     * a valid return type from a method declared in an interface provided to {@link MatlabFunctionLinker}.
+     * Hidden super class of all of the {@code Return}X classes. This class is hidden because it is not a valid return
+     * type from a method declared in an interface provided to {@link MatlabFunctionLinker} and there is no need for a
+     * user to make use of this class.
      */
-    static class MatlabReturnN
+    static class ReturnN
     {
         private final Object[] _values;
         
-        MatlabReturnN(Object[] values)
+        ReturnN(Object[] values)
         {
             _values = values;
         }
@@ -49,286 +52,246 @@ public final class MatlabReturns
         {
             return _values[i];
         }
+        
+        /**
+         * Returns a brief description of this container. The exact details of this representation are unspecified and
+         * are subject to change.
+         * 
+         * @return 
+         */
+        @Override
+        public String toString()
+        {
+            return "[" + this.getClass().getCanonicalName() +
+                    " size=" + _values.length + "," +
+                    " values=" + Arrays.toString(_values) + "]";
+        }
     }
     
-    public static final class MatlabReturn2<A, B> extends MatlabReturnN
+    /**
+     * Container for two MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     */
+    public static class Return2<A, B> extends ReturnN
     {
-        MatlabReturn2(Object[] values)
+        Return2(Object[] values)
         {
             super(values);
         }
         
+        /**
+         * The first return argument.
+         * 
+         * @return 
+         */
         public A getFirst()
         {
             return (A) get(0);
         }
         
+        /**
+         * The second return argument.
+         * 
+         * @return 
+         */
         public B getSecond()
         {
             return (B) get(1);
         }
     }
     
-    public static final class MatlabReturn3<A, B, C> extends MatlabReturnN
+    /**
+     * Container for three MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     */
+    public static class Return3<A, B, C> extends Return2<A, B>
     {
-        MatlabReturn3(Object[] values)
+        Return3(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
+        /**
+         * The third return argument.
+         * 
+         * @return 
+         */
         public C getThird()
         {
             return (C) get(2);
         }
     }
     
-    public static final class MatlabReturn4<A, B, C, D> extends MatlabReturnN
+    /**
+     * Container for four MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     */
+    public static class Return4<A, B, C, D> extends Return3<A, B, C>
     {
-        MatlabReturn4(Object[] values)
+        Return4(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
+        /**
+         * The fourth return argument.
+         * 
+         * @return 
+         */
         public D getFourth()
         {
             return (D) get(3);
         }
     }
     
-    public static final class MatlabReturn5<A, B, C, D, E> extends MatlabReturnN
+    /**
+     * Container for five MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     * @param <E> fifth return type
+     */
+    public static class Return5<A, B, C, D, E> extends Return4<A, B, C, D>
     {
-        MatlabReturn5(Object[] values)
+        Return5(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
-        public D getFourth()
-        {
-            return (D) get(3);
-        }
-        
+        /**
+         * The fifth return argument.
+         * 
+         * @return 
+         */
         public E getFifth()
         {
             return (E) get(4);
         }
     }    
     
-    public static final class MatlabReturn6<A, B, C, D, E, F> extends MatlabReturnN
+    /**
+     * Container for six MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     * @param <E> fifth return type
+     * @param <F> sixth return type
+     */
+    public static class Return6<A, B, C, D, E, F> extends Return5<A, B, C, D, E>
     {
-        MatlabReturn6(Object[] values)
+        Return6(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
-        public D getFourth()
-        {
-            return (D) get(3);
-        }
-        
-        public E getFifth()
-        {
-            return (E) get(4);
-        }
-        
+        /**
+         * The sixth return argument.
+         * 
+         * @return 
+         */
         public F getSixth()
         {
             return (F) get(5);
         }
     }   
     
-    public static final class MatlabReturn7<A, B, C, D, E, F, G> extends MatlabReturnN
+    /**
+     * Container for seven MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     * @param <E> fifth return type
+     * @param <F> sixth return type
+     * @param <G> seventh return type
+     */
+    public static class Return7<A, B, C, D, E, F, G> extends Return6<A, B, C, D, E, F>
     {
-        MatlabReturn7(Object[] values)
+        Return7(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
-        public D getFourth()
-        {
-            return (D) get(3);
-        }
-        
-        public E getFifth()
-        {
-            return (E) get(4);
-        }
-        
-        public F getSixth()
-        {
-            return (F) get(5);
-        }
-        
+        /**
+         * The seventh return argument.
+         * 
+         * @return 
+         */
         public G getSeventh()
         {
             return (G) get(6);
         }
     }
     
-    public static final class MatlabReturn8<A, B, C, D, E, F, G, H> extends MatlabReturnN
+    /**
+     * Container for eight MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     * @param <E> fifth return type
+     * @param <F> sixth return type
+     * @param <G> seventh return type
+     * @param <H> eight return type
+     */
+    public static class Return8<A, B, C, D, E, F, G, H> extends Return7<A, B, C, D, E, F, G>
     {
-        MatlabReturn8(Object[] values)
+        Return8(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
-        public D getFourth()
-        {
-            return (D) get(3);
-        }
-        
-        public E getFifth()
-        {
-            return (E) get(4);
-        }
-        
-        public F getSixth()
-        {
-            return (F) get(5);
-        }
-        
-        public G getSeventh()
-        {
-            return (G) get(6);
-        }
-        
+        /**
+         * The eight return argument.
+         * 
+         * @return 
+         */
         public H getEighth()
         {
             return (H) get(7);
         }
     }
     
-    public static final class MatlabReturn9<A, B, C, D, E, F, G, H, I> extends MatlabReturnN
+    /**
+     * Container for nine MATLAB return values.
+     * 
+     * @param <A> first return type
+     * @param <B> second return type
+     * @param <C> third return type
+     * @param <D> fourth return type
+     * @param <E> fifth return type
+     * @param <F> sixth return type
+     * @param <G> seventh return type
+     * @param <H> eight return type
+     * @param <I> ninth return type
+     */
+    public static class Return9<A, B, C, D, E, F, G, H, I> extends Return8<A, B, C, D, E, F, G, H>
     {
-        MatlabReturn9(Object[] values)
+        Return9(Object[] values)
         {
             super(values);
         }
         
-        public A getFirst()
-        {
-            return (A) get(0);
-        }
-        
-        public B getSecond()
-        {
-            return (B) get(1);
-        }
-        
-        public C getThird()
-        {
-            return (C) get(2);
-        }
-        
-        public D getFourth()
-        {
-            return (D) get(3);
-        }
-        
-        public E getFifth()
-        {
-            return (E) get(4);
-        }
-        
-        public F getSixth()
-        {
-            return (F) get(5);
-        }
-        
-        public G getSeventh()
-        {
-            return (G) get(6);
-        }
-        
-        public H getEighth()
-        {
-            return (H) get(7);
-        }
-        
+        /**
+         * The ninth argument.
+         * 
+         * @return 
+         */
         public I getNinth()
         {
             return (I) get(8);
