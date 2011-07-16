@@ -48,8 +48,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -58,7 +56,6 @@ import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.extensions.MatlabReturns.MatlabReturnN;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
-import sun.tools.jar.resources.jar;
 
 /**
  *
@@ -89,19 +86,16 @@ public class MatlabFunctionLinker
         //Validate and retrieve information about all of the methods in the interface
         for(Method method : functionInterface.getMethods())
         {
+            //Check method is annotated with function information
             MatlabFunctionInfo annotation = method.getAnnotation(MatlabFunctionInfo.class);
-            
             if(annotation == null)
             {
                 throw new LinkingException(method + " is not annotated with " + 
                         MatlabFunctionInfo.class.getCanonicalName());
             }
             
-            if(!Arrays.asList(method.getExceptionTypes()).contains(MatlabInvocationException.class))
-            {
-                throw new LinkingException(method + " does not throw " +
-                        MatlabInvocationException.class.getCanonicalName());
-            }
+            //Check method can throw MatlabInvocationException
+            checkExceptions(method);
             
             //Build information about how to invoke the method, performing validation in the process
             FunctionInfo functionInfo = getFunctionInfo(method, annotation);
@@ -117,6 +111,25 @@ public class MatlabFunctionLinker
                 new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy, resolvedInfo));
         
         return functionProxy;
+    }
+    
+    private static void checkExceptions(Method method)
+    {
+        boolean assignable = false;
+        Type[] genericExceptions = method.getGenericExceptionTypes();
+        for(Type exception : genericExceptions)
+        {
+            if(exception instanceof Class && ((Class<?>) exception).isAssignableFrom(MatlabInvocationException.class))
+            {
+                assignable = true;
+            }
+        }
+        
+        if(!assignable)
+        {
+            throw new LinkingException(method + " is not capable of throwing " +
+                    MatlabInvocationException.class.getCanonicalName() + " or does so with generics");
+        }
     }
     
     private static class FunctionInfo
