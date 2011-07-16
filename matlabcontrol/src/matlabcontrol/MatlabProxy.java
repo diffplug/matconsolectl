@@ -123,14 +123,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <h3>Exceptions</h3>
  * Proxy methods that are relayed to MATLAB can throw {@link MatlabInvocationException}s. They will be thrown if:
  * <ul>
- * <li>An internal MATLAB exception occurs. This occurs primarily for two different reasons. The first is anything that
- *     would normally cause an error in MATLAB such as trying to use a function improperly or referencing a variable
- *     that does not exist. The second is due to the undocumented nature of the underlying Java MATLAB Interface API,
- *     such as trying to send a {@code long[]} to MATLAB.</li>
  * <li>The proxy has been disconnected via {@link #disconnect()}.</li>
+ * <li>Attempting to do anything that would normally cause an error in MATLAB such as calling a function improperly or
+ *     referencing a variable that does not exist.</li>
+ * <li>The underlying Java MATLAB Interface (JMI) API does not support the operation. For instance, attempting to send
+ *     a {@code long[]} to MATLAB. Due to the undocumented nature of this interface, it is not entirely known what
+ *     actions may result in an exception.</li>
  * <br><i>Running outside MATLAB</i>
- * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted (likely due to
- *     closing MATLAB).</li>
+ * <li>Communication between this Java Virtual Machine and the one that MATLAB is running in is disrupted, most
+ *     commonly due to closing MATLAB.</li>
  * <li>The class of an object to be sent or returned is not {@link java.io.Serializable} or
  *     {@link java.rmi.Remote}.<sup>1</sup> Java primitives and arrays behave as if they were {@code Serializable}.</li>
  * <li>The class of an object to be returned from MATLAB is not defined in your application and no
