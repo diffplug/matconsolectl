@@ -37,13 +37,10 @@ import matlabcontrol.MatlabProxy;
  * not throw {@link MatlabInvocationException}s, but if the proxy throws a {@code MatlabInvocationException} it will be
  * provided to the callback.
  * <br><br>
- * All interactions with the proxy will be done in a single threaded manner. The underlying proxy methods will be
- * completed in the order their corresponding methods in this class were called. Because method invocations on the
- * proxy occur on a separate thread from the one calling the methods in this class, it can be used from within MATLAB on
- * the Event Dispatch Thread (EDT).
- * <br><br>
- * This class is unconditionally thread-safe. There are no guarantees about the relative ordering of method completion
- * when methods are invoked both on an instance of this class and on the proxy provided to it.
+ * This class is unconditionally thread-safe. All interactions with the proxy will be done in a single threaded manner.
+ * The underlying proxy methods will be completed in the order their corresponding methods in this class were called.
+ * There are no guarantees about the relative ordering of method completion when methods are invoked both on an instance
+ * of this class and on the proxy provided to it.
  * 
  * @since 4.0.0
  * 

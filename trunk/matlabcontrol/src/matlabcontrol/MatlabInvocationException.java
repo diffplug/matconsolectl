@@ -41,7 +41,7 @@ public class MatlabInvocationException extends Exception
         MARSHAL("Object attempting to be sent cannot be transferred between Java Virtual Machines"),
         INTERNAL_EXCEPTION("Method did not return properly because of an internal MATLAB exception"),
         NARGOUT_MISMATCH("Number of arguments returned did not match excepted"),
-        EVENT_DISPATCH_THREAD("Method cannot be executed on the Event Dispatch Thread"),
+        EVENT_DISPATCH_THREAD("Issue pumping Event Dispatch Thread"),
         RUNTIME_EXCEPTION("RuntimeException occurred in MatlabThreadCallable, see cause for more information"),
         UNKNOWN("Method could not be invoked for an unknown reason, see cause for more information");
         
