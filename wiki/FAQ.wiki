@@ -40,4 +40,4 @@ No, and there are no plans to add this functionality. However, the code is open 
 
 * Why was matlabcontrol created? *
 
-It was created to allow for a grading program written in Java used by teaching assistants to programmatically control MATLAB in order to open, run, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
+It was created to allow for a grading program written in Java used by teaching assistants to programmatically control MATLAB in order to open, run, test, and close students' MATLAB code assignments. matlabcontrol now has functionality that far exceeds the needs of the grading program.
