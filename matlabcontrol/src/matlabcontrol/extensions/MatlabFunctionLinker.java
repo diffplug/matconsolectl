@@ -54,7 +54,7 @@ import java.util.zip.ZipFile;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.MatlabReturns.MatlabReturnN;
+import matlabcontrol.extensions.MatlabReturns.ReturnN;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
 
 /**
@@ -73,11 +73,16 @@ public class MatlabFunctionLinker
     \**************************************************************************************************************/
     
     
-    public static <T> T link(Class<T> functionInterface, MatlabProxy matlabProxy)
+    public static <T> T link(Class<T> functionInterface, MatlabProxy proxy)
     {
         if(!functionInterface.isInterface())
         {
             throw new LinkingException(functionInterface.getCanonicalName() + " is not an interface");
+        }
+        
+        if(proxy == null)
+        {
+            throw new NullPointerException("proxy may not be null");
         }
         
         //Maps each method to information about the function and method
@@ -101,14 +106,16 @@ public class MatlabFunctionLinker
             FunctionInfo functionInfo = getFunctionInfo(method, annotation);
             Class<?>[] returnTypes = getReturnTypes(method);
             Class<?>[] parameterTypes = method.getParameterTypes();
-            boolean usesMatlabTypes = usesMatlabTypes(returnTypes, parameterTypes);
+            boolean usesSpecialTypes = usesSpecialTypes(returnTypes, parameterTypes);
             InvocationInfo invocationInfo = new InvocationInfo(functionInfo.name, functionInfo.containingDirectory,
-                    returnTypes, parameterTypes, usesMatlabTypes);
+                    returnTypes, parameterTypes, usesSpecialTypes);
             resolvedInfo.put(method, invocationInfo);
+            
+            //System.out.println(method.getName() + " :: " + invocationInfo);
         }
         
         T functionProxy = (T) Proxy.newProxyInstance(functionInterface.getClassLoader(),
-                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(matlabProxy, resolvedInfo));
+                new Class<?>[] { functionInterface }, new MatlabFunctionInvocationHandler(proxy, resolvedInfo));
         
         return functionProxy;
     }
@@ -369,7 +376,7 @@ public class MatlabFunctionLinker
             returnTypes = new Class<?>[0];
         }
         //1 return argument
-        else if(!MatlabReturnN.class.isAssignableFrom(methodReturn))
+        else if(!ReturnN.class.isAssignableFrom(methodReturn))
         {
             if(!methodReturn.equals(genericReturn))
             {
@@ -517,14 +524,14 @@ public class MatlabFunctionLinker
         }
     }
     
-    private static boolean usesMatlabTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
+    private static boolean usesSpecialTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
     {
         boolean usesMatlabTypes = false;
 
+        //If MatlabType subclass
         List<Class<?>> types = new ArrayList<Class<?>>();
         types.addAll(Arrays.asList(returnTypes));
         types.addAll(Arrays.asList(parameterTypes));
-
         for(Class<?> type : types)
         {
             if(MatlabType.class.isAssignableFrom(type))
@@ -532,6 +539,12 @@ public class MatlabFunctionLinker
                 usesMatlabTypes = true;
                 break;
             }
+        }
+        
+        //If a return type is Void
+        if(Arrays.asList(returnTypes).contains(Void.class))
+        {
+            usesMatlabTypes = true;
         }
 
         return usesMatlabTypes;
@@ -564,19 +577,30 @@ public class MatlabFunctionLinker
         final Class<?>[] parameterTypes;
         
         /**
-         * If any of {@link #returnTypes} or {@link #parameterTypes} is a subclass of {@link MatlabType}s.
+         * If any of {@link #returnTypes} or {@link #parameterTypes} is to be specially handed.
          */
-        final boolean usesMatlabTypes;
+        final boolean usesSpecialTypes;
         
         private InvocationInfo(String name, String containingDirectory,
-                Class<?>[] returnTypes, Class<?>[] parameterTypes, boolean usesMatlabTypes)
+                Class<?>[] returnTypes, Class<?>[] parameterTypes, boolean usesSpecialTypes)
         {
             this.name = name;
             this.containingDirectory = containingDirectory;
             
             this.returnTypes = returnTypes;
             this.parameterTypes = parameterTypes;
-            this.usesMatlabTypes = usesMatlabTypes;
+            this.usesSpecialTypes = usesSpecialTypes;
+        }
+        
+        @Override
+        public String toString()
+        {
+            return "[" + this.getClass().getName() + 
+                    " name=" + name + "," +
+                    " containingDirectory=" + containingDirectory + "," +
+                    " returnTypes=" + returnTypes + "," +
+                    " parameterTypes=" + parameterTypes + "," +
+                    " usesSpecialTypes=" + usesSpecialTypes + "]";
         }
     }
     
@@ -619,11 +643,16 @@ public class MatlabFunctionLinker
         @Override
         public Object invoke(Object o, Method method, Object[] args) throws MatlabInvocationException
         {   
+            if(args == null)
+            {
+                args = new Object[0];
+            }
+            
             InvocationInfo functionInfo = _functionsInfo.get(method);
             
             //Invoke the function
             Object[] returnValues;
-            if(functionInfo.usesMatlabTypes)
+            if(functionInfo.usesSpecialTypes)
             {
                 //Replace all arguments with parameters of a MatlabType subclass with their serialized setters
                 //(This intentionally means that if the declared type is not a MatlabType but the actual argument is
@@ -650,7 +679,14 @@ public class MatlabFunctionLinker
             }
             else
             {
-                returnValues = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
+                if(functionInfo.containingDirectory == null)
+                {
+                    returnValues = _proxy.returningFeval(functionInfo.name, functionInfo.returnTypes.length, args);
+                }
+                else
+                {
+                    returnValues = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
+                }
             }
             
             //Process the returned values
@@ -668,7 +704,7 @@ public class MatlabFunctionLinker
             {
                 toReturn = convertToType(result[0], returnTypes[0]);
             }
-            //Return type is a subclass of MatlabReturnN
+            //Return type is a subclass of ReturnN
             else
             {
                 for(int i = 0; i < result.length; i++)
@@ -872,17 +908,17 @@ public class MatlabFunctionLinker
                 }
             }
             
-            String[] parameterNames = new String[0];
-            String[] returnNames = new String[0];
+            List<String> usedNames = new ArrayList<String>();
             try
             {
                 //Set all arguments as MATLAB variables and build a function call using those variables
                 String functionStr = _functionInfo.name + "(";
-                parameterNames = generateNames(proxy, "param_", _args.length);
+                String[] parameterNames = generateNames(proxy, "param_", _args.length);
                 for(int i = 0; i < _args.length; i++)
                 {
                     Object arg = _args[i];
                     String name = parameterNames[i];
+                    usedNames.add(name);
                     
                     if(arg instanceof MatlabType.MatlabTypeSerializedSetter)
                     {
@@ -902,14 +938,25 @@ public class MatlabFunctionLinker
                 functionStr += ");";
                 
                 //Return arguments
+                String[] returnNames = new String[0];
                 if(_functionInfo.returnTypes.length != 0)
                 {
                     returnNames = generateNames(proxy, "return_", _functionInfo.returnTypes.length);
                     String returnStr = "[";
                     for(int i = 0; i < returnNames.length; i++)
                     {
-                        returnStr += returnNames[i];
+                        String name;
+                        if(_functionInfo.returnTypes[i].equals(Void.class))
+                        {
+                            name = "~";
+                        }
+                        else
+                        {
+                            name = returnNames[i];
+                            usedNames.add(name);
+                        }
                         
+                        returnStr += name;
                         if(i != returnNames.length - 1)
                         {
                             returnStr += ", ";
@@ -930,7 +977,11 @@ public class MatlabFunctionLinker
                     Class<?> returnType = _functionInfo.returnTypes[i];
                     String returnName = returnNames[i];
                     
-                    if(MatlabType.class.isAssignableFrom(returnType))
+                    if(returnType.equals(Void.class))
+                    {
+                        returnValues[i] = null;
+                    }
+                    else if(MatlabType.class.isAssignableFrom(returnType))
                     {
                         MatlabTypeSerializedGetter getter =
                                 MatlabType.newSerializedGetter((Class<? extends MatlabType>) returnType);
@@ -951,17 +1002,14 @@ public class MatlabFunctionLinker
                 try
                 {
                     //Clear all variables used
-                    List<String> createdVariables = new ArrayList<String>();
-                    createdVariables.addAll(Arrays.asList(parameterNames));
-                    createdVariables.addAll(Arrays.asList(returnNames));
-                    if(!createdVariables.isEmpty())
+                    if(!usedNames.isEmpty())
                     {
                         String variablesStr = "";
-                        for(int i = 0; i < createdVariables.size(); i++)
+                        for(int i = 0; i < usedNames.size(); i++)
                         {
-                            variablesStr += createdVariables.get(i);
+                            variablesStr += usedNames.get(i);
 
-                            if(i != createdVariables.size() - 1)
+                            if(i != usedNames.size() - 1)
                             {
                                 variablesStr += " ";
                             }
