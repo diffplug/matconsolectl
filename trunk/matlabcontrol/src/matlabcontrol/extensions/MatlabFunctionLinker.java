@@ -106,9 +106,8 @@ public class MatlabFunctionLinker
             FunctionInfo functionInfo = getFunctionInfo(method, annotation);
             Class<?>[] returnTypes = getReturnTypes(method);
             Class<?>[] parameterTypes = method.getParameterTypes();
-            boolean usesSpecialTypes = usesSpecialTypes(returnTypes, parameterTypes);
             InvocationInfo invocationInfo = new InvocationInfo(functionInfo.name, functionInfo.containingDirectory,
-                    returnTypes, parameterTypes, usesSpecialTypes);
+                    returnTypes, parameterTypes);
             resolvedInfo.put(method, invocationInfo);
             
             //System.out.println(method.getName() + " :: " + invocationInfo);
@@ -524,32 +523,6 @@ public class MatlabFunctionLinker
         }
     }
     
-    private static boolean usesSpecialTypes(Class<?>[] returnTypes, Class<?>[] parameterTypes)
-    {
-        boolean usesMatlabTypes = false;
-
-        //If MatlabType subclass
-        List<Class<?>> types = new ArrayList<Class<?>>();
-        types.addAll(Arrays.asList(returnTypes));
-        types.addAll(Arrays.asList(parameterTypes));
-        for(Class<?> type : types)
-        {
-            if(MatlabType.class.isAssignableFrom(type))
-            {
-                usesMatlabTypes = true;
-                break;
-            }
-        }
-        
-        //If a return type is Void
-        if(Arrays.asList(returnTypes).contains(Void.class))
-        {
-            usesMatlabTypes = true;
-        }
-
-        return usesMatlabTypes;
-    }
-    
     /**
      * A holder of information about the Java method and the associated MATLAB function.
      */
@@ -576,20 +549,14 @@ public class MatlabFunctionLinker
          */
         final Class<?>[] parameterTypes;
         
-        /**
-         * If any of {@link #returnTypes} or {@link #parameterTypes} is to be specially handed.
-         */
-        final boolean usesSpecialTypes;
-        
         private InvocationInfo(String name, String containingDirectory,
-                Class<?>[] returnTypes, Class<?>[] parameterTypes, boolean usesSpecialTypes)
+                Class<?>[] returnTypes, Class<?>[] parameterTypes)
         {
             this.name = name;
             this.containingDirectory = containingDirectory;
             
             this.returnTypes = returnTypes;
             this.parameterTypes = parameterTypes;
-            this.usesSpecialTypes = usesSpecialTypes;
         }
         
         @Override
@@ -598,9 +565,8 @@ public class MatlabFunctionLinker
             return "[" + this.getClass().getName() + 
                     " name=" + name + "," +
                     " containingDirectory=" + containingDirectory + "," +
-                    " returnTypes=" + returnTypes + "," +
-                    " parameterTypes=" + parameterTypes + "," +
-                    " usesSpecialTypes=" + usesSpecialTypes + "]";
+                    " returnTypes=" + Arrays.asList(returnTypes) + "," +
+                    " parameterTypes=" + Arrays.asList(parameterTypes) + "]";
         }
     }
     
@@ -650,42 +616,37 @@ public class MatlabFunctionLinker
             
             InvocationInfo functionInfo = _functionsInfo.get(method);
             
-            //Invoke the function
-            Object[] returnValues;
-            if(functionInfo.usesSpecialTypes)
+            //Replace all arguments with parameters of a MatlabType subclass with their serialized setters
+            //(This intentionally means that if the declared type is not a MatlabType but the actual argument is
+            //that it will not be transformed. This makes the behavior consistent with explication declaration for
+            //return types.)
+            for(int i = 0; i < args.length; i++)
             {
-                //Replace all arguments with parameters of a MatlabType subclass with their serialized setters
-                //(This intentionally means that if the declared type is not a MatlabType but the actual argument is
-                //that it will not be transformed. This makes the behavior consistent with explication declaration for
-                //return types.)
-                for(int i = 0; i < args.length; i++)
+                if(args[i] == null)
                 {
-                    if(args[i] != null && MatlabType.class.isAssignableFrom(functionInfo.parameterTypes[i]))
-                    {
-                        args[i] = ((MatlabType) args[i]).getSerializedSetter();
-                    }
+                    continue;
                 }
-                
-                returnValues = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
-                
-                //For each returned value that is a serialized getter, deserialize it
-                for(int i = 0; i < returnValues.length; i++)
+
+
+                if(MatlabType.class.isAssignableFrom(functionInfo.parameterTypes[i]))
                 {
-                    if(returnValues[i] instanceof MatlabTypeSerializedGetter)
-                    {
-                        returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
-                    }
+                    args[i] = ((MatlabType) args[i]).getSerializedSetter();
+                }
+                else if(ArrayLinearizer.isMultidimensionalPrimitiveArray(functionInfo.parameterTypes[i]))
+                {
+                    args[i] = ArrayLinearizer.getSerializedSetter(args[i]);
                 }
             }
-            else
+
+            //Invoke function
+            Object[] returnValues = _proxy.invokeAndWait(new CustomFunctionInvocation(functionInfo, args));
+
+            //For each returned value that is a serialized getter, deserialize it
+            for(int i = 0; i < returnValues.length; i++)
             {
-                if(functionInfo.containingDirectory == null)
+                if(returnValues[i] instanceof MatlabTypeSerializedGetter)
                 {
-                    returnValues = _proxy.returningFeval(functionInfo.name, functionInfo.returnTypes.length, args);
-                }
-                else
-                {
-                    returnValues = _proxy.invokeAndWait(new StandardFunctionInvocation(functionInfo, args));
+                    returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
                 }
             }
             
@@ -990,7 +951,13 @@ public class MatlabFunctionLinker
                     }
                     else
                     {
-                        returnValues[i] = proxy.getVariable(returnName);
+                        MatlabValueReceiver receiver = new MatlabValueReceiver();
+                        String receiverName = generateNames(proxy, "receiver_", 1)[0];
+                        usedNames.add(receiverName);
+                        proxy.setVariable(receiverName, receiver);
+                        proxy.eval(receiverName + ".set(" + returnName + ");");
+                        returnValues[i] = receiver.get();
+                        //returnValues[i] = proxy.getVariable(returnName);
                     }
                 }
                 
@@ -1025,6 +992,21 @@ public class MatlabFunctionLinker
                         proxy.feval("cd", initialDir);
                     }
                 }
+            }
+        }
+        
+        private static class MatlabValueReceiver
+        {
+            private Object _object;
+            
+            public void set(Object obj)
+            {
+                _object = obj;
+            }
+            
+            public Object get()
+            {
+                return _object;
             }
         }
         

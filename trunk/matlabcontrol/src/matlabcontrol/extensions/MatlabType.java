@@ -53,7 +53,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-abstract class MatlabType<T extends MatlabType>
+abstract class MatlabType
 {
     /**
      * All {@code MatlabType} subclasses that can return information from MATLAB (typically all types, but for instance
@@ -66,18 +66,17 @@ abstract class MatlabType<T extends MatlabType>
         Class<? extends MatlabTypeSerializedGetter> value();
     }
     
-    abstract MatlabTypeSerializedSetter<T> getSerializedSetter();
+    abstract MatlabTypeSerializedSetter getSerializedSetter();
     
     /**
      * Returns a new instance of the {@link MatlabTypeSerializedGetter} associated with the {@link MatlabType} subclass.
      * Uses the getter that {@code clazz} specifies in its {@link MatlabTypeSerializationProvider} annotation.
      * 
-     * @param <U>
      * @param clazz
      * @return 
      * @throws IllegalArgumentException if a getter cannot be created for {@code clazz}
      */
-    static <U extends MatlabType> MatlabTypeSerializedGetter<U> newSerializedGetter(Class<U> clazz)
+    static MatlabTypeSerializedGetter newSerializedGetter(Class<?> clazz)
     {
         try
         {
@@ -100,7 +99,7 @@ abstract class MatlabType<T extends MatlabType>
      * 
      * @param <U> 
      */
-    static interface MatlabTypeSerializedGetter<U extends MatlabType> extends Serializable
+    static interface MatlabTypeSerializedGetter extends Serializable
     {
         /**
          * Takes the information retrieved by the
@@ -109,7 +108,7 @@ abstract class MatlabType<T extends MatlabType>
          * 
          * @return 
          */
-        public U deserialize();
+        public Object deserialize();
         
         /**
          * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information
@@ -124,10 +123,8 @@ abstract class MatlabType<T extends MatlabType>
     /**
      * Sets in MATLAB the equivalent of the data represented by the {@code MatlabType} that provides an instance of
      * an implementation of this class.
-     * 
-     * @param <U> 
      */
-    static interface MatlabTypeSerializedSetter<U extends MatlabType> extends Serializable
+    static interface MatlabTypeSerializedSetter extends Serializable
     {
         public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException;
     }
