@@ -80,7 +80,7 @@ import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @MatlabType.MatlabTypeSerializationProvider(MatlabNumericArray.MatlabNumericArrayGetter.class)
-public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
+public final class MatlabNumericArray extends MatlabType
 {   
     /**
      * Linear array of real values.
@@ -790,12 +790,12 @@ public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
     }
 
     @Override
-    MatlabTypeSerializedSetter<MatlabNumericArray> getSerializedSetter()
+    MatlabTypeSerializedSetter getSerializedSetter()
     {
         return new MatlabNumericArraySetter(this);
     }
     
-    static class MatlabNumericArraySetter implements MatlabTypeSerializedSetter<MatlabNumericArray>
+    private static class MatlabNumericArraySetter implements MatlabTypeSerializedSetter
     {
         private final double[] _real, _imaginary;
         private final int[] _lengths;
@@ -858,7 +858,7 @@ public final class MatlabNumericArray extends MatlabType<MatlabNumericArray>
         }
     }
     
-    static class MatlabNumericArrayGetter implements MatlabTypeSerializedGetter<MatlabNumericArray>
+    static class MatlabNumericArrayGetter implements MatlabTypeSerializedGetter
     {
         private boolean _retrieved = false;
         private double[] _real, _imaginary;

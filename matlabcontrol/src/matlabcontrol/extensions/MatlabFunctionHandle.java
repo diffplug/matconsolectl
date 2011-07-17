@@ -36,7 +36,7 @@ import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @MatlabTypeSerializationProvider(MatlabFunctionHandle.MatlabFunctionHandleGetter.class)
-public final class MatlabFunctionHandle extends MatlabType<MatlabFunctionHandle>
+public final class MatlabFunctionHandle extends MatlabType
 {
     private final String _function;
     
@@ -161,7 +161,7 @@ public final class MatlabFunctionHandle extends MatlabType<MatlabFunctionHandle>
         return new MatlabFunctionHandlerSetter(_function);
     }
     
-    private static class MatlabFunctionHandlerSetter implements MatlabTypeSerializedSetter<MatlabFunctionHandle>
+    private static class MatlabFunctionHandlerSetter implements MatlabTypeSerializedSetter
     {
         private final String _function;
         
@@ -184,7 +184,7 @@ public final class MatlabFunctionHandle extends MatlabType<MatlabFunctionHandle>
         }
     }
     
-    static class MatlabFunctionHandleGetter implements MatlabTypeSerializedGetter<MatlabFunctionHandle>
+    static class MatlabFunctionHandleGetter implements MatlabTypeSerializedGetter
     {
         private String _function;
         private boolean _retrieved = false;
