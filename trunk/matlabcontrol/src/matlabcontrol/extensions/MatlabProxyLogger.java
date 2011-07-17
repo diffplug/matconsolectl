@@ -557,7 +557,7 @@ public class MatlabProxyLogger
             //Primitive array
             if(componentClass.isPrimitive())
             {
-                String componentName = componentClass.toString();
+                String componentName = componentClass.getCanonicalName();
                 int length = Array.getLength(result);
                 
                 builder.append(componentName);
@@ -582,7 +582,7 @@ public class MatlabProxyLogger
             {
                 Object[] array = (Object[]) result;
                 
-                builder.append(array.getClass().getComponentType().getName());
+                builder.append(array.getClass().getComponentType().getCanonicalName());
                 builder.append(" array, length = ");
                 builder.append(array.length);
                 builder.append("\n");
