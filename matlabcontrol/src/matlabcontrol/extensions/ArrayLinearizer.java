@@ -30,10 +30,11 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
 
+import static matlabcontrol.extensions.ArrayTransformUtils.*;
+
 /**
  *
  * @since 4.1.0
- * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayLinearizer
@@ -79,8 +80,7 @@ class ArrayLinearizer
         }
     }
     
-    
-    private static class LinearizedArray
+    static class LinearizedArray
     {
         /**
          * The linearized array, one of:
@@ -89,7 +89,7 @@ class ArrayLinearizer
         final Object array;
         
         /**
-         * The bounding lengths of the array used to multidimensionalize the linearized array.
+         * The bounding lengths of the array used to reshape the linearized array in MATLAB.
          */
         final int[] lengths;
         
@@ -101,20 +101,29 @@ class ArrayLinearizer
     }
     
     /**
-     * Creates a linearized version of the {@code array} with maximum length in each dimension specified by
-     * {@code lengths}. No verification is performed that the dimensions of the array match the length of the lengths
-     * array.
+     * Creates a linearized version of the {@code array}. The bounding length of each dimension is used if the array is
+     * jagged.
      * 
-     * @param array
-     * @param lengths
+     * @param array a multidimensional primitive array
      * @return 
      */
-    private static LinearizedArray linearize(Object array)
+    static LinearizedArray linearize(Object array)
     {
-        //Create linear array with equal size of the array
+        if(array == null | !array.getClass().isArray())
+        {
+            throw new RuntimeException("provided object is not an array");
+        }
+        
+        //Base component type of the array
+        Class<?> baseClass = getBaseComponentType(array.getClass());
+        if(!baseClass.isPrimitive())
+        {
+            throw new RuntimeException("array type is not a primitive, type: " + baseClass.getCanonicalName());
+        }
+        
+        //Create linear array with size equal to that of the bounding lengths the array
         int[] lengths = computeBoundingLengths(array);
         int size = getTotalSize(lengths);
-        Class<?> baseClass = getBaseArrayClass(array.getClass());
         Object linearArray = Array.newInstance(baseClass, size);
         
         //Fill linearArray with values from array
@@ -122,42 +131,6 @@ class ArrayLinearizer
         linearize_internal(linearArray, array, fillOperation, lengths, new int[0]);
        
         return new LinearizedArray(linearArray, lengths);
-    }
-    
-    
-    private static Class<?> getBaseArrayClass(Class<?> type)
-    {   
-        while(type.isArray())
-        {
-            type = type.getComponentType();
-        }
-        
-        return type;
-    }
-    
-    /**
-     * Computes the total size of an array with lengths specified by {@code lengths}.
-     * 
-     * @param lengths
-     * @return 
-     */
-    private static int getTotalSize(int[] lengths)
-    {
-        int size = 0;
-        
-        for(int length : lengths)
-        {
-            if(size == 0)
-            {
-                size = length;
-            }
-            else if(length != 0)
-            {
-                size *= length;
-            }
-        }
-        
-        return size;
     }
     
     /**
@@ -238,34 +211,6 @@ class ArrayLinearizer
         }
     }
     
-    /**
-     * Multidimensional indices to linear index. Similar to MATLAB's (@code sub2ind} function.
-     * 
-     * @param lengths the lengths of the array in each dimension
-     * @param indices
-     * @return
-     * @throws IllegalArgumentException thrown if the length of {@code lengths} and {@code indices} are not the same
-     */
-    private static int multidimensionalIndicesToLinearIndex(int[] lengths, int[] indices)
-    {
-        if(lengths.length != indices.length)
-        {
-            throw new IllegalArgumentException("There must be an equal number of lengths [" + lengths.length + "] "
-                    + "and indices [" + indices.length + "]");
-        }
-        
-        int linearIndex = 0;
-        
-        int accumSize = 1;
-        for(int i = 0; i < lengths.length; i++)
-        {   
-            linearIndex += accumSize * indices[i];
-            accumSize *= lengths[i];
-        }
-        
-        return linearIndex;
-    }
-    
     private static final Map<Class<?>, ArrayFillOperation<?>> FILL_OPERATIONS = new ConcurrentHashMap<Class<?>, ArrayFillOperation<?>>();
     static
     {
@@ -281,117 +226,117 @@ class ArrayLinearizer
     
     private static interface ArrayFillOperation<T>
     {
-        public void fill(T linearArray, T arrayPiece, int[] primArrayIndices, int[] lengths);
+        public void fill(T dst, T src, int[] indices, int[] lengths);
     }
     
-    private static class ByteArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<byte[]>
+    private static class ByteArrayFillOperation implements ArrayFillOperation<byte[]>
     {
         @Override
-        public void fill(byte[] linearArray, byte[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(byte[] dst, byte[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class ShortArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<short[]>
+    private static class ShortArrayFillOperation implements ArrayFillOperation<short[]>
     {
         @Override
-        public void fill(short[] linearArray, short[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(short[] dst, short[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class IntArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<int[]>
+    private static class IntArrayFillOperation implements ArrayFillOperation<int[]>
     {
         @Override
-        public void fill(int[] linearArray, int[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(int[] dst, int[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class LongArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<long[]>
+    private static class LongArrayFillOperation implements ArrayFillOperation<long[]>
     {
         @Override
-        public void fill(long[] linearArray, long[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(long[] dst, long[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class FloatArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<float[]>
+    private static class FloatArrayFillOperation implements ArrayFillOperation<float[]>
     {
         @Override
-        public void fill(float[] linearArray, float[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(float[] dst, float[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class DoubleArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<double[]>
+    private static class DoubleArrayFillOperation implements ArrayFillOperation<double[]>
     {
         @Override
-        public void fill(double[] linearArray, double[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(double[] dst, double[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class BooleanArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<boolean[]>
+    private static class BooleanArrayFillOperation implements ArrayFillOperation<boolean[]>
     {
         @Override
-        public void fill(boolean[] linearArray, boolean[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(boolean[] dst, boolean[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }
     
-    private static class CharArrayFillOperation implements ArrayLinearizer.ArrayFillOperation<char[]>
+    private static class CharArrayFillOperation implements ArrayFillOperation<char[]>
     {
         @Override
-        public void fill(char[] linearArray, char[] arrayPiece, int[] primArrayIndices, int[] lengths)
+        public void fill(char[] dst, char[] src, int[] indices, int[] lengths)
         {
-            for(int i = 0; i < arrayPiece.length; i++)
+            for(int i = 0; i < src.length; i++)
             {
-                primArrayIndices[primArrayIndices.length - 1] = i;
-                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, primArrayIndices);
-                linearArray[linearIndex] = arrayPiece[i];
+                indices[indices.length - 1] = i;
+                int linearIndex = multidimensionalIndicesToLinearIndex(lengths, indices);
+                dst[linearIndex] = src[i];
             }
         }       
     }

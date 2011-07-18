@@ -432,22 +432,6 @@ public class MatlabFunctionLinker
             }
         }
         
-        //Check that all of the return types are supported
-        for(Class returnType : returnTypes)
-        {
-            ClassInfo info = ClassInfo.getInfo(returnType);
-            
-            //char arrays as a return type are only supported up to 9 dimensions
-            if(char.class.equals(info.arrayElementClass) &&
-               info.arrayDimensions > CustomFunctionInvocation.MatlabCharReceiver.MAX_DIMENSION_SUPPORTED)
-            {
-                throw new LinkingException(method + " may not have a return type of a char array in excess of " +
-                        CustomFunctionInvocation.MatlabCharReceiver.MAX_DIMENSION_SUPPORTED + " dimensions\n" +
-                        "Return Type: " + returnType.getCanonicalName() + "\n" +
-                        "Dimensions: " + info.arrayDimensions);
-            }
-        }
-        
         return returnTypes;
     }
     
@@ -823,7 +807,16 @@ public class MatlabFunctionLinker
             {
                 if(returnValues[i] instanceof MatlabTypeSerializedGetter)
                 {
-                    returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
+                    try
+                    {
+                        returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
+                    }
+                    catch(IncompatibleReturnException e)
+                    {
+                        throw new IncompatibleReturnException("Required return type is incompatible with the type " +
+                                "actually returned\n" +
+                                "Required Type: " + info.returnTypes[i].getCanonicalName(), e);
+                    }
                 }
             }
             
@@ -1128,22 +1121,17 @@ public class MatlabFunctionLinker
                         getter.getInMatlab(proxy, returnName);
                         returnValues[i] = getter;
                     }
+                    else if(returnInfo.isPrimitiveArray)
+                    {
+                        MatlabTypeSerializedGetter getter = ArrayMultidimensionalizer.getGetter(true);
+                        getter.getInMatlab(proxy, returnName);
+                        returnValues[i] = getter;
+                    }
                     else
                     {
                         String receiverName = generateNames(proxy, "receiver_", 1)[0];
                         usedNames.add(receiverName);
-                        
-                        //If a char, Character, or char array handle it specially so that MATLAB does not convert it to
-                        //a String or String array
-                        if(returnType.equals(char.class) || returnType.equals(Character.class) || 
-                           char.class.equals(returnInfo.arrayElementClass))
-                        {
-                            proxy.setVariable(receiverName, new MatlabCharReceiver(returnValues, i));
-                        }
-                        else
-                        {
-                            proxy.setVariable(receiverName, new MatlabValueReceiver(returnValues, i));
-                        }
+                        proxy.setVariable(receiverName, new MatlabValueReceiver(returnValues, i));
                         proxy.eval(receiverName + ".set(" + returnName + ");");
                     }
                 }
@@ -1193,76 +1181,6 @@ public class MatlabFunctionLinker
                 _index = index;
             }
             
-            public void set(Object val)
-            {
-                _values[_index] = val;
-            }
-        }
-        
-        private static class MatlabCharReceiver
-        {
-            static final int MAX_DIMENSION_SUPPORTED = 9;
-                    
-            private final Object[] _values;
-            private final int _index;
-            
-            private MatlabCharReceiver(Object[] values, int index)
-            {
-                _values = values;
-                _index = index;
-            }
-            
-            public void set(char val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][][][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            public void set(char[][][][][][][][][] val)
-            {
-                _values[_index] = val;
-            }
-            
-            //If this is called then val's type is almost certainly not going to match the return type
             public void set(Object val)
             {
                 _values[_index] = val;
