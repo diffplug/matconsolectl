@@ -37,26 +37,7 @@ import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayLinearizer
-{
-    static boolean isMultidimensionalPrimitiveArray(Class<?> clazz)
-    {
-        boolean isMultiPrim = false;
-        
-        //If multidimensional array
-        if(clazz.isArray() && clazz.getComponentType().isArray())
-        {
-            //Get base type of array
-            while(clazz.isArray())
-            {
-                clazz = clazz.getComponentType();
-            }
-            
-            isMultiPrim = clazz.isPrimitive();
-        }
-        
-        return isMultiPrim;
-    }
-    
+{   
     static MatlabTypeSerializedSetter getSerializedSetter(Object array)
     {
         return new MultidimensionalPrimitiveArraySetter(array);
