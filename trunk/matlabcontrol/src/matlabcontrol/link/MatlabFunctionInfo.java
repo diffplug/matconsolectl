@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -30,8 +30,7 @@ import java.lang.annotation.Target;
 /**
  * Information about a MATLAB function.
  *
- * @since 4.1.0
- * 
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @Retention(RetentionPolicy.RUNTIME)

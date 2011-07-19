@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -26,13 +26,12 @@ import java.util.HashSet;
 import java.util.Set;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializationProvider;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializationProvider;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
 
 /**
  *
- * @since 4.1.0
- * 
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 @MatlabTypeSerializationProvider(MatlabFunctionHandle.MatlabFunctionHandleGetter.class)

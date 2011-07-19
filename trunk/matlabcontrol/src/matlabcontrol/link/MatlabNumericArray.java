@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
 
 /**
  * Acts as a MATLAB array of doubles. MATLAB arrays of any numeric type may be represented by a

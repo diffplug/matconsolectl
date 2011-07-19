@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -28,8 +28,8 @@ import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedGetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
 
 /**
  * Converts between MATLAB and Java types. Currently only supports numeric arrays.
