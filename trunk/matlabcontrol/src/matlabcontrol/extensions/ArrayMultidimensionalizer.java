@@ -41,12 +41,12 @@ import static matlabcontrol.extensions.ArrayTransformUtils.*;
  */
 class ArrayMultidimensionalizer
 {   
-    static MultidimensionalPrimitiveArrayGetter getGetter(boolean realPart)
+    static PrimitiveArrayGetter getGetter(boolean realPart, boolean multidimensionalize)
     {
-        return new MultidimensionalPrimitiveArrayGetter(realPart);
+        return new PrimitiveArrayGetter(realPart, multidimensionalize);
     }
     
-    static class MultidimensionalPrimitiveArrayGetter implements MatlabTypeSerializedGetter
+    static class PrimitiveArrayGetter implements MatlabTypeSerializedGetter
     {
         //Note: uint8, uint16, uint32, and uint64 are intentionally not supported because MATLAB will convert them
         //to byte, short, int, and long but that won't work properly for large values do to having one less bit
@@ -70,10 +70,12 @@ class ArrayMultidimensionalizer
         private boolean _retreived = false;
         
         private final boolean _getRealPart;
+        private final boolean _keepLinear;
         
-        public MultidimensionalPrimitiveArrayGetter(boolean realPart)
+        public PrimitiveArrayGetter(boolean realPart, boolean keepLinear)
         {
             _getRealPart = realPart;
+            _keepLinear = keepLinear;
         }
         
         public boolean isRealPart()
@@ -110,7 +112,7 @@ class ArrayMultidimensionalizer
         {
             Object array = this.getArray();
             
-            if(array != null)
+            if(array != null && !_keepLinear)
             {
                 array = multidimensionalize(array, _lengths);
             }
