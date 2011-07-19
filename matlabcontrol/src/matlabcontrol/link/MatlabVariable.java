@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -22,21 +22,65 @@ package matlabcontrol.extensions;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+
 /**
  *
- * @since 4.1.0
- * 
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class IncompatibleReturnException extends RuntimeException
+public final class MatlabVariable extends MatlabType
 {
-    IncompatibleReturnException(String msg)
+    private final String _name;
+
+    public MatlabVariable(String name)
     {
-        super(msg);
+        //Validate variable name
+        if(name.isEmpty())
+        {
+            throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+        }
+        char[] nameChars = name.toCharArray();
+        if(!Character.isLetter(nameChars[0]))
+        {
+            throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+        }
+        for(char element : nameChars)
+        {
+            if(!(Character.isLetter(element) || Character.isDigit(element) || element == '_'))
+            {
+                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
+            }
+        }
+        _name = name;
     }
 
-    IncompatibleReturnException(String msg, Throwable cause)
+    String getName()
     {
-        super(msg, cause);
+        return _name;
+    }
+
+    @Override
+    MatlabTypeSerializedSetter getSerializedSetter()
+    {
+        return new MatlabVariableSerializedSetter(_name);
+    }
+
+    private static class MatlabVariableSerializedSetter implements MatlabTypeSerializedSetter
+    {
+
+        private final String _name;
+
+        private MatlabVariableSerializedSetter(String name)
+        {
+            _name = name;
+        }
+
+        @Override
+        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        {
+            proxy.eval(variableName + " = " + _name + ";");
+        }
     }
 }

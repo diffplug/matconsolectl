@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -28,13 +28,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
 
-import static matlabcontrol.extensions.ArrayTransformUtils.*;
+import static matlabcontrol.link.ArrayTransformUtils.*;
 
 /**
  *
- * @since 4.1.0
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayLinearizer

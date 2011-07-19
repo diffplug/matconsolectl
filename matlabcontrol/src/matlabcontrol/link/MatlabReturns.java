@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 import java.util.Arrays;
 
@@ -27,7 +27,7 @@ import java.util.Arrays;
 /**
  * MATLAB return containers.
  *
- * @since 4.1.0
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public final class MatlabReturns

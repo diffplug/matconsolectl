@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -49,7 +49,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * could be disallowed by checking for it. But the easiest way is to just not expose it. Furthermore, hiding this class
  * makes it easier to change the underlying structure without breaking public API binary compatibility.
  * 
- * @since 4.1.0
+ * @since 5.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */

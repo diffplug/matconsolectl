@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Utility functions used to multidimensionalize and linearize arrays.
  *
- * @since 4.1.0
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayTransformUtils

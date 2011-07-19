@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol.link;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -56,15 +56,14 @@ import java.util.zip.ZipFile;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.extensions.ArrayMultidimensionalizer.PrimitiveArrayGetter;
-import matlabcontrol.extensions.MatlabFunctionHandle.MatlabFunctionHandleGetter;
-import matlabcontrol.extensions.MatlabReturns.ReturnN;
-import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
+import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
+import matlabcontrol.link.MatlabFunctionHandle.MatlabFunctionHandleGetter;
+import matlabcontrol.link.MatlabReturns.ReturnN;
+import matlabcontrol.link.MatlabType.MatlabTypeSerializedGetter;
 
 /**
  *
- * @since 4.1.0
- * 
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabFunctionLinker
