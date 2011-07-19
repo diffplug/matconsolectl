@@ -42,6 +42,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +56,8 @@ import java.util.zip.ZipFile;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.extensions.ArrayMultidimensionalizer.PrimitiveArrayGetter;
+import matlabcontrol.extensions.MatlabFunctionHandle.MatlabFunctionHandleGetter;
 import matlabcontrol.extensions.MatlabReturns.ReturnN;
 import matlabcontrol.extensions.MatlabType.MatlabTypeSerializedGetter;
 
@@ -103,13 +106,8 @@ public class MatlabFunctionLinker
             //Check method can throw MatlabInvocationException
             checkExceptions(method);
             
-            //Build information about how to invoke the method, performing validation in the process
-            FunctionInfo functionInfo = getFunctionInfo(method, annotation);
-            Class<?>[] returnTypes = getReturnTypes(method);
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            InvocationInfo invocationInfo = new InvocationInfo(functionInfo.name, functionInfo.containingDirectory,
-                    returnTypes, parameterTypes);
-            resolvedInfo.put(method, invocationInfo);
+            //Store information about how to invoke the method, performing validation in the process
+            resolvedInfo.put(method, getInvocationInfo(method, annotation));
         }
         
         T functionProxy = (T) Proxy.newProxyInstance(functionInterface.getClassLoader(),
@@ -524,6 +522,15 @@ public class MatlabFunctionLinker
         }
     }
     
+    private static InvocationInfo getInvocationInfo(Method method, MatlabFunctionInfo annotation)
+    {   
+        FunctionInfo funcInfo = getFunctionInfo(method, annotation);
+        Class<?>[] returnTypes = getReturnTypes(method);
+        InvocationInfo invocationInfo = new InvocationInfo(funcInfo.name, funcInfo.containingDirectory, returnTypes);
+            
+        return invocationInfo;
+    }
+    
     /**
      * A holder of information about the Java method and the associated MATLAB function.
      */
@@ -545,19 +552,11 @@ public class MatlabFunctionLinker
          */
         final Class<?>[] returnTypes;
         
-        /**
-         * The declared types of the arguments of the method associated with the function.
-         */
-        final Class<?>[] parameterTypes;
-        
-        private InvocationInfo(String name, String containingDirectory,
-                Class<?>[] returnTypes, Class<?>[] parameterTypes)
+        private InvocationInfo(String name, String containingDirectory, Class<?>[] returnTypes)
         {
             this.name = name;
             this.containingDirectory = containingDirectory;
-            
             this.returnTypes = returnTypes;
-            this.parameterTypes = parameterTypes;
         }
         
         @Override
@@ -566,8 +565,7 @@ public class MatlabFunctionLinker
             return "[" + this.getClass().getName() + 
                     " name=" + name + "," +
                     " containingDirectory=" + containingDirectory + "," +
-                    " returnTypes=" + Arrays.asList(returnTypes) + "," +
-                    " parameterTypes=" + Arrays.asList(parameterTypes) + "]";
+                    " returnTypes=" + Arrays.asList(returnTypes) + "]";
         }
     }
     
@@ -587,27 +585,51 @@ public class MatlabFunctionLinker
             return info;
         }
         
+        /**
+         * The class this information is about
+         */
+        final Class<?> theClass;
+        
+        /**
+         * If the class is either {@code void} or {@code java.lang.Void}
+         */
         final boolean isVoid;
+        
+        /**
+         * If the class is primitive
+         */
         final boolean isPrimitive;
-        final Class<?> autoboxedClass; //Autoboxed equivalent of the class, if the class is primitive
         
-        final boolean isAutoboxedPrimitive;
-        final Class<?> primitiveClass; //Primitive equivalent of the class, if the class is autoboxed
-        
+        /**
+         * If an array type
+         */
         final boolean isArray;
+        
+        /**
+         * If the array's base component type is a primitive
+         */
         final boolean isPrimitiveArray;
-        final Class<?> arrayElementClass; //The type of the array, if the class is an array
+        
+        /**
+         * If the base component type of an array, {@code null} if not an array
+         */
+        final Class<?> baseComponentType;
+        
+        /**
+         * The number of array dimensions, {@code 0} if not an array
+         */
         final int arrayDimensions;
         
+        /**
+         * If the class inherits from {@code MatlabType}
+         */
         final boolean isMatlabType;
         
         private ClassInfo(Class<?> clazz)
         {
-            isPrimitive = clazz.isPrimitive();
-            autoboxedClass = PRIMITIVE_TO_AUTOBOXED.get(clazz);
+            theClass = clazz;
             
-            isAutoboxedPrimitive = AUTOBOXED_TO_PRIMITIVE.containsKey(clazz);
-            primitiveClass = AUTOBOXED_TO_PRIMITIVE.get(clazz);
+            isPrimitive = clazz.isPrimitive();
             
             if(clazz.isArray())
             {
@@ -622,45 +644,19 @@ public class MatlabFunctionLinker
                 }
                 
                 arrayDimensions = dim;
-                arrayElementClass = type;
+                baseComponentType = type;
                 isPrimitiveArray = type.isPrimitive();
             }
             else
             {
                 isArray = false;
-                arrayElementClass = null;
+                baseComponentType = null;
                 isPrimitiveArray = false;
                 arrayDimensions = 0;
             }
             
             isVoid = clazz.equals(Void.class) || clazz.equals(void.class);
             isMatlabType = MatlabType.class.isAssignableFrom(clazz);
-        }
-        
-        private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_AUTOBOXED = new ConcurrentHashMap<Class<?>, Class<?>>();
-        static
-        {
-            PRIMITIVE_TO_AUTOBOXED.put(byte.class, Byte.class);
-            PRIMITIVE_TO_AUTOBOXED.put(short.class, Short.class);
-            PRIMITIVE_TO_AUTOBOXED.put(int.class, Integer.class);
-            PRIMITIVE_TO_AUTOBOXED.put(long.class, Long.class);
-            PRIMITIVE_TO_AUTOBOXED.put(double.class, Double.class);
-            PRIMITIVE_TO_AUTOBOXED.put(float.class, Float.class);
-            PRIMITIVE_TO_AUTOBOXED.put(boolean.class, Boolean.class);
-            PRIMITIVE_TO_AUTOBOXED.put(char.class, Character.class);
-        }
-        
-        private static final Map<Class<?>, Class<?>> AUTOBOXED_TO_PRIMITIVE = new ConcurrentHashMap<Class<?>, Class<?>>();
-        static
-        {
-            AUTOBOXED_TO_PRIMITIVE.put(Byte.class, byte.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Short.class, short.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Integer.class, int.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Long.class, long.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Double.class, double.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Float.class, float.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Boolean.class, boolean.class);
-            AUTOBOXED_TO_PRIMITIVE.put(Character.class, char.class);
         }
     }
     
@@ -778,25 +774,46 @@ public class MatlabFunctionLinker
                 args = new Object[0];
             }
             
+            //If the method uses var args then we need to make those arguments first level
+            if(method.isVarArgs() && args.length > 0)
+            {   
+                Object varArgs = args[args.length - 1];
+                if(varArgs.getClass().isArray())
+                {
+                    //Number of variable arguments
+                    int varArgLength = Array.getLength(varArgs);
+                    
+                    //Combined arguments, ignoring the last argument which was the var arg array container
+                    Object[] allArgs = new Object[args.length + varArgLength - 1];
+                    System.arraycopy(args, 0, allArgs, 0, args.length - 1);
+                    
+                    //Update information with var args as first level arguments
+                    for(int i = 0; i < varArgLength; i++)
+                    {
+                        Object arg = Array.get(varArgs, i);
+                        allArgs[i + args.length - 1] = arg;
+                    }
+                    args = allArgs;
+                }
+            }
+            
             //Replace all arguments with parameters of a MatlabType subclass or a multidimensional primitive array with
             //their serialized setters
             for(int i = 0; i < args.length; i++)
             {
-                if(args[i] == null)
+                if(args[i] != null)
                 {
-                    continue;
-                }
-                
-                ClassInfo paramInfo = ClassInfo.getInfo(info.parameterTypes[i]);
+                    ClassInfo argInfo = ClassInfo.getInfo(args[i].getClass());
 
-                if(paramInfo.isMatlabType)
-                {
-                    args[i] = ((MatlabType) args[i]).getSerializedSetter();
-                }
-                else if(paramInfo.isPrimitiveArray && paramInfo.arrayDimensions > 1)
-                {
-                    args[i] = ArrayLinearizer.getSerializedSetter(args[i]);
-                }
+                    if(argInfo.isMatlabType)
+                    {
+                        args[i] = ((MatlabType) args[i]).getSerializedSetter();
+                    }
+                    else if(argInfo.isPrimitiveArray)
+                    {
+                        args[i] = ArrayLinearizer.getSerializedSetter(args[i]);
+                    }
+                }                
             }
 
             //Invoke function
@@ -832,14 +849,14 @@ public class MatlabFunctionLinker
             }
             else if(result.length == 1)
             {
-                toReturn = convertToType(result[0], returnTypes[0]);
+                toReturn = validateReturnCompatability(result[0], returnTypes[0]);
             }
             //Return type is a subclass of ReturnN
             else
             {
                 for(int i = 0; i < result.length; i++)
                 {
-                    result[i] = convertToType(result[i], returnTypes[i]);
+                    result[i] = validateReturnCompatability(result[i], returnTypes[i]);
                 }
                 
                 try
@@ -867,22 +884,38 @@ public class MatlabFunctionLinker
             return toReturn;
         }
         
-        private Object convertToType(Object value, Class<?> returnType)
-        {
-            ClassInfo returnInfo = ClassInfo.getInfo(returnType);
-            
+        private Object validateReturnCompatability(Object value, Class<?> returnType)
+        {   
             Object toReturn;
             if(value == null)
             {
-                toReturn = null;
+                if(returnType.isPrimitive())
+                {
+                    throw new IncompatibleReturnException("Required return type is a primitive which is incompatible " +
+                            "with the return value of null\n" +
+                            "Required type: " + returnType.getCanonicalName() + "\n" +
+                            "Returned value: null");
+                }
+                else
+                {
+                    toReturn = null;
+                }
             }
-            else if(returnInfo.isPrimitive)
+            else if(returnType.isPrimitive())
             {
-                toReturn = convertPrimitiveReturnType(value, returnType);
-            }
-            else if(returnInfo.isAutoboxedPrimitive)
-            {
-                toReturn = convertAutoboxedReturnType(value, returnType);
+                Class<?> autoboxedClass = PRIMITIVE_TO_AUTOBOXED.get(returnType);
+                if(autoboxedClass.equals(value.getClass()))
+                {
+                    toReturn = value;
+                }
+                else
+                {
+                    throw new IncompatibleReturnException("Required return type is incompatible with the type " +
+                            "actually returned\n" + 
+                            "Required types: " + returnType.getCanonicalName() + " OR " +
+                                                 autoboxedClass.getCanonicalName() + "\n" + 
+                            "Returned type: " + value.getClass().getCanonicalName());
+                }
             }
             else
             {
@@ -911,98 +944,6 @@ public class MatlabFunctionLinker
             PRIMITIVE_TO_AUTOBOXED.put(float.class, Float.class);
             PRIMITIVE_TO_AUTOBOXED.put(boolean.class, Boolean.class);
             PRIMITIVE_TO_AUTOBOXED.put(char.class, Character.class);
-        }
-        
-        private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_ARRAY_OF = new ConcurrentHashMap<Class<?>, Class<?>>();
-        static
-        {
-            PRIMITIVE_TO_ARRAY_OF.put(byte.class, byte[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(short.class, short[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(int.class, int[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(long.class, long[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(double.class, double[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(float.class, float[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(boolean.class, boolean[].class);
-            PRIMITIVE_TO_ARRAY_OF.put(char.class, char[].class);
-        }
-        
-        private Object convertPrimitiveReturnType(Object value, Class<?> returnType)
-        {
-            Class<?> actualType = value.getClass();
-            
-            Class<?> autoBoxOfReturnType = PRIMITIVE_TO_AUTOBOXED.get(returnType);
-            Class<?> arrayOfReturnType = PRIMITIVE_TO_ARRAY_OF.get(returnType);
-            
-            Object result;
-            if(actualType.equals(autoBoxOfReturnType))
-            {
-                result = value;
-            }
-            else if(actualType.equals(arrayOfReturnType))
-            {
-                if(Array.getLength(value) != 1)
-                {
-                    throw new IncompatibleReturnException("Array of " + returnType.getCanonicalName() + " does not " +
-                                "have exactly 1 value");
-                }
-                
-                result = Array.get(value, 0);
-            }
-            else
-            {
-                throw new IncompatibleReturnException("Required return type is incompatible with the type actually " +
-                        "returned\n" +
-                        "Required type: " + returnType.getCanonicalName() + "\n" +
-                        "Returned type: " + actualType.getCanonicalName());
-            }
-            
-            return result;
-        }
-        
-        private static final Map<Class<?>, Class<?>> AUTOBOXED_TO_PRIMITIVE_ARRAY = new ConcurrentHashMap<Class<?>, Class<?>>();
-        static
-        {
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Byte.class, byte[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Short.class, short[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Integer.class, int[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Long.class, long[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Double.class, double[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Float.class, float[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Boolean.class, boolean[].class);
-            AUTOBOXED_TO_PRIMITIVE_ARRAY.put(Character.class, char[].class);
-        }
-        
-        private Object convertAutoboxedReturnType(Object value, Class<?> returnType)
-        {
-            Class<?> actualType = value.getClass();
-            
-            Class<?> primitiveArrayOfReturnType = AUTOBOXED_TO_PRIMITIVE_ARRAY.get(returnType);
-            
-            Object result;
-            if(actualType.equals(returnType))
-            {
-                result = value;
-            }
-            else if(actualType.equals(primitiveArrayOfReturnType))
-            {
-                if(Array.getLength(value) != 1)
-                {
-                    throw new IncompatibleReturnException("Array of " + 
-                            primitiveArrayOfReturnType.getComponentType().getCanonicalName() + " does not have " +
-                            "exactly 1 value");
-                }
-                
-                result = Array.get(value, 0);
-            }
-            else
-            {
-                throw new IncompatibleReturnException("Required return type is incompatible with the type actually " +
-                        "returned\n" + 
-                        "Required type: " + returnType.getCanonicalName() + "\n" +
-                        "Returned type: " + actualType.getCanonicalName());
-            }
-            
-            return result;
         }
     }
     
@@ -1045,11 +986,11 @@ public class MatlabFunctionLinker
             {
                 //Set all arguments as MATLAB variables and build a function call using those variables
                 String functionStr = _functionInfo.name + "(";
-                String[] parameterNames = generateNames(proxy, "param_", _args.length);
+                List<String> parameterNames = generateNames(proxy, "param_", _args.length);
                 for(int i = 0; i < _args.length; i++)
                 {
                     Object arg = _args[i];
-                    String name = parameterNames[i];
+                    String name = parameterNames.get(i);
                     usedNames.add(name);
                     
                     if(arg instanceof MatlabType.MatlabTypeSerializedSetter)
@@ -1058,7 +999,7 @@ public class MatlabFunctionLinker
                     }
                     else
                     {
-                        proxy.setVariable(name, arg);
+                        MatlabValueSetter.setValue(proxy, name, arg);
                     }
                     
                     functionStr += name;
@@ -1070,26 +1011,28 @@ public class MatlabFunctionLinker
                 functionStr += ");";
                 
                 //Return arguments
-                String[] returnNames = new String[0];
+                List<String> returnNames = null;
                 if(_functionInfo.returnTypes.length != 0)
                 {
                     returnNames = generateNames(proxy, "return_", _functionInfo.returnTypes.length);
                     String returnStr = "[";
-                    for(int i = 0; i < returnNames.length; i++)
+                    for(int i = 0; i < returnNames.size(); i++)
                     {
+                        ClassInfo returnInfo = ClassInfo.getInfo(_functionInfo.returnTypes[i]);
+                        
                         String name;
-                        if(_functionInfo.returnTypes[i].equals(Void.class))
+                        if(returnInfo.isVoid)
                         {
                             name = "~";
                         }
                         else
                         {
-                            name = returnNames[i];
+                            name = returnNames.get(i);
                             usedNames.add(name);
                         }
                         
                         returnStr += name;
-                        if(i != returnNames.length - 1)
+                        if(i != returnNames.size() - 1)
                         {
                             returnStr += ", ";
                         }
@@ -1106,33 +1049,11 @@ public class MatlabFunctionLinker
                 Object[] returnValues = new Object[_functionInfo.returnTypes.length];
                 for(int i = 0; i < returnValues.length; i++)
                 {
-                    Class<?> returnType = _functionInfo.returnTypes[i];
-                    ClassInfo returnInfo = ClassInfo.getInfo(returnType);
-                    String returnName = returnNames[i];
+                    ClassInfo returnInfo = ClassInfo.getInfo(_functionInfo.returnTypes[i]);
                     
-                    if(returnInfo.isVoid)
+                    if(!returnInfo.isVoid)
                     {
-                        returnValues[i] = null;
-                    }
-                    else if(returnInfo.isMatlabType)
-                    {
-                        MatlabTypeSerializedGetter getter =
-                                MatlabType.newSerializedGetter((Class<? extends MatlabType>) returnType);
-                        getter.getInMatlab(proxy, returnName);
-                        returnValues[i] = getter;
-                    }
-                    else if(returnInfo.isPrimitiveArray)
-                    {
-                        MatlabTypeSerializedGetter getter = ArrayMultidimensionalizer.getGetter(true);
-                        getter.getInMatlab(proxy, returnName);
-                        returnValues[i] = getter;
-                    }
-                    else
-                    {
-                        String receiverName = generateNames(proxy, "receiver_", 1)[0];
-                        usedNames.add(receiverName);
-                        proxy.setVariable(receiverName, new MatlabValueReceiver(returnValues, i));
-                        proxy.eval(receiverName + ".set(" + returnName + ");");
+                        returnValues[i] = getReturnValue(proxy, returnNames.get(i), returnInfo, usedNames);
                     }
                 }
                 
@@ -1146,17 +1067,17 @@ public class MatlabFunctionLinker
                     //Clear all variables used
                     if(!usedNames.isEmpty())
                     {
-                        String variablesStr = "";
+                        String clearCmd = "clear ";
                         for(int i = 0; i < usedNames.size(); i++)
                         {
-                            variablesStr += usedNames.get(i);
+                            clearCmd += usedNames.get(i);
 
                             if(i != usedNames.size() - 1)
                             {
-                                variablesStr += " ";
+                                clearCmd += " ";
                             }
                         }
-                        proxy.eval("clear " + variablesStr);
+                        proxy.eval(clearCmd);
                     }
                 }
                 finally
@@ -1170,24 +1091,175 @@ public class MatlabFunctionLinker
             }
         }
         
-        private static class MatlabValueReceiver
+        private static Object getReturnValue(MatlabThreadProxy proxy, String returnName, ClassInfo returnInfo,
+                List<String> usedNames) throws MatlabInvocationException
         {
-            private final Object[] _values;
-            private final int _index;
+            Object returnValue;
             
-            private MatlabValueReceiver(Object[] values, int index)
+            //Empty array, MATLAB's rough equivalent of null
+            if(((boolean[]) proxy.returningEval("isempty(" + returnName + ");", 1)[0])[0])
             {
-                _values = values;
-                _index = index;
+                returnValue = null;
+            }
+            //The variable is a Java object
+            else if(((boolean[]) proxy.returningEval("isjava(" + returnName + ");", 1)[0])[0])
+            {
+                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+            }
+            else
+            {
+                String type = (String) proxy.returningEval("class(" + returnName + ");", 1)[0];
+
+                if(type.equals("function_handle"))
+                {
+                    MatlabFunctionHandleGetter getter = new MatlabFunctionHandleGetter();
+                    getter.getInMatlab(proxy, returnName);
+                    returnValue = getter;
+                }
+                else if(MATLAB_TO_JAVA_CLASS.containsKey(type))
+                {   
+                    //If a singular value
+                    boolean isScalar = ((boolean[]) proxy.returningEval("isscalar(" + returnName + ");", 1)[0])[0];
+
+                    //Whether the value should be returned as a linear array instead of MATLAB's default of the minimum
+                    //array dimension being 2
+                    boolean keepLinear = false;
+                    if(!isScalar)
+                    {
+                        //returnLinearArray will be true if the array is a vector and the specified return type
+                        //is the appropriate corresponding one dimensional array
+                        boolean isVector = ((boolean[]) proxy.returningEval("isvector(" + returnName + ");", 1)[0])[0];
+                        keepLinear = (isVector && returnInfo.arrayDimensions == 1 &&
+                                     MATLAB_TO_JAVA_CLASS.get(type).equals(returnInfo.baseComponentType));
+                    }
+                    
+                    //logical -> boolean
+                    if(type.equals("logical"))
+                    {
+                        if(isScalar)
+                        {
+                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                        }
+                        else
+                        {   
+                            PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
+                            getter.getInMatlab(proxy, returnName);
+                            returnValue = getter;
+                        }
+                    }
+                    //char -> char or String
+                    else if(type.equals("char"))
+                    {
+                        //If the return type is specified as char, Character, or an array of char
+                        if(char.class.equals(returnInfo.theClass) || Character.class.equals(returnInfo.theClass) ||
+                           char.class.equals(returnInfo.baseComponentType))
+                        {
+                            if(isScalar)
+                            {
+                                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                            }
+                            else
+                            {   
+                                PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
+                                getter.getInMatlab(proxy, returnName);
+                                returnValue = getter;
+                            }
+                        }
+                        //By default retrieve it as a String or an array of Strings
+                        else
+                        {
+                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                        }
+                    }
+                    //Numerics
+                    //int8 -> byte, int16 -> short, int32 -> int, int64 -> long, single -> float, double -> double
+                    else
+                    {
+                        if(isScalar)
+                        {
+                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                        }
+                        else
+                        {   
+                            //TODO: Change behavior depending on if the return type is a numeric array class
+                            //(they do not exist yet) - this will allow for imaginary values
+
+                            PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
+                            getter.getInMatlab(proxy, returnName);
+                            returnValue = getter;
+                        }
+                    }
+                }
+                else
+                {
+                    //TODO: Support cell arrays & structs (and arrays of them)
+                    
+                    throw new UnsupportedOperationException("Unsupported MATLAB type: " + type);
+                }
             }
             
-            public void set(Object val)
+            return returnValue;
+        }
+        
+        private static final Map<String, Class> MATLAB_TO_JAVA_CLASS = new HashMap<String, Class>();
+        static
+        {
+            MATLAB_TO_JAVA_CLASS.put("int8", byte.class);
+            MATLAB_TO_JAVA_CLASS.put("int16", short.class);
+            MATLAB_TO_JAVA_CLASS.put("int32", int.class);
+            MATLAB_TO_JAVA_CLASS.put("int64", long.class);
+            MATLAB_TO_JAVA_CLASS.put("single", float.class);
+            MATLAB_TO_JAVA_CLASS.put("double", double.class);
+            MATLAB_TO_JAVA_CLASS.put("logical", boolean.class);
+            MATLAB_TO_JAVA_CLASS.put("char", char.class);
+        }
+        
+        private static class MatlabValueSetter
+        {
+            private static void setValue(MatlabThreadProxy proxy, String variableName, Object value)
+                    throws MatlabInvocationException
             {
-                _values[_index] = val;
+                MatlabValueSetter setter = new MatlabValueSetter(value);
+                proxy.setVariable(variableName, setter);
+                proxy.eval(variableName + " = " + variableName + ".getValue();");
+            }
+            
+            private final Object _value;
+            
+            private MatlabValueSetter(Object value)
+            {
+                _value = value;
+            }
+            
+            public Object getValue()
+            {
+                return _value;
             }
         }
         
-        private String[] generateNames(MatlabThreadProxy proxy, String root, int amount)
+        private static class MatlabValueReceiver
+        {
+            private static Object receiveValue(MatlabThreadProxy proxy, List<String> usedNames,
+                    String variableName) throws MatlabInvocationException
+            {
+                String receiverName = (String) proxy.returningEval("genvarname('receiver_', who);", 1)[0];
+                MatlabValueReceiver receiver = new MatlabValueReceiver();
+                proxy.setVariable(receiverName, receiver);
+                usedNames.add(receiverName);
+                proxy.eval(receiverName + ".set(" + variableName + ");");
+                
+                return receiver._value;
+            }
+            
+            private Object _value = null;
+            
+            public void set(Object val)
+            {
+                _value = val;
+            }
+        }
+        
+        private List<String> generateNames(MatlabThreadProxy proxy, String root, int amount)
                 throws MatlabInvocationException
         {
             //Build set of currently taken names
@@ -1208,7 +1280,7 @@ public class MatlabFunctionLinker
                 generatedNames.add(generatedName);
             }
             
-            return generatedNames.toArray(new String[generatedNames.size()]);
+            return generatedNames;
         }
     }
 }

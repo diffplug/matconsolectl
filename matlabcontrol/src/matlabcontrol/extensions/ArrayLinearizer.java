@@ -60,17 +60,27 @@ class ArrayLinearizer
         public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
         {
             proxy.setVariable(variableName, this);
-            String command = variableName + " = reshape(" + variableName + ".getLinearArray()";
-            for(int length : _lengths)
+            
+            String command;
+            if(_lengths.length == 1)
             {
-                command += ", " + length;
+                command = variableName + " = reshape(" + variableName + ".getLinearArray(), 1, " + _lengths[0] + ");";
             }
-            command += ");";
+            else
+            {
+                command = variableName + " = reshape(" + variableName + ".getLinearArray()";
+                for(int length : _lengths)
+                {
+                    command += ", " + length;
+                }
+                command += ");";
+            }
+
             proxy.eval(command);
         }
         
         /**
-         * This round about way allows for setting char[] and long[].
+         * This round about way allows for setting char[] and long[] without exception.
          * 
          * @return 
          */
