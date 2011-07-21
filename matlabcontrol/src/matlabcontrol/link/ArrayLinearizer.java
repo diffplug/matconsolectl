@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSetter;
 
 import static matlabcontrol.link.ArrayTransformUtils.*;
 
@@ -39,19 +39,19 @@ import static matlabcontrol.link.ArrayTransformUtils.*;
  */
 class ArrayLinearizer
 {   
-    static MatlabTypeSerializedSetter getSerializedSetter(Object array)
+    static MatlabTypeSetter getSerializedSetter(Object array)
     {
         return new MultidimensionalPrimitiveArraySetter(array);
     }
     
-    private static class MultidimensionalPrimitiveArraySetter implements MatlabTypeSerializedSetter
+    private static class MultidimensionalPrimitiveArraySetter implements MatlabTypeSetter
     {
         private final Object _linearArray;
         private final int[] _lengths;
         
         public MultidimensionalPrimitiveArraySetter(Object multidimensionalArray)
         {
-            LinearizedArray arrayInfo = linearize(multidimensionalArray);
+            LinearizedArray arrayInfo = linearize(multidimensionalArray, null);
             _linearArray = arrayInfo.array;
             _lengths = arrayInfo.lengths;
         }
@@ -115,9 +115,10 @@ class ArrayLinearizer
      * jagged.
      * 
      * @param array a multidimensional primitive array
-     * @return 
+     * @param lengths the lengths of the array, if null then the lengths of the array will be computed
+     * @return linear array and lengths used
      */
-    static LinearizedArray linearize(Object array)
+    static LinearizedArray linearize(Object array, int[] lengths)
     {
         if(array == null | !array.getClass().isArray())
         {
@@ -131,8 +132,8 @@ class ArrayLinearizer
             throw new RuntimeException("array type is not a primitive, type: " + baseClass.getCanonicalName());
         }
         
-        //Create linear array with size equal to that of the bounding lengths the array
-        int[] lengths = computeBoundingLengths(array);
+        //Create linear array with size equal to that of the bounding lengths of the array
+        lengths = (lengths == null ? computeBoundingLengths(array) : lengths);
         int size = getTotalSize(lengths);
         Object linearArray = Array.newInstance(baseClass, size);
         
@@ -141,50 +142,6 @@ class ArrayLinearizer
         linearize_internal(linearArray, array, fillOperation, lengths, new int[0]);
        
         return new LinearizedArray(linearArray, lengths);
-    }
-    
-    /**
-     * Determines the maximum length for each dimension of the array.
-     * 
-     * @param array
-     * @return 
-     */
-    private static int[] computeBoundingLengths(Object array)
-    {
-        int[] maxLengths = new int[getNumberOfDimensions(array.getClass())];
-
-        //The length of this array
-        int arrayLength = Array.getLength(array);
-        maxLengths[0] = arrayLength;
-
-        //If the array holds arrays as its entries
-        if(array.getClass().getComponentType().isArray())
-        {
-            //For each entry in the array
-            for(int i = 0; i < arrayLength; i++)
-            {   
-                //childLengths' information will be one index ahead of maxLengths
-                int[] childLengths = computeBoundingLengths(Array.get(array, i));
-                for(int j = 0; j < childLengths.length; j++)
-                {
-                    maxLengths[j + 1] = Math.max(maxLengths[j + 1], childLengths[j]);
-                }
-            }
-        }
-        
-        return maxLengths;
-    }
-    
-    private static int getNumberOfDimensions(Class<?> type)
-    {
-        int numDim = 0;
-        while(type.isArray())
-        {
-            numDim++;
-            type = type.getComponentType();
-        }
-
-        return numDim;
     }
     
     /**

@@ -22,6 +22,7 @@ package matlabcontrol.link;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.lang.reflect.Array;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -143,6 +144,56 @@ class ArrayTransformUtils
     }
     
     /**
+     * Gets the number of dimensions represented by {@code type}. If not an array then {@code 0} will be returned.
+     * 
+     * @param type
+     * @return 
+     */
+    static int getNumberOfDimensions(Class<?> type)
+    {
+        int numDim = 0;
+        while(type.isArray())
+        {
+            numDim++;
+            type = type.getComponentType();
+        }
+
+        return numDim;
+    }
+    
+    /**
+     * Determines the maximum length for each dimension of the array.
+     * 
+     * @param array
+     * @return 
+     */
+    static int[] computeBoundingLengths(Object array)
+    {
+        int[] maxLengths = new int[getNumberOfDimensions(array.getClass())];
+
+        //The length of this array
+        int arrayLength = Array.getLength(array);
+        maxLengths[0] = arrayLength;
+
+        //If the array holds arrays as its entries
+        if(array.getClass().getComponentType().isArray())
+        {
+            //For each entry in the array
+            for(int i = 0; i < arrayLength; i++)
+            {   
+                //childLengths' information will be one index ahead of maxLengths
+                int[] childLengths = computeBoundingLengths(Array.get(array, i));
+                for(int j = 0; j < childLengths.length; j++)
+                {
+                    maxLengths[j + 1] = Math.max(maxLengths[j + 1], childLengths[j]);
+                }
+            }
+        }
+        
+        return maxLengths;
+    }
+    
+    /**
      * Gets the class representing an array of type {@code componentType} with the number of dimensions specified by
      * {@code dimensions}. JVMs typically impose a limit of 255 dimensions.
      * 
@@ -152,14 +203,15 @@ class ArrayTransformUtils
      */
     static Class<?> getMultidimensionalArrayClass(Class<?> componentType, int dimensions)
     {
-        //Build binary name
-        char[] nameChars = new char[dimensions + 1];
-        for(int i = 0; i < dimensions; i++)
+        String binaryName;
+        if(componentType.isPrimitive())
         {
-            nameChars[i] = '[';
+            binaryName = getPrimitiveMultidimensionalBinaryName(componentType, dimensions);
         }
-        nameChars[nameChars.length - 1] = PRIMITIVE_TO_BINARY_NAME.get(componentType);
-        String binaryName = new String(nameChars);
+        else
+        {
+            binaryName = getObjectMultidimensionalBinaryName(componentType, dimensions);
+        }
         
         try
         {
@@ -173,6 +225,34 @@ class ArrayTransformUtils
                     "Dimensions: " + dimensions + "\n" +
                     "Array Class Binary Name: "+ binaryName, e);
         }
+    }
+    
+    private static String getPrimitiveMultidimensionalBinaryName(Class<?> componentType, int dimensions)
+    {
+        //Build binary name
+        char[] nameChars = new char[dimensions + 1];
+        for(int i = 0; i < dimensions; i++)
+        {
+            nameChars[i] = '[';
+        }
+        nameChars[nameChars.length - 1] = PRIMITIVE_TO_BINARY_NAME.get(componentType);
+        String binaryName = new String(nameChars);
+        
+        return binaryName;
+    }
+    
+    private static String getObjectMultidimensionalBinaryName(Class<?> componentType, int dimensions)
+    {
+        String binaryName = "";
+        for(int i = 0; i < dimensions; i++)
+        {
+            binaryName += "[";
+        }
+        binaryName += "L";
+        binaryName += componentType.getName();
+        binaryName += ";";
+        
+        return binaryName;
     }
     
     private static final Map<Class<?>, Character> PRIMITIVE_TO_BINARY_NAME = new ConcurrentHashMap<Class<?>, Character>();

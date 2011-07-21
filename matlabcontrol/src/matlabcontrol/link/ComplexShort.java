@@ -22,65 +22,16 @@ package matlabcontrol.link;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-
 /**
- *
+ * Corresponds to a MATLAB {@code int16} with real and imaginary components.
+ * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class MatlabVariable extends MatlabType
+public final class ComplexShort extends ComplexNumber
 {
-    private final String _name;
-
-    public MatlabVariable(String name)
+    public ComplexShort(short real, short imag)
     {
-        //Validate variable name
-        if(name.isEmpty())
-        {
-            throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-        }
-        char[] nameChars = name.toCharArray();
-        if(!Character.isLetter(nameChars[0]))
-        {
-            throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-        }
-        for(char element : nameChars)
-        {
-            if(!(Character.isLetter(element) || Character.isDigit(element) || element == '_'))
-            {
-                throw new IllegalArgumentException("Invalid MATLAB variable name: " + name);
-            }
-        }
-        _name = name;
-    }
-
-    String getName()
-    {
-        return _name;
-    }
-
-    @Override
-    MatlabTypeSetter getSetter()
-    {
-        return new MatlabVariableSerializedSetter(_name);
-    }
-
-    private static class MatlabVariableSerializedSetter implements MatlabTypeSetter
-    {
-
-        private final String _name;
-
-        private MatlabVariableSerializedSetter(String name)
-        {
-            _name = name;
-        }
-
-        @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
-        {
-            proxy.eval(variableName + " = " + _name + ";");
-        }
+        super(new Short(real), new Short(imag));
     }
 }
