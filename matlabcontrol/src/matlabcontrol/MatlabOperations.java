@@ -23,12 +23,12 @@ package matlabcontrol;
  */
 
 /**
- * Interacts with a session of MATLAB.
+ * Operations which interact with a session of MATLAB.
  * 
- * @since 4.0.0
+ * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface MatlabInteractor
+public interface MatlabOperations
 {
     /**
      * Evaluates a command in MATLAB. This is equivalent to MATLAB's {@code eval('command')}.

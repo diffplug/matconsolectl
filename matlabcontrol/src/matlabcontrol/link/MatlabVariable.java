@@ -23,7 +23,7 @@ package matlabcontrol.link;
  */
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
 
 /**
  *
@@ -78,9 +78,9 @@ public final class MatlabVariable extends MatlabType
         }
 
         @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
-            proxy.eval(variableName + " = " + _name + ";");
+            ops.eval(variableName + " = " + _name + ";");
         }
     }
 }

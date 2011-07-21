@@ -28,7 +28,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
 import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
 
 /**
@@ -331,15 +331,15 @@ public class MatlabNumericArray<T> extends MatlabType
         }
 
         @Override
-        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
             PrimitiveArrayGetter realGetter = new PrimitiveArrayGetter(true, true);
-            realGetter.getInMatlab(proxy, variableName);
+            realGetter.getInMatlab(ops, variableName);
             _real = realGetter.retrieve();
             _lengths = realGetter.getLengths();
             
             PrimitiveArrayGetter imagGetter = new PrimitiveArrayGetter(false, true);
-            imagGetter.getInMatlab(proxy, variableName);
+            imagGetter.getInMatlab(ops, variableName);
             _imag = imagGetter.retrieve();
             
             _retreived = true;
@@ -360,9 +360,9 @@ public class MatlabNumericArray<T> extends MatlabType
         }
         
         @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
-            proxy.setVariable(variableName, this);
+            ops.setVariable(variableName, this);
             
             String command = variableName + " = reshape(" + variableName + ".getReal()";
             if(_imag != null)
@@ -383,7 +383,7 @@ public class MatlabNumericArray<T> extends MatlabType
                 command += ");";
             }
 
-            proxy.eval(command);
+            ops.eval(command);
         }
         
         public Object getReal()

@@ -172,7 +172,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public abstract class MatlabProxy implements MatlabInteractor
+public abstract class MatlabProxy implements MatlabOperations
 {   
     /**
      * Unique identifier for this proxy.
@@ -335,30 +335,15 @@ public abstract class MatlabProxy implements MatlabInteractor
     public static interface MatlabThreadCallable<T>
     {
         /**
-         * Performs the computation in MATLAB. The {@code proxy} provided will invoke its methods directly on MATLAB's
-         * main thread without delay. This {@code proxy} should be used to interact with MATLAB, not a
-         * {@code MatlabProxy} (or any class delegating to it).
+         * Performs the computation in MATLAB. The {@code ops} provided will invoke its methods directly on MATLAB's
+         * main thread without delay. This {@code ops} should be used to interact with MATLAB, not a {@code MatlabProxy}
+         * (or any class delegating to it).
          * 
-         * @param proxy
+         * @param ops
          * @return result of the computation
          * @throws MatlabInvocationException
          */
-        public T call(MatlabThreadProxy proxy) throws MatlabInvocationException;
-    }
-    
-    /**
-     * Operates on MATLAB's main thread without interruption. This interface is not intended to be implemented by users
-     * of matlabcontrol.
-     * <br><br>
-     * An implementation of this interface is provided to
-     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy)} so that the callable can interact with
-     * MATLAB. Implementations of this interface behave identically to a {@link MatlabProxy} running inside of MATLAB
-     * except that they are <b>not</b> thread-safe. They must be used solely on the thread that calls
-     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
-     */
-    public static interface MatlabThreadProxy extends MatlabInteractor
-    {
-        
+        public T call(MatlabOperations ops) throws MatlabInvocationException;
     }
     
     /**

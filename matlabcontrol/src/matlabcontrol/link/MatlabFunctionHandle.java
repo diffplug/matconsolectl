@@ -24,8 +24,9 @@ package matlabcontrol.link;
 
 import java.util.HashSet;
 import java.util.Set;
+
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
 import matlabcontrol.link.MatlabType.MatlabTypeSetter;
 
 /**
@@ -168,15 +169,15 @@ public final class MatlabFunctionHandle extends MatlabType
         }
         
         @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {   
             if(_function.startsWith("@"))
             {
-                proxy.eval(variableName + " = " + _function + ";");
+                ops.eval(variableName + " = " + _function + ";");
             }
             else
             {
-                proxy.eval(variableName + " = @" + _function + ";");
+                ops.eval(variableName + " = @" + _function + ";");
             }
         }
     }
@@ -201,15 +202,9 @@ public final class MatlabFunctionHandle extends MatlabType
         }
 
         @Override
-        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
-        {
-            String type = (String) proxy.returningEval("class(" + variableName + ");", 1)[0];
-            if(!type.equals("function_handle"))
-            {
-                throw new IncompatibleReturnException(variableName + " is of type " + type + " not function_handle");
-            }
-            
-            _function = (String) proxy.returningEval("func2str(" + variableName + ");", 1)[0];
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
+        {   
+            _function = (String) ops.returningEval("func2str(" + variableName + ");", 1)[0];
             
             _retrieved = true;
         }

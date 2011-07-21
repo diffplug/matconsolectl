@@ -55,7 +55,8 @@ import java.util.zip.ZipFile;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
 import matlabcontrol.link.ComplexNumber.ComplexNumberGetter;
 import matlabcontrol.link.MatlabFunctionHandle.MatlabFunctionHandleGetter;
@@ -737,7 +738,7 @@ public class MatlabFunctionLinker
                     }
                     else if(argInfo.isPrimitiveArray)
                     {
-                        args[i] = ArrayLinearizer.getSerializedSetter(args[i]);
+                        args[i] = ArrayLinearizer.getSetter(args[i]);
                     }
                 }                
             }
@@ -873,7 +874,7 @@ public class MatlabFunctionLinker
         }
     }
     
-    private static class CustomFunctionInvocation implements MatlabProxy.MatlabThreadCallable<Object[]>, Serializable
+    private static class CustomFunctionInvocation implements MatlabThreadCallable<Object[]>, Serializable
     {
         private final InvocationInfo _functionInfo;
         private final Object[] _args;
@@ -885,7 +886,7 @@ public class MatlabFunctionLinker
         }
 
         @Override
-        public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        public Object[] call(MatlabOperations ops) throws MatlabInvocationException
         {
             String initialDir = null;
             
@@ -893,7 +894,7 @@ public class MatlabFunctionLinker
             if(_functionInfo.containingDirectory != null)
             {
                 //Initial directory before cding
-                initialDir = (String) proxy.returningFeval("pwd", 1)[0];
+                initialDir = (String) ops.returningFeval("pwd", 1)[0];
                 
                 //No need to change directory
                 if(initialDir.equals(_functionInfo.containingDirectory))
@@ -903,7 +904,7 @@ public class MatlabFunctionLinker
                 //Change directory to where the function is located
                 else
                 {
-                    proxy.feval("cd", _functionInfo.containingDirectory);
+                    ops.feval("cd", _functionInfo.containingDirectory);
                 }
             }
             
@@ -912,13 +913,13 @@ public class MatlabFunctionLinker
             {
                 //Set all arguments as MATLAB variables and build a function call using those variables
                 String functionStr = _functionInfo.name + "(";
-                List<String> parameterNames = generateNames(proxy, "param_", _args.length);
+                List<String> parameterNames = generateNames(ops, "param_", _args.length);
                 for(int i = 0; i < _args.length; i++)
                 {
                     String name = parameterNames.get(i);
                     usedNames.add(name);
                     
-                    setReturnValue(proxy, name, _args[i]);
+                    setReturnValue(ops, name, _args[i]);
                     
                     functionStr += name;
                     if(i != _args.length - 1)
@@ -932,7 +933,7 @@ public class MatlabFunctionLinker
                 List<String> returnNames = null;
                 if(_functionInfo.returnTypes.length != 0)
                 {
-                    returnNames = generateNames(proxy, "return_", _functionInfo.returnTypes.length);
+                    returnNames = generateNames(ops, "return_", _functionInfo.returnTypes.length);
                     String returnStr = "[";
                     for(int i = 0; i < returnNames.size(); i++)
                     {
@@ -961,7 +962,7 @@ public class MatlabFunctionLinker
                 }
                 
                 //Invoke the function
-                proxy.eval(functionStr);
+                ops.eval(functionStr);
                 
                 //Get the return values
                 Object[] returnValues = new Object[_functionInfo.returnTypes.length];
@@ -971,7 +972,7 @@ public class MatlabFunctionLinker
                     
                     if(!returnInfo.isVoid)
                     {
-                        returnValues[i] = getReturnValue(proxy, returnNames.get(i), returnInfo, usedNames);
+                        returnValues[i] = getReturnValue(ops, returnNames.get(i), returnInfo, usedNames);
                     }
                 }
                 
@@ -995,7 +996,7 @@ public class MatlabFunctionLinker
                                 clearCmd += " ";
                             }
                         }
-                        proxy.eval(clearCmd);
+                        ops.eval(clearCmd);
                     }
                 }
                 finally
@@ -1003,18 +1004,18 @@ public class MatlabFunctionLinker
                     //If necessary, change back to the directory MATLAB was in before the function was invoked
                     if(initialDir != null)
                     {
-                        proxy.feval("cd", initialDir);
+                        ops.feval("cd", initialDir);
                     }
                 }
             }
         }
         
-        private static void setReturnValue(MatlabThreadProxy proxy, String name, Object arg)
+        private static void setReturnValue(MatlabOperations ops, String name, Object arg)
                 throws MatlabInvocationException
         {
             if(arg instanceof MatlabTypeSetter)
             {
-                ((MatlabTypeSetter) arg).setInMatlab(proxy, name);
+                ((MatlabTypeSetter) arg).setInMatlab(ops, name);
             }
             else if(arg instanceof Number)
             {   
@@ -1022,69 +1023,69 @@ public class MatlabFunctionLinker
                 
                 if(number instanceof Byte)
                 {
-                    proxy.eval(name + "=int8(" + number.byteValue() + ");");
+                    ops.eval(name + "=int8(" + number.byteValue() + ");");
                 }
                 else if(number instanceof Short)
                 {
-                    proxy.eval(name + "=int16(" + number.shortValue() + ");");
+                    ops.eval(name + "=int16(" + number.shortValue() + ");");
                 }
                 else if(number instanceof Integer)
                 {
-                    proxy.eval(name + "=int32(" + number.intValue() + ");");
+                    ops.eval(name + "=int32(" + number.intValue() + ");");
                 }
                 else if(number instanceof Long)
                 {
-                    proxy.eval(name + "=int64(" + number.longValue() + ");");
+                    ops.eval(name + "=int64(" + number.longValue() + ");");
                 }
                 else if(number instanceof Float)
                 {
-                    proxy.setVariable(name, new float[] { number.floatValue() });
+                    ops.setVariable(name, new float[] { number.floatValue() });
                 }
                 else if(number instanceof Double)
                 {
-                    proxy.setVariable(name, new double[] { number.doubleValue() });
+                    ops.setVariable(name, new double[] { number.doubleValue() });
                 }
                 //Otherwise this Number subclass is not to be treated specially, set it as any other Java object
                 else
                 {
-                    MatlabValueSetter.setValue(proxy, name, number);
+                    MatlabValueSetter.setValue(ops, name, number);
                 }
             }
             else
             {
-                MatlabValueSetter.setValue(proxy, name, arg);
+                MatlabValueSetter.setValue(ops, name, arg);
             }
         }
         
-        private static Object getReturnValue(MatlabThreadProxy proxy, String returnName, ClassInfo returnInfo,
+        private static Object getReturnValue(MatlabOperations ops, String returnName, ClassInfo returnInfo,
                 List<String> usedNames) throws MatlabInvocationException
         {
             Object returnValue;
             
             //Empty array, MATLAB's rough equivalent of null
-            if(((boolean[]) proxy.returningEval("isempty(" + returnName + ");", 1)[0])[0])
+            if(((boolean[]) ops.returningEval("isempty(" + returnName + ");", 1)[0])[0])
             {
                 returnValue = null;
             }
             //The variable is a Java object
-            else if(((boolean[]) proxy.returningEval("isjava(" + returnName + ");", 1)[0])[0])
+            else if(((boolean[]) ops.returningEval("isjava(" + returnName + ");", 1)[0])[0])
             {
-                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
             }
             else
             {
-                String type = (String) proxy.returningEval("class(" + returnName + ");", 1)[0];
+                String type = (String) ops.returningEval("class(" + returnName + ");", 1)[0];
 
                 if(type.equals("function_handle"))
                 {
                     MatlabFunctionHandleGetter getter = new MatlabFunctionHandleGetter();
-                    getter.getInMatlab(proxy, returnName);
+                    getter.getInMatlab(ops, returnName);
                     returnValue = getter;
                 }
                 else if(MATLAB_TO_JAVA_CLASS.containsKey(type))
                 {   
                     //If a singular value
-                    boolean isScalar = ((boolean[]) proxy.returningEval("isscalar(" + returnName + ");", 1)[0])[0];
+                    boolean isScalar = ((boolean[]) ops.returningEval("isscalar(" + returnName + ");", 1)[0])[0];
 
                     //Whether the value should be returned as a linear array instead of MATLAB's default of the minimum
                     //array dimension being 2
@@ -1093,7 +1094,7 @@ public class MatlabFunctionLinker
                     {
                         //returnLinearArray will be true if the array is a vector and the specified return type
                         //is the appropriate corresponding one dimensional array
-                        boolean isVector = ((boolean[]) proxy.returningEval("isvector(" + returnName + ");", 1)[0])[0];
+                        boolean isVector = ((boolean[]) ops.returningEval("isvector(" + returnName + ");", 1)[0])[0];
                         keepLinear = (isVector && returnInfo.arrayDimensions == 1 &&
                                      MATLAB_TO_JAVA_CLASS.get(type).equals(returnInfo.baseComponentType));
                     }
@@ -1103,12 +1104,12 @@ public class MatlabFunctionLinker
                     {
                         if(isScalar)
                         {
-                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                            returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
                         }
                         else
                         {   
                             PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
-                            getter.getInMatlab(proxy, returnName);
+                            getter.getInMatlab(ops, returnName);
                             returnValue = getter;
                         }
                     }
@@ -1121,37 +1122,37 @@ public class MatlabFunctionLinker
                         {
                             if(isScalar)
                             {
-                                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
                             }
                             else
                             {   
                                 PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
-                                getter.getInMatlab(proxy, returnName);
+                                getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
                         }
                         //By default retrieve it as a String or an array of Strings
                         else
                         {
-                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                            returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
                         }
                     }
                     //Numerics
                     //int8 -> byte, int16 -> short, int32 -> int, int64 -> long, single -> float, double -> double
                     else
                     {
-                        boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + returnName + ");", 1)[0])[0];
+                        boolean isReal = ((boolean[]) ops.returningEval("isreal(" + returnName + ");", 1)[0])[0];
                         
                         if(isScalar)
                         {
                             if(isReal)
                             {
-                                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
                             }
                             else
                             {
                                 ComplexNumberGetter getter = new ComplexNumberGetter();
-                                getter.getInMatlab(proxy, returnName);
+                                getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
                         }
@@ -1160,13 +1161,13 @@ public class MatlabFunctionLinker
                             if(isReal)
                             {
                                 PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
-                                getter.getInMatlab(proxy, returnName);
+                                getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
                             else
                             {
                                 MatlabNumericArrayGetter getter = new MatlabNumericArrayGetter();
-                                getter.getInMatlab(proxy, returnName);
+                                getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
                         }
@@ -1196,12 +1197,12 @@ public class MatlabFunctionLinker
         
         private static class MatlabValueSetter
         {
-            private static void setValue(MatlabThreadProxy proxy, String variableName, Object value)
+            private static void setValue(MatlabOperations ops, String variableName, Object value)
                     throws MatlabInvocationException
             {
                 MatlabValueSetter setter = new MatlabValueSetter(value);
-                proxy.setVariable(variableName, setter);
-                proxy.eval(variableName + " = " + variableName + ".getValue();");
+                ops.setVariable(variableName, setter);
+                ops.eval(variableName + " = " + variableName + ".getValue();");
             }
             
             private final Object _value;
@@ -1219,14 +1220,14 @@ public class MatlabFunctionLinker
         
         private static class MatlabValueReceiver
         {
-            private static Object receiveValue(MatlabThreadProxy proxy, List<String> usedNames,
+            private static Object receiveValue(MatlabOperations ops, List<String> usedNames,
                     String variableName) throws MatlabInvocationException
             {
-                String receiverName = (String) proxy.returningEval("genvarname('receiver_', who);", 1)[0];
+                String receiverName = (String) ops.returningEval("genvarname('receiver_', who);", 1)[0];
                 MatlabValueReceiver receiver = new MatlabValueReceiver();
-                proxy.setVariable(receiverName, receiver);
+                ops.setVariable(receiverName, receiver);
                 usedNames.add(receiverName);
-                proxy.eval(receiverName + ".set(" + variableName + ");");
+                ops.eval(receiverName + ".set(" + variableName + ");");
                 
                 return receiver._value;
             }
@@ -1239,11 +1240,11 @@ public class MatlabFunctionLinker
             }
         }
         
-        private List<String> generateNames(MatlabThreadProxy proxy, String root, int amount)
+        private List<String> generateNames(MatlabOperations ops, String root, int amount)
                 throws MatlabInvocationException
         {
             //Build set of currently taken names
-            Set<String> takenNames = new HashSet<String>(Arrays.asList((String[]) proxy.returningEval("who", 1)[0]));
+            Set<String> takenNames = new HashSet<String>(Arrays.asList((String[]) ops.returningEval("who", 1)[0]));
             
             //Generate names
             List<String> generatedNames = new ArrayList<String>();

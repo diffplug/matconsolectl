@@ -29,8 +29,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.link.MatlabType.MatlabTypeGetter;
 import static matlabcontrol.link.ArrayTransformUtils.*;
 
@@ -41,11 +41,6 @@ import static matlabcontrol.link.ArrayTransformUtils.*;
  */
 class ArrayMultidimensionalizer
 {   
-    static PrimitiveArrayGetter getGetter(boolean realPart, boolean multidimensionalize)
-    {
-        return new PrimitiveArrayGetter(realPart, multidimensionalize);
-    }
-    
     static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
         //Note: uint8, uint16, uint32, and uint64 are intentionally not supported because MATLAB will convert them
@@ -120,10 +115,10 @@ class ArrayMultidimensionalizer
         }
 
         @Override
-        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
             //Type
-            String type = (String) proxy.returningEval("class(" + variableName + ");", 1)[0];
+            String type = (String) ops.returningEval("class(" + variableName + ");", 1)[0];
             if(!SUPPORTED_MATLAB_CLASSES.contains(type))
             {
                 _exception = new IncompatibleReturnException("Type not supported: " + type + "\n" +
@@ -132,19 +127,19 @@ class ArrayMultidimensionalizer
             else
             {
                 //If an empty array, equivalent to Java null
-                if(((boolean[]) proxy.returningEval("isempty(" + variableName + ");", 1)[0])[0])
+                if(((boolean[]) ops.returningEval("isempty(" + variableName + ");", 1)[0])[0])
                 {
                     _array = null;
                 }
                 //If a scalar (singular) value
-                else if(((boolean[]) proxy.returningEval("isscalar(" + variableName + ");", 1)[0])[0])
+                else if(((boolean[]) ops.returningEval("isscalar(" + variableName + ");", 1)[0])[0])
                 {
                     _exception = new IncompatibleReturnException("Scalar value of type " + type);
                 }
                 else
                 {
                     //Retrieve lengths of array
-                    double[] size = (double[]) proxy.returningEval("size(" + variableName + ");", 1)[0];
+                    double[] size = (double[]) ops.returningEval("size(" + variableName + ");", 1)[0];
                     _lengths = new int[size.length];
                     for(int i = 0; i < size.length; i++)
                     {
@@ -152,27 +147,27 @@ class ArrayMultidimensionalizer
                     }
                     
                     //Retrieve array
-                    String name = (String) proxy.returningEval("genvarname('" + variableName + "_getter', who);", 1)[0];
-                    proxy.setVariable(name, this);
+                    String name = (String) ops.returningEval("genvarname('" + variableName + "_getter', who);", 1)[0];
+                    ops.setVariable(name, this);
                     try
                     {
                         if(_getRealPart)
                         {
-                            proxy.eval(name + ".setArray(reshape(" + variableName + ", 1, []));");
+                            ops.eval(name + ".setArray(reshape(" + variableName + ", 1, []));");
                         }
                         else
                         {
                             //If the array has an imaginary part, retrieve it
-                            boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + variableName + ");", 1)[0])[0];
+                            boolean isReal = ((boolean[]) ops.returningEval("isreal(" + variableName + ");", 1)[0])[0];
                             if(!isReal)
                             {
-                                proxy.eval(name + ".setArray(imag(reshape(" + variableName + ", 1, [])));");
+                                ops.eval(name + ".setArray(imag(reshape(" + variableName + ", 1, [])));");
                             }
                         }
                     }
                     finally
                     {
-                        proxy.eval("clear " + name);
+                        ops.eval("clear " + name);
                     }
                 }
             }

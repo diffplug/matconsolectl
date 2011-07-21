@@ -32,9 +32,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 
+import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.internal.MatlabRMIClassLoaderSpi;
 
 /**
@@ -261,17 +260,17 @@ class MatlabConnector
         private final String[] _toRemove;
         private final String[] _toAdd;
         
-        public ModifyCodebaseCallable(String oldRemoteClassPath[], String[] newRemoteClassPath)
+        public ModifyCodebaseCallable(String[] oldRemoteClassPath, String[] newRemoteClassPath)
         {
             _toRemove = oldRemoteClassPath;
             _toAdd = newRemoteClassPath;
         }
 
         @Override
-        public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
+        public Void call(MatlabOperations ops) throws MatlabInvocationException
         {
             //Current dynamic class path
-            String[] curr = (String[]) proxy.returningFeval("javaclasspath", 1, "-dynamic")[0];
+            String[] curr = (String[]) ops.returningFeval("javaclasspath", 1, "-dynamic")[0];
             
             //Build new dynamic class path
             List<String> newDynamic = new ArrayList<String>();
@@ -282,7 +281,7 @@ class MatlabConnector
             //If the class path is different, set it
             if(!newDynamic.equals(Arrays.asList(curr)))
             {
-                proxy.feval("javaclasspath", new Object[] { newDynamic.toArray(new String[newDynamic.size()]) });
+                ops.feval("javaclasspath", new Object[] { newDynamic.toArray(new String[newDynamic.size()]) });
             }
             
             return null;
