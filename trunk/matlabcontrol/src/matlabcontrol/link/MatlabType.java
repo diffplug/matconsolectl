@@ -23,10 +23,6 @@ package matlabcontrol.link;
  */
 
 import java.io.Serializable;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
@@ -35,62 +31,16 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * Hidden superclass of all Java classes which convert between MATLAB types. Subclasses are all final and are not
  * {@link Serializable}. Being final makes it easier to ensure appropriate behavior when transforming types
  * automatically. They are not serializable to reduce the publicly exposed API and reduce the need to maintain
- * serializable compatibility. Instead, transferring occurs by use of {@link MatlabTypeSerializedSetter} and
- * {@link MatlabTypeSerializedGetter}. A getter is associated with a class, not an instance of a class. As such it
- * cannot be retrieved in a generalizable manner with a method of the class. Instead if a class can be retrieved from
- * MATLAB as a MatlabType then the class is annotated with a {@link MatlabTypeSerializationProvider} that specifies
- * which class is its {@link MatlabType.MatlabTypeSerializedGetter}. The getter must have an accessible no argument
- * constructor.
- * <br><br>
- * This class is hidden for a few reasons. {@link MatlabFunctionLinker} in a variety of situations needs to determine if
- * something is a subclass of {@code MatlabType}, but it would not work if the type was actually a {@code MatlabType}.
- * Allowing it as either a parameter type or return type would complicate the logic, and in the case of a return type
- * or annotated return type would not in all situations work. It would generally degrade type safety to allow it. This
- * could be disallowed by checking for it. But the easiest way is to just not expose it. Furthermore, hiding this class
- * makes it easier to change the underlying structure without breaking public API binary compatibility.
+ * serializable compatibility. Instead, transferring occurs by use of {@link MatlabTypeSetter} and
+ * {@link MatlabTypeGetter}. A getter is typically associated with a class as inner static class.
  * 
  * @since 5.0.0
- * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 abstract class MatlabType
-{
-    /**
-     * All {@code MatlabType} subclasses that can return information from MATLAB (typically all types, but for instance
-     * not {@link MatlabVariable}) must be annotated with this.
-     */
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.TYPE)
-    @interface MatlabTypeSerializationProvider
-    {
-        Class<? extends MatlabTypeSerializedGetter> value();
-    }
-    
-    abstract MatlabTypeSerializedSetter getSerializedSetter();
-    
-    /**
-     * Returns a new instance of the {@link MatlabTypeSerializedGetter} associated with the {@link MatlabType} subclass.
-     * Uses the getter that {@code clazz} specifies in its {@link MatlabTypeSerializationProvider} annotation.
-     * 
-     * @param clazz
-     * @return 
-     * @throws IllegalArgumentException if a getter cannot be created for {@code clazz}
-     */
-    static MatlabTypeSerializedGetter newSerializedGetter(Class<?> clazz)
-    {
-        try
-        {
-            MatlabTypeSerializationProvider provider = clazz.getAnnotation(MatlabTypeSerializationProvider.class);
-            Class<? extends MatlabTypeSerializedGetter> getterClass = provider.value();
-            
-            return getterClass.newInstance();
-        }
-        catch(Exception ex)
-        {
-            throw new IllegalArgumentException("Unable to create serialized getter for " + clazz.getName(), ex);
-        }
-    }
-    
+{   
+    abstract MatlabTypeSetter getSetter();
+       
     /**
      * Retrieves in MATLAB the information necessary to create the associated {@code MatlabType} from a given MATLAB
      * variable.
@@ -99,7 +49,7 @@ abstract class MatlabType
      * 
      * @param <U> 
      */
-    static interface MatlabTypeSerializedGetter extends Serializable
+    static interface MatlabTypeGetter extends Serializable
     {
         /**
          * Takes the information retrieved by the
@@ -108,11 +58,11 @@ abstract class MatlabType
          * 
          * @return 
          */
-        public Object deserialize();
+        public Object retrieve();
         
         /**
          * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information
-         * {@link #deserialize()} can be called to create the appropriate {@code MatlabType}.
+         * {@link #retrieve()} can be called to create the appropriate {@code MatlabType}.
          * 
          * @param proxy
          * @param variableName 
@@ -124,7 +74,7 @@ abstract class MatlabType
      * Sets in MATLAB the equivalent of the data represented by the {@code MatlabType} that provides an instance of
      * an implementation of this class.
      */
-    static interface MatlabTypeSerializedSetter extends Serializable
+    static interface MatlabTypeSetter extends Serializable
     {
         public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException;
     }

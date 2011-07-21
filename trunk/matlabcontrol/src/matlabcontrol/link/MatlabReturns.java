@@ -1,7 +1,5 @@
 package matlabcontrol.link;
 
-import java.util.Arrays;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -23,6 +21,8 @@ import java.util.Arrays;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+import java.util.Arrays;
 
 /**
  * MATLAB return containers.

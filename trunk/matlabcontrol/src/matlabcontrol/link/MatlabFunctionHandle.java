@@ -26,15 +26,13 @@ import java.util.HashSet;
 import java.util.Set;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.link.MatlabType.MatlabTypeSerializationProvider;
-import matlabcontrol.link.MatlabType.MatlabTypeSerializedSetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSetter;
 
 /**
  *
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-@MatlabTypeSerializationProvider(MatlabFunctionHandle.MatlabFunctionHandleGetter.class)
 public final class MatlabFunctionHandle extends MatlabType
 {
     private final String _function;
@@ -155,12 +153,12 @@ public final class MatlabFunctionHandle extends MatlabType
     }
     
     @Override
-    MatlabTypeSerializedSetter getSerializedSetter()
+    MatlabTypeSetter getSetter()
     {
         return new MatlabFunctionHandlerSetter(_function);
     }
     
-    private static class MatlabFunctionHandlerSetter implements MatlabTypeSerializedSetter
+    private static class MatlabFunctionHandlerSetter implements MatlabTypeSetter
     {
         private final String _function;
         
@@ -183,13 +181,13 @@ public final class MatlabFunctionHandle extends MatlabType
         }
     }
     
-    static class MatlabFunctionHandleGetter implements MatlabTypeSerializedGetter
+    static class MatlabFunctionHandleGetter implements MatlabTypeGetter
     {
         private String _function;
         private boolean _retrieved = false;
         
         @Override
-        public MatlabFunctionHandle deserialize()
+        public MatlabFunctionHandle retrieve()
         {
             if(_retrieved)
             {

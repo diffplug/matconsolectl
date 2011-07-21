@@ -57,9 +57,12 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
+import matlabcontrol.link.ComplexNumber.ComplexNumberGetter;
 import matlabcontrol.link.MatlabFunctionHandle.MatlabFunctionHandleGetter;
+import matlabcontrol.link.MatlabNumericArray.MatlabNumericArrayGetter;
 import matlabcontrol.link.MatlabReturns.ReturnN;
-import matlabcontrol.link.MatlabType.MatlabTypeSerializedGetter;
+import matlabcontrol.link.MatlabType.MatlabTypeGetter;
+import matlabcontrol.link.MatlabType.MatlabTypeSetter;
 
 /**
  *
@@ -461,64 +464,7 @@ public class MatlabFunctionLinker
             }
         }
         
-        return getMultidimensionalArrayClass((Class<?>) componentType, dimensions, method);
-    }
-    
-    private static final Map<Class<?>, String> PRIMITIVE_TO_BINARY_NAME = new ConcurrentHashMap<Class<?>, String>();
-    static
-    {
-        PRIMITIVE_TO_BINARY_NAME.put(byte.class, "B");
-        PRIMITIVE_TO_BINARY_NAME.put(short.class, "S");
-        PRIMITIVE_TO_BINARY_NAME.put(int.class, "I");
-        PRIMITIVE_TO_BINARY_NAME.put(long.class, "J");
-        PRIMITIVE_TO_BINARY_NAME.put(float.class, "F");
-        PRIMITIVE_TO_BINARY_NAME.put(double.class, "D");
-        PRIMITIVE_TO_BINARY_NAME.put(boolean.class, "Z");
-        PRIMITIVE_TO_BINARY_NAME.put(char.class, "C");
-    }
-    
-    /**
-     * 
-     * @param componentType
-     * @param dimensions
-     * @param method used for exception message only
-     * @return 
-     */
-    private static Class<?> getMultidimensionalArrayClass(Class<?> componentType, int dimensions, Method method)
-    {
-        String prefix = "";
-        String suffix = "";
-        String body;
-        
-        for(int i = 0; i < dimensions; i++)
-        {
-            prefix += "[";
-        }
-        
-        if(componentType.isPrimitive())
-        {
-            body = PRIMITIVE_TO_BINARY_NAME.get(componentType);
-        }
-        else
-        {
-            prefix += "L";
-            suffix = ";";
-            body = componentType.getName();
-        }
-        
-        String binaryName = prefix + body + suffix;
-        
-        try
-        {
-            return Class.forName(binaryName, false, componentType.getClassLoader());
-        }
-        catch(ClassNotFoundException e)
-        {
-            throw new LinkingException(method + " has a " + dimensions + " dimension array of " +
-                    componentType.getCanonicalName() + " as a parameter of " +
-                    method.getReturnType().getCanonicalName() + " which could be not be created with the binary name " +
-                    binaryName, e);
-        }
+        return ArrayTransformUtils.getMultidimensionalArrayClass((Class<?>) componentType, dimensions);
     }
     
     private static InvocationInfo getInvocationInfo(Method method, MatlabFunctionInfo annotation)
@@ -564,7 +510,7 @@ public class MatlabFunctionLinker
             return "[" + this.getClass().getName() + 
                     " name=" + name + "," +
                     " containingDirectory=" + containingDirectory + "," +
-                    " returnTypes=" + Arrays.asList(returnTypes) + "]";
+                    " returnTypes=" + Arrays.toString(returnTypes) + "]";
         }
     }
     
@@ -658,26 +604,7 @@ public class MatlabFunctionLinker
             isMatlabType = MatlabType.class.isAssignableFrom(clazz);
         }
     }
-    
-    /**
-     * Represents an issue linking a Java method to a MATLAB function.
-     * 
-     * @since 4.1.0
-     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
-     */
-    public static class LinkingException extends RuntimeException
-    {
-        private LinkingException(String msg)
-        {
-            super(msg);
-        }
-        
-        private LinkingException(String msg, Throwable cause)
-        {
-            super(msg, cause);
-        }
-    }
-    
+
     
     /**************************************************************************************************************\
     |*                                        Function Invocation                                                 *|
@@ -806,7 +733,7 @@ public class MatlabFunctionLinker
 
                     if(argInfo.isMatlabType)
                     {
-                        args[i] = ((MatlabType) args[i]).getSerializedSetter();
+                        args[i] = ((MatlabType) args[i]).getSetter();
                     }
                     else if(argInfo.isPrimitiveArray)
                     {
@@ -818,14 +745,14 @@ public class MatlabFunctionLinker
             //Invoke function
             Object[] returnValues = _proxy.invokeAndWait(new CustomFunctionInvocation(info, args));
 
-            //For each returned value that is a serialized getter, deserialize it
+            //For each returned value that is a serialized getter, retrieve it
             for(int i = 0; i < returnValues.length; i++)
             {
-                if(returnValues[i] instanceof MatlabTypeSerializedGetter)
+                if(returnValues[i] instanceof MatlabTypeGetter)
                 {
                     try
                     {
-                        returnValues[i] = ((MatlabType.MatlabTypeSerializedGetter) returnValues[i]).deserialize();
+                        returnValues[i] = ((MatlabType.MatlabTypeGetter) returnValues[i]).retrieve();
                     }
                     catch(IncompatibleReturnException e)
                     {
@@ -988,18 +915,10 @@ public class MatlabFunctionLinker
                 List<String> parameterNames = generateNames(proxy, "param_", _args.length);
                 for(int i = 0; i < _args.length; i++)
                 {
-                    Object arg = _args[i];
                     String name = parameterNames.get(i);
                     usedNames.add(name);
                     
-                    if(arg instanceof MatlabType.MatlabTypeSerializedSetter)
-                    {
-                        ((MatlabType.MatlabTypeSerializedSetter) arg).setInMatlab(proxy, name);
-                    }
-                    else
-                    {
-                        MatlabValueSetter.setValue(proxy, name, arg);
-                    }
+                    setReturnValue(proxy, name, _args[i]);
                     
                     functionStr += name;
                     if(i != _args.length - 1)
@@ -1090,6 +1009,53 @@ public class MatlabFunctionLinker
             }
         }
         
+        private static void setReturnValue(MatlabThreadProxy proxy, String name, Object arg)
+                throws MatlabInvocationException
+        {
+            if(arg instanceof MatlabTypeSetter)
+            {
+                ((MatlabTypeSetter) arg).setInMatlab(proxy, name);
+            }
+            else if(arg instanceof Number)
+            {   
+                Number number = (Number) arg;
+                
+                if(number instanceof Byte)
+                {
+                    proxy.eval(name + "=int8(" + number.byteValue() + ");");
+                }
+                else if(number instanceof Short)
+                {
+                    proxy.eval(name + "=int16(" + number.shortValue() + ");");
+                }
+                else if(number instanceof Integer)
+                {
+                    proxy.eval(name + "=int32(" + number.intValue() + ");");
+                }
+                else if(number instanceof Long)
+                {
+                    proxy.eval(name + "=int64(" + number.longValue() + ");");
+                }
+                else if(number instanceof Float)
+                {
+                    proxy.setVariable(name, new float[] { number.floatValue() });
+                }
+                else if(number instanceof Double)
+                {
+                    proxy.setVariable(name, new double[] { number.doubleValue() });
+                }
+                //Otherwise this Number subclass is not to be treated specially, set it as any other Java object
+                else
+                {
+                    MatlabValueSetter.setValue(proxy, name, number);
+                }
+            }
+            else
+            {
+                MatlabValueSetter.setValue(proxy, name, arg);
+            }
+        }
+        
         private static Object getReturnValue(MatlabThreadProxy proxy, String returnName, ClassInfo returnInfo,
                 List<String> usedNames) throws MatlabInvocationException
         {
@@ -1174,25 +1140,40 @@ public class MatlabFunctionLinker
                     //int8 -> byte, int16 -> short, int32 -> int, int64 -> long, single -> float, double -> double
                     else
                     {
+                        boolean isReal = ((boolean[]) proxy.returningEval("isreal(" + returnName + ");", 1)[0])[0];
+                        
                         if(isScalar)
                         {
-                            returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                            if(isReal)
+                            {
+                                returnValue = MatlabValueReceiver.receiveValue(proxy, usedNames, returnName);
+                            }
+                            else
+                            {
+                                ComplexNumberGetter getter = new ComplexNumberGetter();
+                                getter.getInMatlab(proxy, returnName);
+                                returnValue = getter;
+                            }
                         }
                         else
-                        {   
-                            //TODO: Change behavior depending on if the return type is a numeric array class
-                            //(they do not exist yet) - this will allow for imaginary values
-
-                            PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
-                            getter.getInMatlab(proxy, returnName);
-                            returnValue = getter;
+                        {
+                            if(isReal)
+                            {
+                                PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
+                                getter.getInMatlab(proxy, returnName);
+                                returnValue = getter;
+                            }
+                            else
+                            {
+                                MatlabNumericArrayGetter getter = new MatlabNumericArrayGetter();
+                                getter.getInMatlab(proxy, returnName);
+                                returnValue = getter;
+                            }
                         }
                     }
                 }
                 else
                 {
-                    //TODO: Support cell arrays & structs (and arrays of them)
-                    
                     throw new UnsupportedOperationException("Unsupported MATLAB type: " + type);
                 }
             }

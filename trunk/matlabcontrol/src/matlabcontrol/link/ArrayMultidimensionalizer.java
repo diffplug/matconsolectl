@@ -31,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-import matlabcontrol.link.MatlabType.MatlabTypeSerializedGetter;
+import matlabcontrol.link.MatlabType.MatlabTypeGetter;
 import static matlabcontrol.link.ArrayTransformUtils.*;
 
 /**
@@ -46,7 +46,7 @@ class ArrayMultidimensionalizer
         return new PrimitiveArrayGetter(realPart, multidimensionalize);
     }
     
-    static class PrimitiveArrayGetter implements MatlabTypeSerializedGetter
+    static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
         //Note: uint8, uint16, uint32, and uint64 are intentionally not supported because MATLAB will convert them
         //to byte, short, int, and long but that won't work properly for large values do to having one less bit
@@ -83,14 +83,21 @@ class ArrayMultidimensionalizer
             return _getRealPart;
         }
         
+        public int[] getLengths()
+        {
+            return _lengths;
+        }
+        
         /**
          * May be null if this represents the imaginary part and the array has no imaginary values or the array was
          * empty.
          * 
          * @return 
          */
-        public Object getArray()
+        @Override
+        public Object retrieve()
         {
+            //Validate
             if(_retreived)
             {
                 if(_exception != null)
@@ -98,26 +105,18 @@ class ArrayMultidimensionalizer
                     _exception.fillInStackTrace();
                     throw _exception;
                 }
-                
-                return _array;
             }
             else
             {
                 throw new IllegalStateException("array has not yet been retrieved");
             }
-        }
-        
-        @Override
-        public Object deserialize()
-        {
-            Object array = this.getArray();
             
-            if(array != null && !_keepLinear)
+            if(_array != null && !_keepLinear)
             {
-                array = multidimensionalize(array, _lengths);
+                _array = multidimensionalize(_array, _lengths);
             }
             
-            return array;
+            return _array;
         }
 
         @Override
