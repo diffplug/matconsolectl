@@ -25,7 +25,7 @@ package matlabcontrol.link;
 import java.io.Serializable;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
 
 /**
  * Hidden superclass of all Java classes which convert between MATLAB types. Subclasses are all final and are not
@@ -53,7 +53,7 @@ abstract class MatlabType
     {
         /**
          * Takes the information retrieved by the
-         * {@link #getInMatlab(matlabcontrol.MatlabProxy.MatlabThreadProxy, java.lang.String)} and creates the
+         * {@link #getInMatlab(matlabcontrol.MatlabOperations, java.lang.String)} and creates the
          * associated {@code MatlabType}.
          * 
          * @return 
@@ -64,10 +64,10 @@ abstract class MatlabType
          * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information
          * {@link #retrieve()} can be called to create the appropriate {@code MatlabType}.
          * 
-         * @param proxy
+         * @param ops
          * @param variableName 
          */
-        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException;
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
     }
     
     /**
@@ -76,6 +76,6 @@ abstract class MatlabType
      */
     static interface MatlabTypeSetter extends Serializable
     {
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException;
+        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
     }
 }

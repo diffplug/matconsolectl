@@ -1,10 +1,5 @@
 package matlabcontrol.link;
 
-import java.util.HashMap;
-import java.util.Map;
-import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -26,6 +21,12 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
+import java.util.HashMap;
+import java.util.Map;
+
+import matlabcontrol.MatlabInvocationException;
+import matlabcontrol.MatlabOperations;
 
 /**
  * Corresponds to a MATLAB number with real and imaginary components.
@@ -184,38 +185,38 @@ public abstract class ComplexNumber extends MatlabType
         }
 
         @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String name) throws MatlabInvocationException
+        public void setInMatlab(MatlabOperations ops, String name) throws MatlabInvocationException
         {
             //Avoids limitation that MATLAB cannot multiply an integer stored in a variable by i
                     
             if(_real instanceof Byte)
             {
-                proxy.eval(name + "=int8(" + _real.byteValue() + "+" + _imag.byteValue() + "i);");
+                ops.eval(name + "=int8(" + _real.byteValue() + "+" + _imag.byteValue() + "i);");
             }
             else if(_real instanceof Short)
             {
-                proxy.eval(name + "=int16(" + _real.shortValue() + "+" + _imag.shortValue() + "i);");
+                ops.eval(name + "=int16(" + _real.shortValue() + "+" + _imag.shortValue() + "i);");
             }
             else if(_real instanceof Integer)
             {
-                proxy.eval(name + "=int32(" + _real.intValue() + "+" + _imag.intValue() + "i);");
+                ops.eval(name + "=int32(" + _real.intValue() + "+" + _imag.intValue() + "i);");
             }
             else if(_real instanceof Long)
             {
-                proxy.eval(name + "=int64(" + _real.longValue() + "+" + _imag.longValue() + "i);");
+                ops.eval(name + "=int64(" + _real.longValue() + "+" + _imag.longValue() + "i);");
             }
                     
             // Set value through an array to avoid values being converted to MATLAB double
                     
             else if(_real instanceof Float)
             {
-                proxy.setVariable(name, new float[] { _real.floatValue(), _imag.floatValue() });
-                proxy.eval(name + "=" + name + "(1)+" + name + "(2)*i;");
+                ops.setVariable(name, new float[] { _real.floatValue(), _imag.floatValue() });
+                ops.eval(name + "=" + name + "(1)+" + name + "(2)*i;");
             }
             else if(_real instanceof Double)
             {
-                proxy.setVariable(name, new double[] { _real.doubleValue(), _imag.doubleValue() });
-                proxy.eval(name + "=" + name + "(1)+" + name + "(2)*i;");
+                ops.setVariable(name, new double[] { _real.doubleValue(), _imag.doubleValue() });
+                ops.eval(name + "=" + name + "(1)+" + name + "(2)*i;");
             }
         }
     }
@@ -238,18 +239,18 @@ public abstract class ComplexNumber extends MatlabType
         }
 
         @Override
-        public void getInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
-            String receiverName = (String) proxy.returningEval("genvarname('complex_receiver_', who);", 1)[0];
+            String receiverName = (String) ops.returningEval("genvarname('complex_receiver_', who);", 1)[0];
             try
             {
-                proxy.setVariable(receiverName, this);
-                proxy.eval(receiverName + ".setReal(real(" + variableName + "));");
-                proxy.eval(receiverName + ".setImaginary(imag(" + variableName + "));");
+                ops.setVariable(receiverName, this);
+                ops.eval(receiverName + ".setReal(real(" + variableName + "));");
+                ops.eval(receiverName + ".setImaginary(imag(" + variableName + "));");
             }
             finally
             {
-                proxy.eval("clear " + receiverName);
+                ops.eval("clear " + receiverName);
             }
             
             _retrieved = true;

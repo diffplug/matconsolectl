@@ -27,9 +27,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy.MatlabThreadProxy;
+import matlabcontrol.MatlabOperations;
 import matlabcontrol.link.MatlabType.MatlabTypeSetter;
-
 import static matlabcontrol.link.ArrayTransformUtils.*;
 
 /**
@@ -39,7 +38,7 @@ import static matlabcontrol.link.ArrayTransformUtils.*;
  */
 class ArrayLinearizer
 {   
-    static MatlabTypeSetter getSerializedSetter(Object array)
+    static MatlabTypeSetter getSetter(Object array)
     {
         return new MultidimensionalPrimitiveArraySetter(array);
     }
@@ -57,9 +56,9 @@ class ArrayLinearizer
         }
         
         @Override
-        public void setInMatlab(MatlabThreadProxy proxy, String variableName) throws MatlabInvocationException
+        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
         {
-            proxy.setVariable(variableName, this);
+            ops.setVariable(variableName, this);
             
             String command;
             if(_lengths.length == 1)
@@ -76,7 +75,7 @@ class ArrayLinearizer
                 command += ");";
             }
 
-            proxy.eval(command);
+            ops.eval(command);
         }
         
         /**
