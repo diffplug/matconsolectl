@@ -99,6 +99,12 @@ public class MatlabFunctionLinker
         //Validate and retrieve information about all of the methods in the interface
         for(Method method : functionInterface.getMethods())
         {
+            //Methods in MatlabOperations are allowed; no validation necessary
+            if(method.getDeclaringClass().equals(MatlabOperations.class))
+            {
+                continue;
+            }
+            
             //Check method is annotated with function information
             MatlabFunctionInfo annotation = method.getAnnotation(MatlabFunctionInfo.class);
             if(annotation == null)
@@ -508,12 +514,27 @@ public class MatlabFunctionLinker
         
         @Override
         public String toString()
-        {
-            return "[" + this.getClass().getName() + 
+        {   
+            //Build the String this way instead of Array.toString(...) so that canonical names are used
+            String returnTypesStr = "[";
+            for(int i = 0; i < returnTypes.length; i++)
+            {
+                returnTypesStr += returnTypes[i].getCanonicalName();
+                
+                if(i != returnTypes.length - 1)
+                {
+                    returnTypesStr += " ";
+                }
+            }
+            returnTypesStr += "]";
+            
+            return "[" + this.getClass().getSimpleName() + 
                     " name=" + name + "," +
                     " containingDirectory=" + containingDirectory + "," +
-                    " returnTypes=" + Arrays.toString(returnTypes) + "]";
+                    " returnTypes=" + returnTypesStr + "]";
         }
+        
+        
     }
     
     private static class ClassInfo
@@ -620,11 +641,11 @@ public class MatlabFunctionLinker
         private final ConcurrentMap<Method, InvocationInfo> _invocationsInfo;
         
         private MatlabFunctionInvocationHandler(MatlabProxy proxy, Class<?> functionInterface,
-                ConcurrentMap<Method, InvocationInfo> functionsInfo)
+                ConcurrentMap<Method, InvocationInfo> invocationInfos)
         {
             _proxy = proxy;
             _interface = functionInterface;
-            _invocationsInfo = functionsInfo;
+            _invocationsInfo = invocationInfos;
         }
 
         @Override
@@ -635,52 +656,48 @@ public class MatlabFunctionLinker
             //Method belongs to java.lang.Object
             if(method.getDeclaringClass().equals(Object.class))
             {
-                result = invokeObjectMethod(o, method, args);
+                result = invokeObjectMethod(method, args);
+            }
+            //Methods defined in matlabcontrol.MatlabOperations interface
+            else if(method.getDeclaringClass().equals(MatlabOperations.class))
+            {
+                result = invokeMatlabOperationsMethod(method, args);
             }
             //Method belongs to the interface supplied to this linker
             else
             {
-                result = invokeMatlabFunction(o, method, args);
+                result = invokeUserInterfaceMethod(method, args);
             }
             
             return result;
         }
         
-        private Object invokeObjectMethod(Object o, Method method, Object[] args)
+        private Object invokeObjectMethod(Method method, Object[] args)
         {
             Object result;
             
             //public void String toString()
-            if(method.getName().equals("toString") && method.getReturnType().equals(String.class) && 
-                    method.getParameterTypes().length == 0)
+            if(method.getName().equals("toString"))
             {
-                result = "[" + _interface.getCanonicalName() + " info=" + _invocationsInfo + "]";
+                result = "[Linked " + _interface.getCanonicalName() + " info=" + _invocationsInfo + "]";
             }
             //public boolean equals(Object other)
-            else if(method.getName().equals("equals") && method.getReturnType().equals(boolean.class) &&
-                    method.getParameterTypes().length == 1 && method.getParameterTypes()[0].equals(Object.class))
+            else if(method.getName().equals("equals"))
             {
                 Object other = args[0];
-                if(other == null || !Proxy.isProxyClass(other.getClass()))
+                if(other != null && Proxy.isProxyClass(other.getClass()) &&
+                   (Proxy.getInvocationHandler(other) instanceof MatlabFunctionInvocationHandler))
                 {
-                    result = false;
+                    InvocationHandler handler = Proxy.getInvocationHandler(other);
+                    result = _interface.equals(((MatlabFunctionInvocationHandler) handler)._interface);
                 }
                 else
                 {
-                    InvocationHandler handler = Proxy.getInvocationHandler(o);
-                    if(handler instanceof MatlabFunctionInvocationHandler)
-                    {
-                        result = _interface.equals(((MatlabFunctionInvocationHandler) handler)._interface);
-                    }
-                    else
-                    {
-                        result = false;
-                    }
+                    result = false;
                 }
             }
             //public int hashCode()
-            else if(method.getName().equals("hashCode") && method.getReturnType().equals(int.class) &&
-                    method.getParameterTypes().length == 0)
+            else if(method.getName().equals("hashCode"))
             {
                 result = _interface.hashCode();
             }
@@ -693,7 +710,78 @@ public class MatlabFunctionLinker
             return result;
         }
         
-        private Object invokeMatlabFunction(Object o, Method method, Object[] args) throws MatlabInvocationException
+        private Object invokeMatlabOperationsMethod(Method method, Object[] args) throws MatlabInvocationException
+        {
+            Class<?> methodReturn = method.getReturnType();
+            Object result;
+            
+            if(method.getName().equals("eval"))
+            {
+                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[0]);
+                
+                result = invokeMatlabFunction(info, false, args, methodReturn);
+            }
+            else if(method.getName().equals("returningEval"))
+            {   
+                //Each return type
+                int nargout = (int) args[1];
+                Class<?>[] returnTypes = new Class<?>[nargout];
+                Arrays.fill(returnTypes, Object.class);
+                
+                InvocationInfo info = new InvocationInfo("eval", null, returnTypes);
+                
+                result = invokeMatlabFunction(info, false, new Object[]{ args[0] }, methodReturn);
+            }
+            else if(method.getName().equals("feval"))
+            {
+                //Make function arguments at the same level as the function name
+                Object[] functionArgs = (Object[]) args[1];
+                Object[] firstLevelArgs = new Object[functionArgs.length + 1];
+                firstLevelArgs[0] = args[0];
+                System.arraycopy(functionArgs, 0, firstLevelArgs, 1, functionArgs.length);
+                
+                InvocationInfo info = new InvocationInfo("feval", null, new Class<?>[0]);
+                
+                result = invokeMatlabFunction(info, false, firstLevelArgs, methodReturn);
+            }
+            else if(method.getName().equals("returningFeval"))
+            {
+                //Make function arguments at same level as function name
+                Object[] functionArgs = (Object[]) args[2];
+                Object[] firstLevelArgs = new Object[functionArgs.length + 1];
+                firstLevelArgs[0] = args[0];
+                System.arraycopy(functionArgs, 0, firstLevelArgs, 1, functionArgs.length);
+                
+                //Each return type
+                int nargout = (int) args[1];
+                Class<?>[] returnTypes = new Class<?>[nargout];
+                Arrays.fill(returnTypes, Object.class);
+                
+                InvocationInfo info = new InvocationInfo("feval", null, returnTypes);
+                
+                result = invokeMatlabFunction(info, false, firstLevelArgs, methodReturn);
+            }
+            else if(method.getName().equals("getVariable"))
+            {
+                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[]{ Object.class });
+                
+                result = ((Object[]) invokeMatlabFunction(info, false, args, methodReturn))[0];
+            }
+            else if(method.getName().equals("setVariable"))
+            {
+                InvocationInfo info = new InvocationInfo("assignin", null, new Class<?>[0]);
+                
+                result = invokeMatlabFunction(info, false, new Object[]{ "base", args[0], args[1] }, methodReturn);
+            }
+            else
+            {
+                throw new UnsupportedOperationException(method + " not supported");
+            }
+            
+            return result;
+        }
+        
+        private Object invokeUserInterfaceMethod(Method method, Object[] args) throws MatlabInvocationException
         {
             InvocationInfo info = _invocationsInfo.get(method);
             
@@ -725,6 +813,13 @@ public class MatlabFunctionLinker
                 }
             }
             
+            return invokeMatlabFunction(info, true, args, method.getReturnType());
+        }
+        
+        private Object invokeMatlabFunction(InvocationInfo info, boolean userDefined, Object[] args,
+                Class<?> methodReturn)
+                throws MatlabInvocationException
+        {
             //Replace all arguments with parameters of a MatlabType subclass or a multidimensional primitive array with
             //their serialized setters
             for(int i = 0; i < args.length; i++)
@@ -765,26 +860,39 @@ public class MatlabFunctionLinker
                 }
             }
             
-            return processReturnValues(returnValues, info.returnTypes, method.getReturnType()); 
+            //Process returned values if user defined
+            Object toReturn;
+            if(userDefined)
+            {
+                toReturn = processReturnValues(info, returnValues, methodReturn);
+            }
+            else
+            {
+                toReturn = returnValues;
+            }
+            
+            return toReturn; 
         }
         
-        private Object processReturnValues(Object[] result, Class<?>[] returnTypes, Class<?> methodReturn)
+        private Object processReturnValues(InvocationInfo info, Object[] result, Class<?> methodReturn)
         {
             Object toReturn;
+            //0 return values
             if(result.length == 0)
             {
                 toReturn = result;
             }
+            //1 return values
             else if(result.length == 1)
             {
-                toReturn = validateReturnCompatability(result[0], returnTypes[0]);
+                toReturn = validateReturnCompatability(result[0], info.returnTypes[0]);
             }
-            //Return type is a subclass of ReturnN
+            //2 or more return values
             else
             {
                 for(int i = 0; i < result.length; i++)
                 {
-                    result[i] = validateReturnCompatability(result[i], returnTypes[i]);
+                    result[i] = validateReturnCompatability(result[i], info.returnTypes[i]);
                 }
                 
                 try

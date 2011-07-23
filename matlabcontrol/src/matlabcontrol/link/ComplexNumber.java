@@ -361,7 +361,7 @@ public abstract class ComplexNumber extends MatlabType
         }
         else
         {
-            fullStr = realStr + " + " + imagStr;
+            fullStr = realStr + " + " + imagStr + "i";
         }
         
         return fullStr;
