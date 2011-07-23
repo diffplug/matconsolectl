@@ -26,6 +26,8 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
 
 /**
+ * Represents a variable in MATLAB. The representation is not associated with a given session of MATLAB. An instance of
+ * this class with a given name does not mean that a variable with that name exists in any session of MATLAB.
  *
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
@@ -34,6 +36,12 @@ public final class MatlabVariable extends MatlabType
 {
     private final String _name;
 
+    /**
+     * Constructs a representation of a MATLAB variable with the name specified by {@code name}.
+     * 
+     * @param name 
+     * @throws IllegalArgumentException if {@code name} is not a valid MATLAB variable name
+     */
     public MatlabVariable(String name)
     {
         //Validate variable name
@@ -56,23 +64,95 @@ public final class MatlabVariable extends MatlabType
         _name = name;
     }
 
-    String getName()
+    /**
+     * The name of this variable.
+     * 
+     * @return 
+     */
+    public String getName()
     {
         return _name;
+    }
+        
+    /**
+     * Returns a brief description of this variable. The exact details of this representation are unspecified and are
+     * subject to change.
+     * 
+     * @return 
+     */
+    @Override
+    public String toString()
+    {
+        return "[" + this.getClass().getName() + ", name=" + _name + "]";
+    }
+    
+    /**
+     * Returns {@code true} if and only if {@code obj} is a {@code MatlabVariable} and has the same name as this
+     * variable.
+     * 
+     * @param obj
+     * @return 
+     */
+    @Override
+    public boolean equals(Object obj)
+    {
+        boolean equal = false;
+        
+        if(obj instanceof MatlabVariable)
+        {
+            MatlabVariable other = (MatlabVariable) obj;
+            equal = other._name.equals(_name);
+        }
+        
+        return equal;
+    }
+    
+    /**
+     * Returns a hash code consistent with {@link #equals(java.lang.Object)}.
+     * 
+     * @return 
+     */
+    @Override
+    public int hashCode()
+    {
+        return _name.hashCode();
+    }
+    
+    static class MatlabVariableGetter implements MatlabTypeGetter
+    {
+        private String _name;
+        private boolean _retrieved;
+        
+        @Override
+        public MatlabVariable retrieve()
+        {
+            if(!_retrieved)
+            {
+                throw new IllegalStateException("variable not retrieved");
+            }
+            
+            return new MatlabVariable(_name);
+        }
+
+        @Override
+        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
+        {
+            _name = variableName;
+            _retrieved = true;
+        }
     }
 
     @Override
     MatlabTypeSetter getSetter()
     {
-        return new MatlabVariableSerializedSetter(_name);
+        return new MatlabVariableSetter(_name);
     }
 
-    private static class MatlabVariableSerializedSetter implements MatlabTypeSetter
+    private static class MatlabVariableSetter implements MatlabTypeSetter
     {
-
         private final String _name;
 
-        private MatlabVariableSerializedSetter(String name)
+        private MatlabVariableSetter(String name)
         {
             _name = name;
         }
