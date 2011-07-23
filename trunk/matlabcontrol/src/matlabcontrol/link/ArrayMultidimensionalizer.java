@@ -22,12 +22,13 @@ package matlabcontrol.link;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.util.HashMap;
 import java.lang.reflect.Array;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabInvocationException;
@@ -44,18 +45,22 @@ class ArrayMultidimensionalizer
     static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
         //Note: uint8, uint16, uint32, and uint64 are intentionally not supported because MATLAB will convert them
-        //to byte, short, int, and long but that won't work properly for large values do to having one less bit
-        private static final Set<String> SUPPORTED_MATLAB_CLASSES = new HashSet<String>();
+        //to byte, short, int, and long but that won't work properly for large values due to having one less bit
+        private static final Set<String> SUPPORTED_MATLAB_CLASSES;
         static
         {
-            SUPPORTED_MATLAB_CLASSES.add("int8");
-            SUPPORTED_MATLAB_CLASSES.add("int16");
-            SUPPORTED_MATLAB_CLASSES.add("int32");
-            SUPPORTED_MATLAB_CLASSES.add("int64");
-            SUPPORTED_MATLAB_CLASSES.add("single");
-            SUPPORTED_MATLAB_CLASSES.add("double");
-            SUPPORTED_MATLAB_CLASSES.add("logical");
-            SUPPORTED_MATLAB_CLASSES.add("char");
+            Set<String> set = new HashSet<String>();
+            
+            set.add("int8");
+            set.add("int16");
+            set.add("int32");
+            set.add("int64");
+            set.add("single");
+            set.add("double");
+            set.add("logical");
+            set.add("char");
+            
+            SUPPORTED_MATLAB_CLASSES = Collections.unmodifiableSet(set);
         }
         
         private int[] _lengths;
@@ -322,18 +327,21 @@ class ArrayMultidimensionalizer
         return array;
     }
     
-    private static final Map<Class<?>, ArrayFillOperation<?>> FILL_OPERATIONS =
-            new ConcurrentHashMap<Class<?>, ArrayFillOperation<?>>();
+    private static final Map<Class<?>, ArrayFillOperation<?>> FILL_OPERATIONS;
     static
     {
-        FILL_OPERATIONS.put(byte.class, new ByteArrayFillOperation());
-        FILL_OPERATIONS.put(short.class, new ShortArrayFillOperation());
-        FILL_OPERATIONS.put(int.class, new IntArrayFillOperation());
-        FILL_OPERATIONS.put(long.class, new LongArrayFillOperation());
-        FILL_OPERATIONS.put(float.class, new FloatArrayFillOperation());
-        FILL_OPERATIONS.put(double.class, new DoubleArrayFillOperation());
-        FILL_OPERATIONS.put(boolean.class, new BooleanArrayFillOperation());
-        FILL_OPERATIONS.put(char.class, new CharArrayFillOperation());
+        Map<Class<?>, ArrayFillOperation<?>> map = new HashMap<Class<?>, ArrayFillOperation<?>>();
+        
+        map.put(byte.class, new ByteArrayFillOperation());
+        map.put(short.class, new ShortArrayFillOperation());
+        map.put(int.class, new IntArrayFillOperation());
+        map.put(long.class, new LongArrayFillOperation());
+        map.put(float.class, new FloatArrayFillOperation());
+        map.put(double.class, new DoubleArrayFillOperation());
+        map.put(boolean.class, new BooleanArrayFillOperation());
+        map.put(char.class, new CharArrayFillOperation());
+        
+        FILL_OPERATIONS = Collections.unmodifiableMap(map);
     }
     
     private static interface ArrayFillOperation<T>

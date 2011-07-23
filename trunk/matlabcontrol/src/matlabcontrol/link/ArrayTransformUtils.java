@@ -23,8 +23,9 @@ package matlabcontrol.link;
  */
 
 import java.lang.reflect.Array;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Utility functions used to multidimensionalize and linearize arrays.
@@ -34,7 +35,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 class ArrayTransformUtils
 {
-        
     /**
      * Computes the total size of an array with lengths specified by {@code lengths}.
      * 
@@ -255,16 +255,20 @@ class ArrayTransformUtils
         return binaryName;
     }
     
-    private static final Map<Class<?>, Character> PRIMITIVE_TO_BINARY_NAME = new ConcurrentHashMap<Class<?>, Character>();
+    private static final Map<Class<?>, Character> PRIMITIVE_TO_BINARY_NAME;
     static
     {
-        PRIMITIVE_TO_BINARY_NAME.put(byte.class, 'B');
-        PRIMITIVE_TO_BINARY_NAME.put(short.class, 'S');
-        PRIMITIVE_TO_BINARY_NAME.put(int.class, 'I');
-        PRIMITIVE_TO_BINARY_NAME.put(long.class, 'J');
-        PRIMITIVE_TO_BINARY_NAME.put(float.class, 'F');
-        PRIMITIVE_TO_BINARY_NAME.put(double.class, 'D');
-        PRIMITIVE_TO_BINARY_NAME.put(boolean.class, 'Z');
-        PRIMITIVE_TO_BINARY_NAME.put(char.class, 'C');
+        Map<Class<?>, Character> map = new HashMap<Class<?>, Character>();
+        
+        map.put(byte.class, 'B');
+        map.put(short.class, 'S');
+        map.put(int.class, 'I');
+        map.put(long.class, 'J');
+        map.put(float.class, 'F');
+        map.put(double.class, 'D');
+        map.put(boolean.class, 'Z');
+        map.put(char.class, 'C');
+        
+        PRIMITIVE_TO_BINARY_NAME = Collections.unmodifiableMap(map);
     }
 }

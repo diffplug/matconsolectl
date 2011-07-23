@@ -24,8 +24,9 @@ package matlabcontrol.link;
 
 import java.lang.reflect.Array;
 import java.util.Arrays;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
@@ -402,19 +403,22 @@ public class MatlabNumericArray<T> extends MatlabType
         public ComplexNumber create(A real, A imag, int index);
     }
     
-    private static final ConcurrentMap<Class, ComplexSupplier> COMPLEX_SUPPLIERS =
-            new ConcurrentHashMap<Class, ComplexSupplier>(6);
+    private static final Map<Class<?>, ComplexSupplier> COMPLEX_SUPPLIERS;
     static
     {
-        COMPLEX_SUPPLIERS.put(byte.class, new ComplexByteSupplier());
-        COMPLEX_SUPPLIERS.put(short.class, new ComplexShortSupplier());
-        COMPLEX_SUPPLIERS.put(int.class, new ComplexIntegerSupplier());
-        COMPLEX_SUPPLIERS.put(long.class, new ComplexLongSupplier());
-        COMPLEX_SUPPLIERS.put(float.class, new ComplexFloatSupplier());
-        COMPLEX_SUPPLIERS.put(double.class, new ComplexDoubleSupplier());
+        Map<Class<?>, ComplexSupplier> map = new HashMap<Class<?>, ComplexSupplier>();
+        
+        map.put(byte.class, new ComplexByteSupplier());
+        map.put(short.class, new ComplexShortSupplier());
+        map.put(int.class, new ComplexIntegerSupplier());
+        map.put(long.class, new ComplexLongSupplier());
+        map.put(float.class, new ComplexFloatSupplier());
+        map.put(double.class, new ComplexDoubleSupplier());
+        
+        COMPLEX_SUPPLIERS = Collections.unmodifiableMap(map);
     }
     
-    private static final class ComplexByteSupplier implements ComplexSupplier<byte[]>
+    private static class ComplexByteSupplier implements ComplexSupplier<byte[]>
     {
         @Override
         public ComplexByte create(byte[] real, byte[] imag, int index)
@@ -423,7 +427,7 @@ public class MatlabNumericArray<T> extends MatlabType
         }
     }
     
-    private static final class ComplexShortSupplier implements ComplexSupplier<short[]>
+    private static class ComplexShortSupplier implements ComplexSupplier<short[]>
     {
         @Override
         public ComplexShort create(short[] real, short[] imag, int index)
@@ -432,7 +436,7 @@ public class MatlabNumericArray<T> extends MatlabType
         }
     }
     
-    private static final class ComplexIntegerSupplier implements ComplexSupplier<int[]>
+    private static class ComplexIntegerSupplier implements ComplexSupplier<int[]>
     {
         @Override
         public ComplexInteger create(int[] real, int[] imag, int index)
@@ -441,7 +445,7 @@ public class MatlabNumericArray<T> extends MatlabType
         }
     }
     
-    private static final class ComplexLongSupplier implements ComplexSupplier<long[]>
+    private static class ComplexLongSupplier implements ComplexSupplier<long[]>
     {
         @Override
         public ComplexLong create(long[] real, long[] imag, int index)
@@ -450,7 +454,7 @@ public class MatlabNumericArray<T> extends MatlabType
         }
     }
     
-    private static final class ComplexFloatSupplier implements ComplexSupplier<float[]>
+    private static class ComplexFloatSupplier implements ComplexSupplier<float[]>
     {
         @Override
         public ComplexFloat create(float[] real, float[] imag, int index)
@@ -459,7 +463,7 @@ public class MatlabNumericArray<T> extends MatlabType
         }
     }
     
-    private static final class ComplexDoubleSupplier implements ComplexSupplier<double[]>
+    private static class ComplexDoubleSupplier implements ComplexSupplier<double[]>
     {
         @Override
         public ComplexDouble create(double[] real, double[] imag, int index)

@@ -83,7 +83,7 @@ public final class MatlabVariable extends MatlabType
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() + ", name=" + _name + "]";
+        return "[" + this.getClass().getName() + " name=" + _name + "]";
     }
     
     /**

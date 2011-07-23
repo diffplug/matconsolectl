@@ -150,7 +150,7 @@ public final class MatlabFunctionHandle extends MatlabType
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() + ", functionName=" + _function + "]";
+        return "[" + this.getClass().getName() + " functionName=" + _function + "]";
     }
     
     @Override
