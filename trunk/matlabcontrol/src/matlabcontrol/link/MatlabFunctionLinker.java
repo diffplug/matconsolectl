@@ -64,6 +64,7 @@ import matlabcontrol.link.MatlabNumericArray.MatlabNumericArrayGetter;
 import matlabcontrol.link.MatlabReturns.ReturnN;
 import matlabcontrol.link.MatlabType.MatlabTypeGetter;
 import matlabcontrol.link.MatlabType.MatlabTypeSetter;
+import matlabcontrol.link.MatlabVariable.MatlabVariableGetter;
 
 /**
  *
@@ -908,7 +909,7 @@ public class MatlabFunctionLinker
                 }
             }
             
-            List<String> usedNames = new ArrayList<String>();
+            List<String> variablesToClear = new ArrayList<String>();
             try
             {
                 //Set all arguments as MATLAB variables and build a function call using those variables
@@ -917,7 +918,7 @@ public class MatlabFunctionLinker
                 for(int i = 0; i < _args.length; i++)
                 {
                     String name = parameterNames.get(i);
-                    usedNames.add(name);
+                    variablesToClear.add(name);
                     
                     setReturnValue(ops, name, _args[i]);
                     
@@ -947,7 +948,7 @@ public class MatlabFunctionLinker
                         else
                         {
                             name = returnNames.get(i);
-                            usedNames.add(name);
+                            variablesToClear.add(name);
                         }
                         
                         returnStr += name;
@@ -965,16 +966,35 @@ public class MatlabFunctionLinker
                 ops.eval(functionStr);
                 
                 //Get the return values
+                List<String> variablesToKeep = new ArrayList<String>();
                 Object[] returnValues = new Object[_functionInfo.returnTypes.length];
                 for(int i = 0; i < returnValues.length; i++)
                 {
                     ClassInfo returnInfo = ClassInfo.getInfo(_functionInfo.returnTypes[i]);
                     
-                    if(!returnInfo.isVoid)
+                    //No return
+                    if(returnInfo.isVoid)
                     {
-                        returnValues[i] = getReturnValue(ops, returnNames.get(i), returnInfo, usedNames);
+                        returnValues[i] = null;
+                    }
+                    //Not a true "return", keeps the value in MATLAB and returns the name of the variable
+                    else if(_functionInfo.returnTypes[i].equals(MatlabVariable.class))
+                    {
+                        MatlabVariableGetter getter = new MatlabVariableGetter();
+                        getter.getInMatlab(ops, returnNames.get(i));
+                        returnValues[i] = getter;
+                        
+                        variablesToKeep.add(returnNames.get(i));
+                    }
+                    //Retrieve the value
+                    else
+                    {
+                        returnValues[i] = getReturnValue(ops, returnNames.get(i), returnInfo, variablesToClear);
                     }
                 }
+                
+                //Do this last, so if any exceptions occurred then the variables will not be kept
+                variablesToClear.removeAll(variablesToKeep);
                 
                 return returnValues;
             }
@@ -984,14 +1004,14 @@ public class MatlabFunctionLinker
                 try
                 {
                     //Clear all variables used
-                    if(!usedNames.isEmpty())
+                    if(!variablesToClear.isEmpty())
                     {
                         String clearCmd = "clear ";
-                        for(int i = 0; i < usedNames.size(); i++)
+                        for(int i = 0; i < variablesToClear.size(); i++)
                         {
-                            clearCmd += usedNames.get(i);
+                            clearCmd += variablesToClear.get(i);
 
-                            if(i != usedNames.size() - 1)
+                            if(i != variablesToClear.size() - 1)
                             {
                                 clearCmd += " ";
                             }
@@ -1058,19 +1078,19 @@ public class MatlabFunctionLinker
         }
         
         private static Object getReturnValue(MatlabOperations ops, String returnName, ClassInfo returnInfo,
-                List<String> usedNames) throws MatlabInvocationException
+                List<String> variablesToClear) throws MatlabInvocationException
         {
             Object returnValue;
             
             //Empty array, MATLAB's rough equivalent of null
-            if(((boolean[]) ops.returningEval("isempty(" + returnName + ");", 1)[0])[0])
+            if(isFoo(ops, "isempty", returnName))
             {
                 returnValue = null;
             }
             //The variable is a Java object
-            else if(((boolean[]) ops.returningEval("isjava(" + returnName + ");", 1)[0])[0])
+            else if(isFoo(ops, "isjava", returnName))
             {
-                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
+                returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
             }
             else
             {
@@ -1082,10 +1102,10 @@ public class MatlabFunctionLinker
                     getter.getInMatlab(ops, returnName);
                     returnValue = getter;
                 }
-                else if(MATLAB_TO_JAVA_CLASS.containsKey(type))
+                else if(MATLAB_TO_JAVA_PRIMITIVE.containsKey(type))
                 {   
                     //If a singular value
-                    boolean isScalar = ((boolean[]) ops.returningEval("isscalar(" + returnName + ");", 1)[0])[0];
+                    boolean isScalar = isFoo(ops, "isscalar", returnName);
 
                     //Whether the value should be returned as a linear array instead of MATLAB's default of the minimum
                     //array dimension being 2
@@ -1094,9 +1114,9 @@ public class MatlabFunctionLinker
                     {
                         //returnLinearArray will be true if the array is a vector and the specified return type
                         //is the appropriate corresponding one dimensional array
-                        boolean isVector = ((boolean[]) ops.returningEval("isvector(" + returnName + ");", 1)[0])[0];
-                        keepLinear = (isVector && returnInfo.arrayDimensions == 1 &&
-                                     MATLAB_TO_JAVA_CLASS.get(type).equals(returnInfo.baseComponentType));
+                        keepLinear = returnInfo.arrayDimensions == 1 &&
+                                     MATLAB_TO_JAVA_PRIMITIVE.get(type).equals(returnInfo.baseComponentType) &&
+                                     isFoo(ops, "isvector", returnName);
                     }
                     
                     //logical -> boolean
@@ -1104,7 +1124,7 @@ public class MatlabFunctionLinker
                     {
                         if(isScalar)
                         {
-                            returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
+                            returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
                         }
                         else
                         {   
@@ -1122,7 +1142,7 @@ public class MatlabFunctionLinker
                         {
                             if(isScalar)
                             {
-                                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
+                                returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
                             }
                             else
                             {   
@@ -1134,20 +1154,20 @@ public class MatlabFunctionLinker
                         //By default retrieve it as a String or an array of Strings
                         else
                         {
-                            returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
+                            returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
                         }
                     }
                     //Numerics
                     //int8 -> byte, int16 -> short, int32 -> int, int64 -> long, single -> float, double -> double
                     else
                     {
-                        boolean isReal = ((boolean[]) ops.returningEval("isreal(" + returnName + ");", 1)[0])[0];
+                        boolean isReal = isFoo(ops, "isreal", returnName);
                         
                         if(isScalar)
                         {
                             if(isReal)
                             {
-                                returnValue = MatlabValueReceiver.receiveValue(ops, usedNames, returnName);
+                                returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
                             }
                             else
                             {
@@ -1165,7 +1185,7 @@ public class MatlabFunctionLinker
                                 returnValue = getter;
                             }
                             else
-                            {
+                            {  
                                 MatlabNumericArrayGetter getter = new MatlabNumericArrayGetter();
                                 getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
@@ -1182,17 +1202,31 @@ public class MatlabFunctionLinker
             return returnValue;
         }
         
-        private static final Map<String, Class> MATLAB_TO_JAVA_CLASS = new HashMap<String, Class>();
+        /**
+         * Convenience method to invoke a MATLAB "is" function; equivalent to {@code function(var);}
+         * 
+         * @param ops
+         * @param function
+         * @param var
+         * @return
+         * @throws MatlabInvocationException 
+         */
+        private static boolean isFoo(MatlabOperations ops, String function, String var) throws MatlabInvocationException
+        {
+            return ((boolean[]) ops.returningEval(function + "(" + var + ");", 1)[0])[0];
+        }
+        
+        private static final Map<String, Class> MATLAB_TO_JAVA_PRIMITIVE = new HashMap<String, Class>();
         static
         {
-            MATLAB_TO_JAVA_CLASS.put("int8", byte.class);
-            MATLAB_TO_JAVA_CLASS.put("int16", short.class);
-            MATLAB_TO_JAVA_CLASS.put("int32", int.class);
-            MATLAB_TO_JAVA_CLASS.put("int64", long.class);
-            MATLAB_TO_JAVA_CLASS.put("single", float.class);
-            MATLAB_TO_JAVA_CLASS.put("double", double.class);
-            MATLAB_TO_JAVA_CLASS.put("logical", boolean.class);
-            MATLAB_TO_JAVA_CLASS.put("char", char.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("int8", byte.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("int16", short.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("int32", int.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("int64", long.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("single", float.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("double", double.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("logical", boolean.class);
+            MATLAB_TO_JAVA_PRIMITIVE.put("char", char.class);
         }
         
         private static class MatlabValueSetter
@@ -1220,13 +1254,13 @@ public class MatlabFunctionLinker
         
         private static class MatlabValueReceiver
         {
-            private static Object receiveValue(MatlabOperations ops, List<String> usedNames,
-                    String variableName) throws MatlabInvocationException
+            private static Object receiveValue(MatlabOperations ops, List<String> variablesToClear, String variableName)
+                    throws MatlabInvocationException
             {
                 String receiverName = (String) ops.returningEval("genvarname('receiver_', who);", 1)[0];
                 MatlabValueReceiver receiver = new MatlabValueReceiver();
                 ops.setVariable(receiverName, receiver);
-                usedNames.add(receiverName);
+                variablesToClear.add(receiverName);
                 ops.eval(receiverName + ".set(" + variableName + ");");
                 
                 return receiver._value;
