@@ -42,6 +42,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -969,17 +970,21 @@ public class MatlabFunctionLinker
             return toReturn;
         }
 
-        private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_AUTOBOXED = new ConcurrentHashMap<Class<?>, Class<?>>();
+        private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_AUTOBOXED;
         static
         {
-            PRIMITIVE_TO_AUTOBOXED.put(byte.class, Byte.class);
-            PRIMITIVE_TO_AUTOBOXED.put(short.class, Short.class);
-            PRIMITIVE_TO_AUTOBOXED.put(int.class, Integer.class);
-            PRIMITIVE_TO_AUTOBOXED.put(long.class, Long.class);
-            PRIMITIVE_TO_AUTOBOXED.put(double.class, Double.class);
-            PRIMITIVE_TO_AUTOBOXED.put(float.class, Float.class);
-            PRIMITIVE_TO_AUTOBOXED.put(boolean.class, Boolean.class);
-            PRIMITIVE_TO_AUTOBOXED.put(char.class, Character.class);
+            Map<Class<?>, Class<?>> map = new HashMap<Class<?>, Class<?>>();
+            
+            map.put(byte.class, Byte.class);
+            map.put(short.class, Short.class);
+            map.put(int.class, Integer.class);
+            map.put(long.class, Long.class);
+            map.put(double.class, Double.class);
+            map.put(float.class, Float.class);
+            map.put(boolean.class, Boolean.class);
+            map.put(char.class, Character.class);
+            
+            PRIMITIVE_TO_AUTOBOXED = Collections.unmodifiableMap(map);
         }
     }
     
@@ -1324,17 +1329,21 @@ public class MatlabFunctionLinker
             return ((boolean[]) ops.returningEval(function + "(" + var + ");", 1)[0])[0];
         }
         
-        private static final Map<String, Class> MATLAB_TO_JAVA_PRIMITIVE = new HashMap<String, Class>();
+        private static final Map<String, Class<?>> MATLAB_TO_JAVA_PRIMITIVE;
         static
         {
-            MATLAB_TO_JAVA_PRIMITIVE.put("int8", byte.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("int16", short.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("int32", int.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("int64", long.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("single", float.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("double", double.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("logical", boolean.class);
-            MATLAB_TO_JAVA_PRIMITIVE.put("char", char.class);
+            Map<String, Class<?>> map = new HashMap<String, Class<?>>();
+            
+            map.put("int8", byte.class);
+            map.put("int16", short.class);
+            map.put("int32", int.class);
+            map.put("int64", long.class);
+            map.put("single", float.class);
+            map.put("double", double.class);
+            map.put("logical", boolean.class);
+            map.put("char", char.class);
+            
+            MATLAB_TO_JAVA_PRIMITIVE = Collections.unmodifiableMap(map);
         }
         
         private static class MatlabValueSetter

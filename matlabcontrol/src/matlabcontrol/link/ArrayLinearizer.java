@@ -22,9 +22,10 @@ package matlabcontrol.link;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.util.HashMap;
 import java.lang.reflect.Array;
+import java.util.Collections;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
@@ -177,17 +178,21 @@ class ArrayLinearizer
         }
     }
     
-    private static final Map<Class<?>, ArrayFillOperation<?>> FILL_OPERATIONS = new ConcurrentHashMap<Class<?>, ArrayFillOperation<?>>();
+    private static final Map<Class<?>, ArrayFillOperation<?>> FILL_OPERATIONS;
     static
     {
-        FILL_OPERATIONS.put(byte.class, new ByteArrayFillOperation());
-        FILL_OPERATIONS.put(short.class, new ShortArrayFillOperation());
-        FILL_OPERATIONS.put(int.class, new IntArrayFillOperation());
-        FILL_OPERATIONS.put(long.class, new LongArrayFillOperation());
-        FILL_OPERATIONS.put(float.class, new FloatArrayFillOperation());
-        FILL_OPERATIONS.put(double.class, new DoubleArrayFillOperation());
-        FILL_OPERATIONS.put(boolean.class, new BooleanArrayFillOperation());
-        FILL_OPERATIONS.put(char.class, new CharArrayFillOperation());
+        Map<Class<?>, ArrayFillOperation<?>> map = new HashMap<Class<?>, ArrayFillOperation<?>>();
+        
+        map.put(byte.class, new ByteArrayFillOperation());
+        map.put(short.class, new ShortArrayFillOperation());
+        map.put(int.class, new IntArrayFillOperation());
+        map.put(long.class, new LongArrayFillOperation());
+        map.put(float.class, new FloatArrayFillOperation());
+        map.put(double.class, new DoubleArrayFillOperation());
+        map.put(boolean.class, new BooleanArrayFillOperation());
+        map.put(char.class, new CharArrayFillOperation());
+        
+        FILL_OPERATIONS = Collections.unmodifiableMap(map);
     }
     
     private static interface ArrayFillOperation<T>
