@@ -32,7 +32,7 @@ package matlabcontrol;
  */
 class ThrowableWrapper extends Throwable
 {    
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 0xC500L;
     
     /**
      * The {@code String} representation of the {@code MatlabException} so that this exception can pretend to be a

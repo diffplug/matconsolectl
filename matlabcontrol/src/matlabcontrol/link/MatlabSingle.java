@@ -23,7 +23,7 @@ package matlabcontrol.link;
  */
 
 /**
- * Corresponds to a MATLAB {@code single} with real and imaginary components.
+ * MATLAB {@code single} with real and imaginary components.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>

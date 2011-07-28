@@ -35,7 +35,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.METHOD)
-public @interface MatlabFunctionInfo
+public @interface MatlabFunction
 {   
     /**
      * Either the name of a MATLAB function or a path to a MATLAB function. The value provided to this element is

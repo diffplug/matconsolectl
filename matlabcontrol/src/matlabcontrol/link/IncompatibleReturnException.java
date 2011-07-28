@@ -23,12 +23,18 @@ package matlabcontrol.link;
  */
 
 /**
- *
+ * The type to be returned is not assignable to the return type. This exception is conceptually similar to a
+ * {@link ClassCastException} except that it is thrown before the cast would ever occur. For primitive return types,
+ * this is similar to a {@link NullPointerException} being thrown when the return value is {@code null} and therefore
+ * cannot be un-boxed.
+ * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class IncompatibleReturnException extends RuntimeException
 {
+    private static final long serialVersionUID = 0xD500L;
+    
     IncompatibleReturnException(String msg)
     {
         super(msg);

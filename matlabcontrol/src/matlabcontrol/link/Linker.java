@@ -72,9 +72,9 @@ import matlabcontrol.link.MatlabVariable.MatlabVariableGetter;
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabFunctionLinker
+public class Linker
 {    
-    private MatlabFunctionLinker() { }
+    private Linker() { }
     
     
     /**************************************************************************************************************\
@@ -107,11 +107,11 @@ public class MatlabFunctionLinker
             }
             
             //Check method is annotated with function information
-            MatlabFunctionInfo annotation = method.getAnnotation(MatlabFunctionInfo.class);
+            MatlabFunction annotation = method.getAnnotation(MatlabFunction.class);
             if(annotation == null)
             {
                 throw new LinkingException(method + " is not annotated with " + 
-                        MatlabFunctionInfo.class.getCanonicalName());
+                        MatlabFunction.class.getCanonicalName());
             }
             
             //Check method can throw MatlabInvocationException
@@ -159,7 +159,7 @@ public class MatlabFunctionLinker
         }
     }
     
-    private static FunctionInfo getFunctionInfo(Method method, MatlabFunctionInfo annotation)
+    private static FunctionInfo getFunctionInfo(Method method, MatlabFunction annotation)
     {
         //Determine the function's name and if applicable, the directory the function is located in
         String functionName;
@@ -305,7 +305,7 @@ public class MatlabFunctionLinker
      * @throws LinkingException 
      */
     private static File extractFromZip(ZipFile zip, ZipEntry entry, String functionName,
-            Method method, File interfaceLocation, MatlabFunctionInfo annotation)
+            Method method, File interfaceLocation, MatlabFunction annotation)
     {
         try
         {
@@ -476,7 +476,7 @@ public class MatlabFunctionLinker
         return ArrayTransformUtils.getArrayClass((Class<?>) componentType, dimensions);
     }
     
-    private static InvocationInfo getInvocationInfo(Method method, MatlabFunctionInfo annotation)
+    private static InvocationInfo getInvocationInfo(Method method, MatlabFunction annotation)
     {   
         FunctionInfo funcInfo = getFunctionInfo(method, annotation);
         Class<?>[] returnTypes = getReturnTypes(method);
