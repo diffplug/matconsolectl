@@ -36,16 +36,60 @@ import java.util.Map;
 class ArrayTransformUtils
 {
     /**
-     * Computes the total size of an array with lengths specified by {@code lengths}.
+     * Deeply copies a primitive array. If the array is not primitive then the {@code Object}s in the array will not
+     * be copies, although the arrays will be copied.
      * 
-     * @param lengths
+     * @param <T>
+     * @param array
+     * @return copy of array
+     */
+    static <T> T deepCopy(T array)
+    {
+        T copy;
+        
+        if(array == null)
+        {
+            copy = null;
+        }
+        else if(array.getClass().isArray())
+        {
+            //Array of arrays
+            if(array.getClass().getComponentType().isArray())
+            {
+                int arrayLength = Array.getLength(array);
+                copy = (T) Array.newInstance(array.getClass().getComponentType(), arrayLength);
+                for(int i = 0; i < arrayLength; i++)
+                {
+                    Array.set(copy, i, deepCopy(Array.get(array, i)));
+                }
+            }
+            //Array of values
+            else
+            {
+                int arrayLength = Array.getLength(array);
+                copy = (T) Array.newInstance(array.getClass().getComponentType(), arrayLength);
+                System.arraycopy(array, 0, copy, 0, arrayLength);
+            }
+        }
+        else
+        {
+            throw new IllegalArgumentException("Input not an array: " + array.getClass().getCanonicalName());
+        }
+        
+        return copy;
+    }
+    
+    /**
+     * Computes the total number of elements in an array with dimensions specified by {@code dimensions}.
+     * 
+     * @param dimensions
      * @return 
      */
-    static int getTotalSize(int[] lengths)
+    static int getNumberOfElements(int[] dimensions)
     {
         int size = 0;
         
-        for(int length : lengths)
+        for(int length : dimensions)
         {
             if(size == 0)
             {
@@ -61,64 +105,70 @@ class ArrayTransformUtils
     }
     
     /**
-     * Multidimensional indices to linear index. Similar to MATLAB's (@code sub2ind} function.
+     * Multidimensional indices to linear index. Similar to MATLAB's (@code sub2ind} function. The lengths of
+     * {@code dimensions} and {@code indices} should be the same; this is <b>not</b> checked.
      * 
-     * @param lengths the lengths of the array in each dimension
+     * @param dimensions the lengths of the array in each dimension
      * @param indices
-     * @return
-     * @throws IllegalArgumentException thrown if the length of {@code lengths} and {@code indices} are not the same
+     * @return linear index
      */
-    static int multidimensionalIndicesToLinearIndex(int[] lengths, int[] indices)
+    static int multidimensionalIndicesToLinearIndex(int[] dimensions, int[] indices)
     {
-        if(lengths.length != indices.length)
-        {
-            throw new IllegalArgumentException("There must be an equal number of lengths [" + lengths.length + "] "
-                    + "and indices [" + indices.length + "]");
-        }
-        
         int linearIndex = 0;
         
         int accumSize = 1;
-        for(int i = 0; i < lengths.length; i++)
+        for(int i = 0; i < dimensions.length; i++)
         {   
             linearIndex += accumSize * indices[i];
-            accumSize *= lengths[i];
+            accumSize *= dimensions[i];
         }
         
         return linearIndex;
     }
     
+    //Optimized version for 2 indices
+    static int multidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column)
+    {
+        return column * dimensions[0] + row;
+    }
+    
+    //Optimized version for 3 indices
+    static int multidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column, int page)
+    {
+        return page * (dimensions[0] * dimensions[1]) + column * dimensions[0] + row;
+    }
+    
     /**
      * Linear index to multidimensional indices. Similar to MATLAB's (@code ind2sub} function.
      * 
-     * @param lengths the lengths of the array in each dimension
+     * @param dimensions the lengths of the array in each dimension
      * @param linearIndex
      * @return 
      */
-    static int[] linearIndexToMultidimensionalIndices(int[] lengths, int linearIndex)
+    static int[] linearIndexToMultidimensionalIndices(int[] dimensions, int linearIndex)
     {
-        int[] indices = new int[lengths.length];
+        int[] indices = new int[dimensions.length];
         
-        if(lengths.length == 1)
+        if(dimensions.length == 1)
         {
             indices[0] = linearIndex;
         }
         else
         {
-            int pageSize = lengths[0] * lengths[1];
+            int pageSize = dimensions[0] * dimensions[1];
             int pageNumber = linearIndex / pageSize;
 
             //Row and column
             int indexInPage = linearIndex % pageSize;
-            indices[0] = indexInPage % lengths[0];
-            indices[1] = indexInPage / lengths[0];
+            indices[0] = indexInPage % dimensions[0];
+            indices[1] = indexInPage / dimensions[0];
 
             //3rd dimension and above
             int accumSize = 1;
-            for(int dim = 2; dim < lengths.length; dim++)
+            for(int dim = 2; dim < dimensions.length; dim++)
             {
-                indices[dim] = (pageNumber / accumSize) % lengths[dim];
-                accumSize *= lengths[dim];
+                indices[dim] = (pageNumber / accumSize) % dimensions[dim];
+                accumSize *= dimensions[dim];
             }
         }
         
@@ -167,7 +217,7 @@ class ArrayTransformUtils
      * @param array
      * @return 
      */
-    static int[] computeBoundingLengths(Object array)
+    static int[] computeBoundingDimensions(Object array)
     {
         int[] maxLengths = new int[getNumberOfDimensions(array.getClass())];
 
@@ -182,7 +232,7 @@ class ArrayTransformUtils
             for(int i = 0; i < arrayLength; i++)
             {   
                 //childLengths' information will be one index ahead of maxLengths
-                int[] childLengths = computeBoundingLengths(Array.get(array, i));
+                int[] childLengths = computeBoundingDimensions(Array.get(array, i));
                 for(int j = 0; j < childLengths.length; j++)
                 {
                     maxLengths[j + 1] = Math.max(maxLengths[j + 1], childLengths[j]);
@@ -195,22 +245,22 @@ class ArrayTransformUtils
     
     /**
      * Gets the class representing an array of type {@code componentType} with the number of dimensions specified by
-     * {@code dimensions}. JVMs typically impose a limit of 255 dimensions.
+     * {@code rank}. JVMs typically impose a limit of 255 dimensions.
      * 
      * @param componentType
-     * @param dimensions
+     * @param rank
      * @return 
      */
-    static Class<?> getMultidimensionalArrayClass(Class<?> componentType, int dimensions)
+    static Class<?> getArrayClass(Class<?> componentType, int rank)
     {
         String binaryName;
         if(componentType.isPrimitive())
         {
-            binaryName = getPrimitiveMultidimensionalBinaryName(componentType, dimensions);
+            binaryName = getPrimitiveArrayBinaryName(componentType, rank);
         }
         else
         {
-            binaryName = getObjectMultidimensionalBinaryName(componentType, dimensions);
+            binaryName = getObjectArrayBinaryName(componentType, rank);
         }
         
         try
@@ -222,37 +272,22 @@ class ArrayTransformUtils
             throw new RuntimeException("Could not create array class\n" +
                     "Component Type (Canonical Name): " + componentType.getCanonicalName() + "\n" +
                     "Component Type (Name): " + componentType.getName() + "\n" +
-                    "Dimensions: " + dimensions + "\n" +
+                    "Rank: " + rank + "\n" +
                     "Array Class Binary Name: "+ binaryName, e);
         }
     }
     
-    private static String getPrimitiveMultidimensionalBinaryName(Class<?> componentType, int dimensions)
+    private static String getPrimitiveArrayBinaryName(Class<?> componentType, int rank)
     {
         //Build binary name
-        char[] nameChars = new char[dimensions + 1];
-        for(int i = 0; i < dimensions; i++)
+        char[] nameChars = new char[rank + 1];
+        for(int i = 0; i < rank; i++)
         {
             nameChars[i] = '[';
         }
         nameChars[nameChars.length - 1] = PRIMITIVE_TO_BINARY_NAME.get(componentType);
-        String binaryName = new String(nameChars);
         
-        return binaryName;
-    }
-    
-    private static String getObjectMultidimensionalBinaryName(Class<?> componentType, int dimensions)
-    {
-        String binaryName = "";
-        for(int i = 0; i < dimensions; i++)
-        {
-            binaryName += "[";
-        }
-        binaryName += "L";
-        binaryName += componentType.getName();
-        binaryName += ";";
-        
-        return binaryName;
+        return new String(nameChars);
     }
     
     private static final Map<Class<?>, Character> PRIMITIVE_TO_BINARY_NAME;
@@ -270,5 +305,19 @@ class ArrayTransformUtils
         map.put(char.class, 'C');
         
         PRIMITIVE_TO_BINARY_NAME = Collections.unmodifiableMap(map);
+    }
+    
+    private static String getObjectArrayBinaryName(Class<?> componentType, int rank)
+    {
+        StringBuilder builder = new StringBuilder();
+        for(int i = 0; i < rank; i++)
+        {
+            builder.append("[");
+        }
+        builder.append("L");
+        builder.append(componentType.getName());
+        builder.append(";");
+        
+        return builder.toString();
     }
 }

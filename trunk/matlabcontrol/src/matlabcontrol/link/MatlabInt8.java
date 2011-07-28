@@ -23,15 +23,37 @@ package matlabcontrol.link;
  */
 
 /**
- * Corresponds to a MATLAB {@code int32} with real and imaginary components.
+ * Corresponds to a MATLAB {@code int8} with real and imaginary components.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class ComplexInteger extends ComplexNumber
+public final class MatlabInt8 extends MatlabNumber<Byte>
 {
-    public ComplexInteger(int real, int imag)
+    private static final Byte DEFAULT = 0;
+    
+    public MatlabInt8(byte real, byte imag)
     {
-        super(new Integer(real), new Integer(imag));
+        super(DEFAULT, real, imag);
+    }
+    
+    /**
+     * Returns the real value.
+     * 
+     * @return 
+     */
+    public byte toReal()
+    {
+        return _real;
+    }
+    
+    /**
+     * Returns the imaginary value.
+     * 
+     * @return 
+     */
+    public byte toImaginary()
+    {
+        return _imag;
     }
 }

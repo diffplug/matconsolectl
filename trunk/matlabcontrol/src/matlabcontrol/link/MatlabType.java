@@ -28,17 +28,21 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
 
 /**
- * Hidden superclass of all Java classes which convert between MATLAB types. Subclasses are all final and are not
- * {@link Serializable}. Being final makes it easier to ensure appropriate behavior when transforming types
- * automatically. They are not serializable to reduce the publicly exposed API and reduce the need to maintain
- * serializable compatibility. Instead, transferring occurs by use of {@link MatlabTypeSetter} and
- * {@link MatlabTypeGetter}. A getter is typically associated with a class as inner static class.
+ * Superclass of all Java classes which represent MATLAB types.
+ * <br><br>
+ * Subclasses of this either final or abstract and non-extenable with final subclasses of their own. Being final makes
+ * it easier to ensure appropriate behavior when transforming types automatically. Subclasses are not
+ * {@link Serializable} to reduce the publicly exposed API and reduce the need to maintain serializable compatibility.
+ * Instead, transferring occurs by use of {@link MatlabTypeSetter} and {@link MatlabTypeGetter}. A getter is typically
+ * associated with a class as an inner static class.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 abstract class MatlabType
 {   
+    MatlabType() { }
+    
     abstract MatlabTypeSetter getSetter();
        
     /**

@@ -23,15 +23,37 @@ package matlabcontrol.link;
  */
 
 /**
- * Corresponds to a MATLAB {@code int16} with real and imaginary components.
+ * Corresponds to a MATLAB {@code int32} with real and imaginary components.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class ComplexShort extends ComplexNumber
+public final class MatlabInt32 extends MatlabNumber<Integer>
 {
-    public ComplexShort(short real, short imag)
+    private static final Integer DEFAULT = 0;
+    
+    public MatlabInt32(int real, int imag)
     {
-        super(new Short(real), new Short(imag));
+        super(DEFAULT, real, imag);
+    }
+    
+    /**
+     * Returns the real value.
+     * 
+     * @return 
+     */
+    public int toReal()
+    {
+        return _real;
+    }
+    
+    /**
+     * Returns the imaginary value.
+     * 
+     * @return 
+     */
+    public int toImaginary()
+    {
+        return _imag;
     }
 }
