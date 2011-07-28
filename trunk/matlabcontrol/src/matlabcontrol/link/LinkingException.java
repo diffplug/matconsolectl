@@ -23,13 +23,15 @@ package matlabcontrol.link;
  */
 
 /**
- * Represents an issue linking a Java method to a MATLAB function.
+ * Issue linking a Java method to a MATLAB function.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class LinkingException extends RuntimeException
 {
+    private static final long serialVersionUID = 0xE500L;
+    
     LinkingException(String msg)
     {
         super(msg);
