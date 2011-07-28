@@ -242,17 +242,17 @@ class ArrayMultidimensionalizer
         }
         
         //Validate lengths
-        if(getTotalSize(lengths) != Array.getLength(linearArray))
+        if(getNumberOfElements(lengths) != Array.getLength(linearArray))
         {
             throw new RuntimeException("linear array's length does not match the total size of the provided " +
                     "multidimensional lengths\n"+
                     "Linear Array Length: " + Array.getLength(linearArray) + "\n" +
                     "Multidimensional Lengths: " + Arrays.toString(lengths) + "\n" +
-                    "Multidimensional Total Size: " + getTotalSize(lengths));
+                    "Multidimensional Total Size: " + getNumberOfElements(lengths));
         }
         
         Class componentType = linearArray.getClass().getComponentType();
-        Class outputArrayType = getMultidimensionalArrayClass(componentType, lengths.length);
+        Class outputArrayType = getArrayClass(componentType, lengths.length);
         ArrayFillOperation fillOperation = FILL_OPERATIONS.get(componentType);
         
         return multidimensionalize_internal(linearArray, outputArrayType, lengths, 0, new int[0], fillOperation);

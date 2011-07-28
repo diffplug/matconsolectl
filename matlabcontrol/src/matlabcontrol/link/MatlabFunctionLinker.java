@@ -59,9 +59,9 @@ import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
-import matlabcontrol.link.ComplexNumber.ComplexNumberGetter;
+import matlabcontrol.link.MatlabNumber.MatlabNumberGetter;
 import matlabcontrol.link.MatlabFunctionHandle.MatlabFunctionHandleGetter;
-import matlabcontrol.link.MatlabNumericArray.MatlabNumericArrayGetter;
+import matlabcontrol.link.MatlabNumberArray.MatlabNumberArrayGetter;
 import matlabcontrol.link.MatlabReturns.ReturnN;
 import matlabcontrol.link.MatlabType.MatlabTypeGetter;
 import matlabcontrol.link.MatlabType.MatlabTypeSetter;
@@ -473,7 +473,7 @@ public class MatlabFunctionLinker
             }
         }
         
-        return ArrayTransformUtils.getMultidimensionalArrayClass((Class<?>) componentType, dimensions);
+        return ArrayTransformUtils.getArrayClass((Class<?>) componentType, dimensions);
     }
     
     private static InvocationInfo getInvocationInfo(Method method, MatlabFunctionInfo annotation)
@@ -590,6 +590,12 @@ public class MatlabFunctionLinker
         final int arrayDimensions;
         
         /**
+         * If the class is one of: {@code byte}, {@code Byte}, {@code short}, {@code Short}, {@code int},
+         * {@code Integer}, {@code long}, {@code Long}, {@code float}, {@code Float}, {@code double}, {@code Double}
+         */
+        final boolean isBuiltinNumeric;
+        
+        /**
          * If the class inherits from {@code MatlabType}
          */
         final boolean isMatlabType;
@@ -626,6 +632,13 @@ public class MatlabFunctionLinker
             
             isVoid = clazz.equals(Void.class) || clazz.equals(void.class);
             isMatlabType = MatlabType.class.isAssignableFrom(clazz);
+            
+            isBuiltinNumeric = clazz.equals(Byte.class)    || clazz.equals(byte.class)  ||
+                               clazz.equals(Short.class)   || clazz.equals(short.class) || 
+                               clazz.equals(Integer.class) || clazz.equals(int.class)   ||    
+                               clazz.equals(Long.class)    || clazz.equals(long.class)  ||
+                               clazz.equals(Float.class)   || clazz.equals(float.class) || 
+                               clazz.equals(Double.class)  || clazz.equals(double.class);
         }
     }
 
@@ -1146,11 +1159,15 @@ public class MatlabFunctionLinker
         private static void setReturnValue(MatlabOperations ops, String name, Object arg)
                 throws MatlabInvocationException
         {
-            if(arg instanceof MatlabTypeSetter)
+            if(arg == null)
+            {
+                ops.eval(name + " = [];");
+            }
+            else if(arg instanceof MatlabTypeSetter)
             {
                 ((MatlabTypeSetter) arg).setInMatlab(ops, name);
             }
-            else if(arg instanceof Number)
+            else if(ClassInfo.getInfo(arg.getClass()).isBuiltinNumeric)
             {   
                 Number number = (Number) arg;
                 
@@ -1177,11 +1194,6 @@ public class MatlabFunctionLinker
                 else if(number instanceof Double)
                 {
                     ops.setVariable(name, new double[] { number.doubleValue() });
-                }
-                //Otherwise this Number subclass is not to be treated specially, set it as any other Java object
-                else
-                {
-                    MatlabValueSetter.setValue(ops, name, number);
                 }
             }
             else
@@ -1273,33 +1285,40 @@ public class MatlabFunctionLinker
                     //Numerics
                     //int8 -> byte, int16 -> short, int32 -> int, int64 -> long, single -> float, double -> double
                     else
-                    {
+                    {   
                         boolean isReal = isFoo(ops, "isreal", returnName);
                         
+                        //Singular value
                         if(isScalar)
                         {
-                            if(isReal)
+                            //If the return value is real and the return type is a primitive numeric or the autobox
+                            if(isReal && returnInfo.isBuiltinNumeric)
                             {
                                 returnValue = MatlabValueReceiver.receiveValue(ops, variablesToClear, returnName);
                             }
+                            //By default, return a MatlabNumber
                             else
                             {
-                                ComplexNumberGetter getter = new ComplexNumberGetter();
+                                MatlabNumberGetter getter = new MatlabNumberGetter();
                                 getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
                         }
+                        //Array
                         else
                         {
-                            if(isReal)
+                            //If the return value is a real array and the return type is a primitive numeric array
+                            if(isReal && returnInfo.isArray && returnInfo.baseComponentType.isPrimitive() && 
+                               ClassInfo.getInfo(returnInfo.baseComponentType).isBuiltinNumeric)
                             {
                                 PrimitiveArrayGetter getter = new PrimitiveArrayGetter(true, keepLinear);
                                 getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
+                            //By default, return a MatlabNumberArray
                             else
                             {  
-                                MatlabNumericArrayGetter getter = new MatlabNumericArrayGetter();
+                                MatlabNumberArrayGetter getter = new MatlabNumberArrayGetter();
                                 getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }

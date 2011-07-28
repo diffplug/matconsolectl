@@ -51,9 +51,8 @@ class ArrayLinearizer
         
         public MultidimensionalPrimitiveArraySetter(Object multidimensionalArray)
         {
-            LinearizedArray arrayInfo = linearize(multidimensionalArray, null);
-            _linearArray = arrayInfo.array;
-            _lengths = arrayInfo.lengths;
+            _lengths = computeBoundingDimensions(multidimensionalArray);
+            _linearArray = linearize(multidimensionalArray, _lengths);
         }
         
         @Override
@@ -90,35 +89,14 @@ class ArrayLinearizer
         }
     }
     
-    static class LinearizedArray
-    {
-        /**
-         * The linearized array, one of:
-         * byte[], short[], int[], long[], float[], double[], char[], boolean[]
-         */
-        final Object array;
-        
-        /**
-         * The bounding lengths of the array used to reshape the linearized array in MATLAB.
-         */
-        final int[] lengths;
-        
-        private LinearizedArray(Object array, int[] lengths)
-        {
-            this.array = array;
-            this.lengths = lengths;
-        }
-    }
-    
     /**
-     * Creates a linearized version of the {@code array}. The bounding length of each dimension is used if the array is
-     * jagged.
+     * Creates a linearized version of the {@code array}.
      * 
      * @param array a multidimensional primitive array
-     * @param lengths the lengths of the array, if null then the lengths of the array will be computed
-     * @return linear array and lengths used
+     * @param lengths the bounding lengths of the array
+     * @return linear array
      */
-    static LinearizedArray linearize(Object array, int[] lengths)
+    static Object linearize(Object array, int[] lengths)
     {
         if(array == null | !array.getClass().isArray())
         {
@@ -133,15 +111,14 @@ class ArrayLinearizer
         }
         
         //Create linear array with size equal to that of the bounding lengths of the array
-        lengths = (lengths == null ? computeBoundingLengths(array) : lengths);
-        int size = getTotalSize(lengths);
+        int size = getNumberOfElements(lengths);
         Object linearArray = Array.newInstance(baseClass, size);
         
         //Fill linearArray with values from array
         ArrayFillOperation fillOperation = FILL_OPERATIONS.get(baseClass);
         linearize_internal(linearArray, array, fillOperation, lengths, new int[0]);
        
-        return new LinearizedArray(linearArray, lengths);
+        return linearArray;
     }
     
     /**

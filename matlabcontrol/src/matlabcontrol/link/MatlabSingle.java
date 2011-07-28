@@ -23,15 +23,37 @@ package matlabcontrol.link;
  */
 
 /**
- * Corresponds to a MATLAB {@code int8} with real and imaginary components.
+ * Corresponds to a MATLAB {@code single} with real and imaginary components.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class ComplexByte extends ComplexNumber
+public final class MatlabSingle extends MatlabNumber<Float>
 {
-    public ComplexByte(byte real, byte imag)
+    private static final Float DEFAULT = 0.0f;
+    
+    public MatlabSingle(float real, float imag)
     {
-        super(new Byte(real), new Byte(imag));
+        super(DEFAULT, real, imag);
+    }
+    
+    /**
+     * Returns the real value.
+     * 
+     * @return 
+     */
+    public float toReal()
+    {
+        return _real;
+    }
+    
+    /**
+     * Returns the imaginary value.
+     * 
+     * @return 
+     */
+    public float toImaginary()
+    {
+        return _imag;
     }
 }
