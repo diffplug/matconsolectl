@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Array;
 import java.lang.reflect.GenericArrayType;
@@ -42,7 +43,9 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -73,7 +76,7 @@ import matlabcontrol.link.MatlabVariable.MatlabVariableGetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class Linker
-{    
+{   
     private Linker() { }
     
     
@@ -175,91 +178,65 @@ public class Linker
         else
         {   
             String path = annotation.value();
-            File mFile;
             
-            //If an absolute path
+            //Retrieve location of function file
+            File functionFile;
             if(new File(path).isAbsolute())
             {
-                mFile = new File(path);
+                functionFile = new File(path);
             }
-            //If a relative path
             else
             {
-                File interfaceLocation = getClassLocation(method.getDeclaringClass());
-                try
-                {   
-                    //If this line succeeds then, then the interface is inside of a zip file, so the m-file is as well
-                    ZipFile zip = new ZipFile(interfaceLocation);
-
-                    ZipEntry entry = zip.getEntry(path);
-
-                    if(entry == null)
-                    {
-                         throw new LinkingException("Unable to find m-file inside of jar\n" +
-                            "method: " + method.getName() + "\n" +
-                            "path: " + path + "\n" +
-                            "zip file location: " + interfaceLocation.getAbsolutePath());
-                    }
-
-                    String entryName = entry.getName();
-                    if(!entryName.endsWith(".m"))
-                    {
-                        throw new LinkingException("Specified m-file does not end in .m\n" +
-                                "method: " + method.getName() + "\n" +
-                                "path: " + path + "\n" +
-                                "zip file location: " + interfaceLocation.getAbsolutePath());
-                    }
-
-                    functionName = entryName.substring(entryName.lastIndexOf("/") + 1, entryName.length() - 2);
-                    mFile = extractFromZip(zip, entry, functionName, method, interfaceLocation, annotation);
-                    zip.close();
-                }
-                //Interface is not located inside a jar, so neither is the m-file
-                catch(IOException e)
-                {
-                    mFile = new File(interfaceLocation, path);
-                }
+                functionFile = resolveRelativePath(method, path);
             }
             
             //Resolve canonical path
             try
             {
-                mFile = mFile.getCanonicalFile();
+                functionFile = functionFile.getCanonicalFile();
             }
-            catch(IOException ex)
+            catch(IOException e)
             {
                 throw new LinkingException("Unable to resolve canonical path of specified function\n" +
                         "method: " + method.getName() + "\n" +
                         "path:" + path + "\n" +
-                        "non-canonical path: " + mFile.getAbsolutePath(), ex);
+                        "non-canonical path: " + functionFile.getAbsolutePath(), e);
             }
             
             //Validate file location
-            if(!mFile.exists())
+            if(!functionFile.exists())
             {
-                throw new LinkingException("Specified m-file does not exist\n" + 
+                throw new LinkingException("Specified file does not exist\n" + 
                         "method: " + method.getName() + "\n" +
                         "path: " + path + "\n" +
-                        "resolved as: " + mFile.getAbsolutePath());
+                        "resolved as: " + functionFile.getAbsolutePath());
             }
-            if(!mFile.isFile())
+            if(!functionFile.isFile())
             {
-                throw new LinkingException("Specified m-file is not a file\n" + 
+                throw new LinkingException("Specified file is not a file\n" + 
                         "method: " + method.getName() + "\n" +
                         "path: " + path + "\n" +
-                        "resolved as: " + mFile.getAbsolutePath());
+                        "resolved as: " + functionFile.getAbsolutePath());
             }
-            if(!mFile.getName().endsWith(".m"))
+            if(!(functionFile.getName().endsWith(".m") || functionFile.getName().endsWith(".p")))
             {
-                throw new LinkingException("Specified m-file does not end in .m\n" + 
+                throw new LinkingException("Specified file does not end in .m or .p\n" + 
                         "method: " + method.getName() + "\n" +
                         "path: " + path + "\n" +
-                        "resolved as: " + mFile.getAbsolutePath());
+                        "resolved as: " + functionFile.getAbsolutePath());
             }
             
             //Parse out the name of the function and the directory containing it
-            containingDirectory = mFile.getParent();
-            functionName = mFile.getName().substring(0, mFile.getName().length() - 2); 
+            containingDirectory = functionFile.getParent();
+            functionName = functionFile.getName().substring(0, functionFile.getName().length() - 2);
+            
+            //Validate the function name
+            if(!isFunctionName(functionName))
+            {
+                throw new LinkingException("Specified file's name is not a MATLAB function name\n" + 
+                        "Function Name: " + functionName + "\n" +
+                        "File: " + functionFile.getAbsolutePath());
+            }
         }
         
         return new FunctionInfo(functionName, containingDirectory);
@@ -291,79 +268,244 @@ public class Linker
     }
     
     /**
-     * Extracts the {@code entry} belonging to {@code zip} to a file named {@code functionName}.m that is placed in
-     * the directory specified by the property {@code java.io.tmpdir}. It is not placed directly in that directory, but
-     * instead inside a directory with a randomly generated name. The file is deleted upon JVM termination.
-     * 
-     * @param zip
-     * @param entry
-     * @param functionName
-     * @param method  used only for exception message
-     * @param interfaceLocation  used only for exception message
-     * @param annotation   used only for exception message
-     * @return
-     * @throws LinkingException 
+     * Cache used by {@link #resolveRelativePath(Method, String)}
      */
-    private static File extractFromZip(ZipFile zip, ZipEntry entry, String functionName,
-            Method method, File interfaceLocation, MatlabFunction annotation)
-    {
-        try
-        {
-            //Source
-            InputStream entryStream = zip.getInputStream(entry);
-
-            //Destination
-            File tempDir = new File(System.getProperty("java.io.tmpdir"), UUID.randomUUID().toString());
-            File destFile = new File(tempDir, functionName + ".m");
-            if(destFile.exists())
+    private static final ConcurrentHashMap<Class<?>, Map<String, File>> UNZIPPED_ENTRIES =
+            new ConcurrentHashMap<Class<?>, Map<String, File>>();
+    
+    /**
+     * Resolves the location of {@code relativePath} relative to the interface which declared {@code method}. If the
+     * interface is inside of a zip file (jar/war/ear etc. file) then the contents of the zip file may first need to be
+     * unzipped.
+     * 
+     * @param method
+     * @param relativePath
+     * @return the absolute location of the file
+     */
+    private static File resolveRelativePath(Method method, String relativePath)
+    {   
+        Class<?> theInterface = method.getDeclaringClass();
+        File interfaceLocation = getClassLocation(theInterface); 
+        
+        File functionFile;
+        
+        //Code source is in a file, which means it should be jar/ear/war/zip etc.
+        if(interfaceLocation.isFile())
+        {        
+            if(!UNZIPPED_ENTRIES.containsKey(theInterface))
             {
-                throw new LinkingException("Unable to extract m-file, randomly generated path already defined\n" +
-                        "method: " + method + "\n" +
-                        "function: " + functionName + "\n" +
-                        "generated path: " + destFile.getAbsolutePath());
+                UnzipResult unzipResult = unzip(interfaceLocation);
+                Map<String, File> mapping = unzipResult.unzippedMapping;
+                List<File> filesToDelete = new ArrayList<File>(mapping.values());
+                filesToDelete.add(unzipResult.rootDirectory); 
+                
+                //If there was a previous mapping, delete all of the files just unzipped 
+                if(UNZIPPED_ENTRIES.putIfAbsent(theInterface, mapping) != null)
+                {
+                    deleteFiles(filesToDelete, true);
+                }
+                //No previous mapping, delete unzipped files on JVM exit
+                else
+                {
+                    deleteFiles(filesToDelete, false);
+                }
             }
-            destFile.getParentFile().mkdirs();
-            destFile.deleteOnExit();
-
-            //Copy source to destination
-            final int BUFFER_SIZE = 2048;
-            byte[] buffer = new byte[BUFFER_SIZE];
-            BufferedOutputStream dest = new BufferedOutputStream(new FileOutputStream(destFile), BUFFER_SIZE);
-            int count;
-            while((count = entryStream.read(buffer, 0, BUFFER_SIZE)) != -1)
+            
+            functionFile = UNZIPPED_ENTRIES.get(theInterface).get(relativePath);
+            
+            if(functionFile == null)
             {
-               dest.write(buffer, 0, count);
+                 throw new LinkingException("Unable to find file inside of zip\n" +
+                    "Method: " + method.getName() + "\n" +
+                    "Relative Path: " + relativePath + "\n" +
+                    "Zip File: " + interfaceLocation.getAbsolutePath());
             }
-            dest.flush();
-            dest.close();
-
-            return destFile;
         }
-        catch(IOException e)
+        //Code source is a directory, it code should not be inside a jar/ear/war/zip etc.
+        else
         {
-            throw new LinkingException("Unable to extract m-file from jar\n" +
-                "method: " + method.getName() + "\n" +
-                "path: " + annotation.value() + "\n" +
-                "zip file location: " + interfaceLocation.getAbsolutePath(), e);
+            functionFile = new File(interfaceLocation, relativePath);
+        }
+        
+        return functionFile;
+    }
+    
+    private static void deleteFiles(Collection<File> files, boolean deleteNow)
+    {
+        ArrayList<File> sortedFiles = new ArrayList<File>(files);
+        Collections.sort(sortedFiles);
+        
+        //Delete files in the opposite order so that files are deleted before their containing directories
+        if(deleteNow)
+        {
+            for(int i = sortedFiles.size() - 1; i >= 0; i--)
+            {
+                sortedFiles.get(i).delete();
+            }
+        }
+        //Delete files in the existing order because the files will be deleted on exit in the opposite order
+        else
+        {
+            for(File file : sortedFiles)
+            {
+                file.deleteOnExit();
+            }
         }
     }
     
+    /**
+     * Cache used by {@link #getClassLocation(java.lang.Class)}}.
+     */
+    private static final ConcurrentHashMap<Class<?>, File> CLASS_LOCATIONS =
+            new ConcurrentHashMap<Class<?>, File>();
+    
     private static File getClassLocation(Class<?> clazz)
     {
+        if(!CLASS_LOCATIONS.containsKey(clazz))
+        {
+            try
+            {
+                URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
+                File file = new File(url.toURI().getPath()).getCanonicalFile();
+                if(!file.exists())
+                {
+                    throw new LinkingException("Incorrectly resolved location of class\n" +
+                            "class: " + clazz.getCanonicalName() + "\n" +
+                            "focation: " + file.getAbsolutePath());
+                }
+
+                CLASS_LOCATIONS.put(clazz, file);
+            }
+            catch(IOException e)
+            {
+                throw new LinkingException("Unable to determine location of " + clazz.getCanonicalName(), e);
+            }
+            catch(URISyntaxException e)
+            {
+                throw new LinkingException("Unable to determine location of " + clazz.getCanonicalName(), e);
+            }
+        }
+        
+        return CLASS_LOCATIONS.get(clazz);
+    }
+    
+    private static class UnzipResult
+    {
+        final Map<String, File> unzippedMapping;
+        File rootDirectory;
+        
+        private UnzipResult(Map<String, File> mapping, File root)
+        {
+            this.unzippedMapping = mapping;
+            this.rootDirectory = root;
+        }
+    }
+    
+    /**
+     * Unzips the file located at {@code zipLocation}.
+     * 
+     * @param zipLocation the location of the file zip
+     * @return resulting files from unzipping
+     * @throws LinkingException if unable to unzip the zip file for any reason
+     */
+    private static UnzipResult unzip(File zipLocation)
+    {
+        ZipFile zip;
         try
         {
-            URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
-            File file = new File(url.toURI().getPath()).getCanonicalFile();
-            
-            return file;
+            zip = new ZipFile(zipLocation);
         }
         catch(IOException e)
         {
-            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+            throw new LinkingException("Unable to open zip file\n" +
+                    "zip location: " + zipLocation.getAbsolutePath(), e);
         }
-        catch(URISyntaxException e)
+        
+        try
         {
-            throw new LinkingException("Unable to determine location of " + clazz.getName(), e);
+            //Mapping from entry names to the unarchived location on disk
+            Map<String, File> entryMap = new HashMap<String, File>();
+            
+            //Destination
+            File unzipDir = new File(System.getProperty("java.io.tmpdir"), "linked_" + UUID.randomUUID().toString());
+
+            for(Enumeration<? extends ZipEntry> entries = zip.entries(); entries.hasMoreElements(); )
+            {
+                ZipEntry entry = entries.nextElement();
+
+                //Directory
+                if(entry.isDirectory())
+                {
+                    File destDir = new File(unzipDir, entry.getName());
+                    destDir.mkdirs();
+                    
+                    entryMap.put(entry.getName(), destDir);
+                }
+                //File
+                else
+                {
+                    //File should not exist, but confirm it
+                    File destFile = new File(unzipDir, entry.getName());
+                    if(destFile.exists())
+                    {
+                        throw new LinkingException("Cannot unzip file, randomly generated path already exists\n" +
+                                "generated path: " + destFile.getAbsolutePath() + "\n" +
+                                "zip file: " + zipLocation.getAbsolutePath());
+                    }
+                    destFile.getParentFile().mkdirs();
+
+                    //Unarchive
+                    try
+                    {
+                        final int BUFFER_SIZE = 2048;
+                        OutputStream dest = new BufferedOutputStream(new FileOutputStream(destFile), BUFFER_SIZE);
+                        try
+                        {
+                            InputStream entryStream = zip.getInputStream(entry);
+                            try
+                            {
+                                byte[] buffer = new byte[BUFFER_SIZE];
+                                int count;
+                                while((count = entryStream.read(buffer, 0, BUFFER_SIZE)) != -1)
+                                {
+                                   dest.write(buffer, 0, count);
+                                }
+                                dest.flush();
+                            }
+                            finally
+                            {
+                                entryStream.close();
+                            }
+                        }
+                        finally
+                        {
+                            dest.close();
+                        }
+                    }
+                    catch(IOException e)
+                    {
+                        throw new LinkingException("Unable to unzip file entry\n" +
+                                "entry: " + entry.getName() + "\n" +
+                                "zip location: " + zipLocation.getAbsolutePath() + "\n" +
+                                "destination file: " + destFile.getAbsolutePath(), e);
+                    }
+                
+                    entryMap.put(entry.getName(), destFile);
+                }
+            }
+            
+            return new UnzipResult(Collections.unmodifiableMap(entryMap), unzipDir);
+        }
+        finally
+        {
+            try
+            {
+                zip.close();
+            }
+            catch(IOException ex)
+            {
+                throw new LinkingException("Unable to close zip file: " + zipLocation.getAbsolutePath());
+            }
         }
     }
     
@@ -738,7 +880,7 @@ public class Linker
             else if(method.getName().equals("returningEval"))
             {   
                 //Each return type
-                int nargout = (int) args[1];
+                int nargout = (Integer) args[1];
                 Class<?>[] returnTypes = new Class<?>[nargout];
                 Arrays.fill(returnTypes, Object.class);
                 
@@ -767,7 +909,7 @@ public class Linker
                 System.arraycopy(functionArgs, 0, firstLevelArgs, 1, functionArgs.length);
                 
                 //Each return type
-                int nargout = (int) args[1];
+                int nargout = (Integer) args[1];
                 Class<?>[] returnTypes = new Class<?>[nargout];
                 Arrays.fill(returnTypes, Object.class);
                 
