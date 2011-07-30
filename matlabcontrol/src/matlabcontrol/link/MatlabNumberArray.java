@@ -407,18 +407,19 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     public int hashCode()
     {
         //The hash code might still be computed multiple times if the first invocation of this method overlaps with
-        //other concurrent invocations. This behaviors avoids any need for synchronization.
-        if(_hashCode == 0)
+        //other concurrent invocations. This behavior avoids any need for synchronization.
+        int result = _hashCode;
+        if(result == 0)
         {
-            int hash = 7;
-            hash = 97 * hash + this.hashReal();
-            hash = 97 * hash + this.hashImaginary();
-            hash = 97 * hash + Arrays.hashCode(_dimensions);
+            result= 7;
+            result = 97 * result + this.hashReal();
+            result = 97 * result + this.hashImaginary();
+            result = 97 * result + Arrays.hashCode(_dimensions);
 
-            _hashCode = hash;
+            _hashCode = result;
         }
         
-        return _hashCode;
+        return result;
     }
     
     abstract int hashReal();
@@ -454,11 +455,16 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     }
     
     abstract boolean containsNonZero(L array);
-
+    
     @Override
     MatlabTypeSetter getSetter()
     {
         return new MatlabNumberArraySetter(_real, _imag, _dimensions);
+    }
+
+    Class<T> getOutputArrayType()
+    {
+        return _outputArrayType;
     }
     
     private static class MatlabNumberArraySetter implements MatlabTypeSetter
@@ -519,6 +525,13 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
         private int[] _lengths;
         private boolean _retreived = false;
         
+        private final boolean _keepLinear;
+        
+        MatlabNumberArrayGetter(boolean keepLinear)
+        {
+            _keepLinear = keepLinear;
+        }
+        
         @Override
         public MatlabNumberArray retrieve()
         {
@@ -567,7 +580,15 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
             PrimitiveArrayGetter realGetter = new PrimitiveArrayGetter(true, true);
             realGetter.getInMatlab(ops, variableName);
             _real = realGetter.retrieve();
-            _lengths = realGetter.getLengths();
+            
+            if(_keepLinear)
+            {
+                _lengths = new int[] { realGetter.getLengths()[1] };
+            }
+            else
+            {
+                _lengths = realGetter.getLengths();
+            }
             
             PrimitiveArrayGetter imagGetter = new PrimitiveArrayGetter(false, true);
             imagGetter.getInMatlab(ops, variableName);

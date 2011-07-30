@@ -509,7 +509,19 @@ public class Linker
         }
     }
     
-    private static Class<?>[] getReturnTypes(Method method)
+    private static class ReturnTypeInfo
+    {
+        Class<?>[] returnTypes;
+        Class<?>[][] returnTypeParameters;
+        
+        private ReturnTypeInfo(Class<?>[] returnTypes, Class<?>[][] returnTypeParameters)
+        {
+            this.returnTypes = returnTypes;
+            this.returnTypeParameters = returnTypeParameters;
+        }
+    }
+    
+    private static ReturnTypeInfo getReturnTypes(Method method)
     {
         //The type-erasured return type of the method
         Class<?> methodReturn = method.getReturnType();
@@ -519,18 +531,38 @@ public class Linker
         
         //The return types to be determined
         Class<?>[] returnTypes;
+        Class<?>[][] returnTypeGenericParameters;
         
         //0 return arguments
         if(methodReturn.equals(void.class))
         {
             returnTypes = new Class<?>[0];
+            returnTypeGenericParameters = new Class<?>[0][0];
         }
         //1 return argument
         else if(!ReturnN.class.isAssignableFrom(methodReturn))
         {
-            if(!methodReturn.equals(genericReturn))
+            //MatlabNumberArray subclasses are allowed to be parameterized
+            if(MatlabNumberArray.class.isAssignableFrom(methodReturn))
+            {
+                if(genericReturn instanceof ParameterizedType)
+                {
+                    Type[] parameterizedTypes = ((ParameterizedType) genericReturn).getActualTypeArguments();
+                    Class<?> parameter = getMatlabNumberArrayParameter(parameterizedTypes[0], methodReturn, method);
+                    returnTypeGenericParameters = new Class<?>[][] { { parameter } };
+                }
+                else
+                {
+                    throw new LinkingException(method + " must parameterize " + methodReturn.getCanonicalName());
+                }
+            }
+            else if(!methodReturn.equals(genericReturn))
             {
                 throw new LinkingException(method + " may not have a return type that uses generics");
+            }
+            else
+            {
+                returnTypeGenericParameters = new Class<?>[1][0];
             }
             
             returnTypes = new Class<?>[]{ methodReturn };
@@ -542,6 +574,7 @@ public class Linker
             {
                 Type[] parameterizedTypes = ((ParameterizedType) genericReturn).getActualTypeArguments();
                 returnTypes = new Class<?>[parameterizedTypes.length];
+                returnTypeGenericParameters = new Class<?>[parameterizedTypes.length][];
                 
                 for(int i = 0; i < parameterizedTypes.length; i++)
                 {
@@ -549,16 +582,38 @@ public class Linker
                 
                     if(type instanceof Class)
                     {
-                        returnTypes[i] = (Class) type;
+                        Class returnType = (Class) type;
+                        if(MatlabNumberArray.class.isAssignableFrom(returnType))
+                        {
+                            throw new LinkingException(method + " must parameterize " + returnType.getCanonicalName());
+                        }
+                        returnTypes[i] = returnType;
+                        returnTypeGenericParameters[i] = new Class[0];
                     }
                     else if(type instanceof GenericArrayType)
                     {   
                         returnTypes[i] = getClassOfArrayType((GenericArrayType) type, method);
+                        returnTypeGenericParameters[i] = new Class[0];
                     }
                     else if(type instanceof ParameterizedType)
                     {
-                        throw new LinkingException(method + " may not parameterize " + methodReturn.getCanonicalName() +
-                                " with a parameterized type");
+                        //MatlabNumberArray subclasses are allowed to be parameterized
+                        ParameterizedType parameterizedType = (ParameterizedType) type;
+                        Type rawType = parameterizedType.getRawType();
+                        if(rawType instanceof Class && MatlabNumberArray.class.isAssignableFrom((Class<?>) rawType))
+                        {
+                            Class<?> returnType = (Class<?>) rawType;
+                            returnTypes[i] = returnType;
+                            
+                            Class<?> parameter = getMatlabNumberArrayParameter(
+                                    parameterizedType.getActualTypeArguments()[0], returnType, method);
+                            returnTypeGenericParameters[i] = new Class[] { parameter };
+                        }
+                        else
+                        {
+                            throw new LinkingException(method + " may not parameterize " +
+                                    methodReturn.getCanonicalName() + " with a parameterized type");
+                        }
                     }
                     else if(type instanceof WildcardType)
                     {
@@ -583,7 +638,38 @@ public class Linker
             }
         }
         
-        return returnTypes;
+        return new ReturnTypeInfo(returnTypes, returnTypeGenericParameters);
+    }
+    
+    private static Class<?> getMatlabNumberArrayParameter(Type type, Class<?> matlabArrayClass, Method method)
+    {
+        Class<?> parameter;
+        if(type instanceof GenericArrayType)
+        {
+            parameter = getClassOfArrayType((GenericArrayType) type, method);
+            ClassInfo paramInfo = ClassInfo.getInfo(parameter);
+            
+            boolean validParameter =
+            ((matlabArrayClass.equals(MatlabInt8Array.class)   && byte.class.equals(paramInfo.baseComponentType))  ||
+             (matlabArrayClass.equals(MatlabInt16Array.class)  && short.class.equals(paramInfo.baseComponentType)) || 
+             (matlabArrayClass.equals(MatlabInt32Array.class)  && int.class.equals(paramInfo.baseComponentType))   ||
+             (matlabArrayClass.equals(MatlabInt64Array.class)  && long.class.equals(paramInfo.baseComponentType))  ||
+             (matlabArrayClass.equals(MatlabSingleArray.class) && float.class.equals(paramInfo.baseComponentType)) ||
+             (matlabArrayClass.equals(MatlabDoubleArray.class) && double.class.equals(paramInfo.baseComponentType)));
+            
+            if(!validParameter)
+            {
+                throw new LinkingException(method + " may not parameterize " + matlabArrayClass.getCanonicalName() + 
+                        " with " + parameter.getCanonicalName());
+            }
+        }
+        else
+        {
+            throw new LinkingException(method + " may not parameterize " + matlabArrayClass.getCanonicalName() +
+                    " with " + type);
+        }
+        
+        return parameter;
     }
     
     /**
@@ -621,8 +707,9 @@ public class Linker
     private static InvocationInfo getInvocationInfo(Method method, MatlabFunction annotation)
     {   
         FunctionInfo funcInfo = getFunctionInfo(method, annotation);
-        Class<?>[] returnTypes = getReturnTypes(method);
-        InvocationInfo invocationInfo = new InvocationInfo(funcInfo.name, funcInfo.containingDirectory, returnTypes);
+        ReturnTypeInfo returnInfo = getReturnTypes(method);
+        InvocationInfo invocationInfo = new InvocationInfo(funcInfo.name, funcInfo.containingDirectory,
+                returnInfo.returnTypes, returnInfo.returnTypeParameters);
             
         return invocationInfo;
     }
@@ -648,36 +735,61 @@ public class Linker
          */
         final Class<?>[] returnTypes;
         
-        private InvocationInfo(String name, String containingDirectory, Class<?>[] returnTypes)
+        /**
+         * Array of generic type parameters of the return types. For instance for return type at index <i>i</i> in
+         * {@code returnTypes} the generic parameters are in the array returned by {@code returnTypeGenericParameters}
+         * at index <i>i</i>.
+         */
+        final Class<?>[][] returnTypeParameters;
+        
+        private InvocationInfo(String name, String containingDirectory,
+                 Class<?>[] returnTypes, Class<?>[][] returnTypeParameters)
         {
             this.name = name;
             this.containingDirectory = containingDirectory;
+            
             this.returnTypes = returnTypes;
+            this.returnTypeParameters = returnTypeParameters;
         }
         
         @Override
         public String toString()
         {   
-            //Build the String this way instead of Array.toString(...) so that canonical names are used
-            String returnTypesStr = "[";
-            for(int i = 0; i < returnTypes.length; i++)
+            String genericParameters = "[";
+            for(int i = 0; i < returnTypeParameters.length; i++)
             {
-                returnTypesStr += returnTypes[i].getCanonicalName();
+                genericParameters += classArrayToString(returnTypeParameters[i]);
                 
-                if(i != returnTypes.length - 1)
+                if(i != returnTypeParameters.length - 1)
                 {
-                    returnTypesStr += " ";
+                    genericParameters += " ";
                 }
             }
-            returnTypesStr += "]";
+            genericParameters += "]";
             
             return "[" + this.getClass().getSimpleName() + 
                     " name=" + name + "," +
                     " containingDirectory=" + containingDirectory + "," +
-                    " returnTypes=" + returnTypesStr + "]";
+                    " returnTypes=" + classArrayToString(returnTypes) + "," +
+                    " returnTypesGenericParameters=" + genericParameters + "]";
         }
         
-        
+        private static String classArrayToString(Class[] array)
+        {
+            String str = "[";
+            for(int i = 0; i < array.length; i++)
+            {
+                str += array[i].getCanonicalName();
+                
+                if(i != array.length - 1)
+                {
+                    str += " ";
+                }
+            }
+            str += "]";
+            
+            return str;
+        }
     }
     
     private static class ClassInfo
@@ -699,7 +811,7 @@ public class Linker
         /**
          * The class this information is about
          */
-        final Class<?> theClass;
+        final Class<?> describedClass;
         
         /**
          * If the class is either {@code void} or {@code java.lang.Void}
@@ -744,7 +856,7 @@ public class Linker
         
         private ClassInfo(Class<?> clazz)
         {
-            theClass = clazz;
+            describedClass = clazz;
             
             isPrimitive = clazz.isPrimitive();
             
@@ -873,7 +985,7 @@ public class Linker
             
             if(method.getName().equals("eval"))
             {
-                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[0]);
+                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[0], new Class<?>[0][0]);
                 
                 result = invokeMatlabFunction(info, false, args, methodReturn);
             }
@@ -884,7 +996,7 @@ public class Linker
                 Class<?>[] returnTypes = new Class<?>[nargout];
                 Arrays.fill(returnTypes, Object.class);
                 
-                InvocationInfo info = new InvocationInfo("eval", null, returnTypes);
+                InvocationInfo info = new InvocationInfo("eval", null, returnTypes, new Class<?>[nargout][0]);
                 
                 result = invokeMatlabFunction(info, false, new Object[]{ args[0] }, methodReturn);
             }
@@ -896,7 +1008,7 @@ public class Linker
                 firstLevelArgs[0] = args[0];
                 System.arraycopy(functionArgs, 0, firstLevelArgs, 1, functionArgs.length);
                 
-                InvocationInfo info = new InvocationInfo("feval", null, new Class<?>[0]);
+                InvocationInfo info = new InvocationInfo("feval", null, new Class<?>[0], new Class<?>[0][0]);
                 
                 result = invokeMatlabFunction(info, false, firstLevelArgs, methodReturn);
             }
@@ -913,19 +1025,19 @@ public class Linker
                 Class<?>[] returnTypes = new Class<?>[nargout];
                 Arrays.fill(returnTypes, Object.class);
                 
-                InvocationInfo info = new InvocationInfo("feval", null, returnTypes);
+                InvocationInfo info = new InvocationInfo("feval", null, returnTypes, new Class<?>[nargout][0]);
                 
                 result = invokeMatlabFunction(info, false, firstLevelArgs, methodReturn);
             }
             else if(method.getName().equals("getVariable"))
             {
-                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[]{ Object.class });
+                InvocationInfo info = new InvocationInfo("eval", null, new Class<?>[]{ Object.class }, new Class<?>[1][0]);
                 
                 result = ((Object[]) invokeMatlabFunction(info, false, args, methodReturn))[0];
             }
             else if(method.getName().equals("setVariable"))
             {
-                InvocationInfo info = new InvocationInfo("assignin", null, new Class<?>[0]);
+                InvocationInfo info = new InvocationInfo("assignin", null, new Class<?>[0], new Class<?>[0][0]);
                 
                 result = invokeMatlabFunction(info, false, new Object[]{ "base", args[0], args[1] }, methodReturn);
             }
@@ -1041,14 +1153,14 @@ public class Linker
             //1 return values
             else if(result.length == 1)
             {
-                toReturn = validateReturnCompatability(result[0], info.returnTypes[0]);
+                toReturn = validateReturnCompatability(result[0], info.returnTypes[0], info.returnTypeParameters[0]);
             }
             //2 or more return values
             else
             {
                 for(int i = 0; i < result.length; i++)
                 {
-                    result[i] = validateReturnCompatability(result[i], info.returnTypes[i]);
+                    result[i] = validateReturnCompatability(result[i], info.returnTypes[i], info.returnTypeParameters[0]);
                 }
                 
                 try
@@ -1076,7 +1188,7 @@ public class Linker
             return toReturn;
         }
         
-        private Object validateReturnCompatability(Object value, Class<?> returnType)
+        private Object validateReturnCompatability(Object value, Class<?> returnType, Class<?>[] returnTypeParameters)
         {   
             Object toReturn;
             if(value == null)
@@ -1106,7 +1218,7 @@ public class Linker
                             "actually returned\n" + 
                             "Required types: " + returnType.getCanonicalName() + " OR " +
                                                  autoboxedClass.getCanonicalName() + "\n" + 
-                            "Returned type: " + value.getClass().getCanonicalName());
+                            "Returned type: " + toClassString(value));
                 }
             }
             else
@@ -1115,14 +1227,74 @@ public class Linker
                 {
                     throw new IncompatibleReturnException("Required return type is incompatible with the type " +
                             "actually returned\n" +
-                            "Required type: " + returnType.getCanonicalName() + "\n" +
-                            "Returned type: " + value.getClass().getCanonicalName());
+                            "Required type: " + toClassString(returnType, returnTypeParameters) + "\n" +
+                            "Returned type: " + toClassString(value));
+                }
+                
+                //If the return type is a MatlabNumberArray subclass and is parameterized
+                if(MatlabNumberArray.class.isAssignableFrom(returnType) && returnTypeParameters.length == 1)
+                {
+                    //Check the parameterization matches
+                    Class<?> valueParameterization = ((MatlabNumberArray) value).getOutputArrayType();
+                    if(!valueParameterization.equals(returnTypeParameters[0]))
+                    {
+                        throw new IncompatibleReturnException("Required return type is incompatible with the type " +
+                                "actually returned\n" +
+                                "Required type: " + toClassString(returnType, returnTypeParameters) + "\n" +
+                                "Returned type: " + toClassString(value));
+                    }
                 }
                 
                 toReturn = value;
             }
             
             return toReturn;
+        }
+        
+        private static String toClassString(Class<?> returnType, Class<?>[] returnTypeParameters)
+        {
+            String classString = returnType.getCanonicalName();
+            
+            if(returnTypeParameters.length != 0)
+            {
+                classString += "<";
+                
+                for(int i = 0; i < returnTypeParameters.length; i++)
+                {
+                    classString += returnTypeParameters[i].getCanonicalName();
+                    
+                    if(i != returnTypeParameters.length - 1)
+                    {
+                        classString += ", ";
+                    }
+                }
+                
+                classString += ">";
+            }
+            
+            return classString;
+        }
+        
+        private static String toClassString(Object obj)
+        {
+            String classString;
+            
+            if(obj == null)
+            {
+                classString = "null";
+            }
+            else if(MatlabNumberArray.class.isAssignableFrom(obj.getClass()))
+            {
+                MatlabNumberArray array = (MatlabNumberArray) obj;
+                classString = array.getClass().getCanonicalName() +
+                              "<" + array.getOutputArrayType().getCanonicalName() + ">";
+            }
+            else
+            {
+                classString = obj.getClass().getCanonicalName();
+            }
+            
+            return classString;
         }
 
         private static final Map<Class<?>, Class<?>> PRIMITIVE_TO_AUTOBOXED;
@@ -1257,7 +1429,8 @@ public class Linker
                     //Retrieve the value
                     else
                     {
-                        returnValues[i] = getReturnValue(ops, returnNames.get(i), returnInfo, variablesToClear);
+                        returnValues[i] = getReturnValue(ops, returnNames.get(i), returnInfo,
+                                _functionInfo.returnTypeParameters[i], variablesToClear);
                     }
                 }
                 
@@ -1345,7 +1518,7 @@ public class Linker
         }
         
         private static Object getReturnValue(MatlabOperations ops, String returnName, ClassInfo returnInfo,
-                List<String> variablesToClear) throws MatlabInvocationException
+                Class<?>[] returnParams, List<String> variablesToClear) throws MatlabInvocationException
         {
             Object returnValue;
             
@@ -1379,11 +1552,15 @@ public class Linker
                     boolean keepLinear = false;
                     if(!isScalar)
                     {
-                        //returnLinearArray will be true if the array is a vector and the specified return type
-                        //is the appropriate corresponding one dimensional array
-                        keepLinear = returnInfo.arrayDimensions == 1 &&
-                                     MATLAB_TO_JAVA_PRIMITIVE.get(type).equals(returnInfo.baseComponentType) &&
-                                     isFoo(ops, "isvector", returnName);
+                        if(MatlabNumberArray.class.isAssignableFrom(returnInfo.describedClass))
+                        {
+                            ClassInfo returnParamInfo = ClassInfo.getInfo(returnParams[0]);
+                            keepLinear = returnParamInfo.arrayDimensions == 1 && isFoo(ops, "isvector", returnName);
+                        }
+                        else
+                        {
+                            keepLinear = returnInfo.arrayDimensions == 1 && isFoo(ops, "isvector", returnName);
+                        }
                     }
                     
                     //logical -> boolean
@@ -1404,7 +1581,7 @@ public class Linker
                     else if(type.equals("char"))
                     {
                         //If the return type is specified as char, Character, or an array of char
-                        if(char.class.equals(returnInfo.theClass) || Character.class.equals(returnInfo.theClass) ||
+                        if(char.class.equals(returnInfo.describedClass) || Character.class.equals(returnInfo.describedClass) ||
                            char.class.equals(returnInfo.baseComponentType))
                         {
                             if(isScalar)
@@ -1460,7 +1637,7 @@ public class Linker
                             //By default, return a MatlabNumberArray
                             else
                             {  
-                                MatlabNumberArrayGetter getter = new MatlabNumberArrayGetter();
+                                MatlabNumberArrayGetter getter = new MatlabNumberArrayGetter(keepLinear);
                                 getter.getInMatlab(ops, returnName);
                                 returnValue = getter;
                             }
