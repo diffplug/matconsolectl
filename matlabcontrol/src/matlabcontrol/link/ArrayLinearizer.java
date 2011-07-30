@@ -38,7 +38,7 @@ import static matlabcontrol.link.ArrayTransformUtils.*;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayLinearizer
-{   
+{
     static MatlabTypeSetter getSetter(Object array)
     {
         return new MultidimensionalPrimitiveArraySetter(array);
@@ -116,11 +116,11 @@ class ArrayLinearizer
         
         //Fill linearArray with values from array
         ArrayFillOperation fillOperation = FILL_OPERATIONS.get(baseClass);
-        linearize_internal(linearArray, array, fillOperation, lengths, new int[0]);
+        linearize_internal(linearArray, array, fillOperation, lengths, new int[lengths.length], 0);
        
         return linearArray;
     }
-    
+        
     /**
      * Performs the linearization using recursion.
      * 
@@ -128,29 +128,24 @@ class ArrayLinearizer
      * @param srcArray source array
      * @param fillOperation  operation to read values from srcArray and write into linearArray
      * @param lengths the lengths of the array for the initial array supplied before any recursion
-     * @param currIndices must initially be an empty integer array
+     * @param indices must be the length of {@code indices}
+     * @param depth the level of recursion, initially {@code 0}
      */
     private static void linearize_internal(Object linearArray, Object srcArray, ArrayFillOperation fillOperation,
-            int[] lengths, int[] currIndices)
+            int[] lengths, int[] indices, int depth)
     {
-        //Base case
+        //Base case - array holding non-array elements
         if(!srcArray.getClass().getComponentType().isArray())
         {
-            //Fill linear array with contents of the source array
-            int[] primArrayIndices = new int[currIndices.length + 1];
-            System.arraycopy(currIndices, 0, primArrayIndices, 0, currIndices.length);
-            fillOperation.fill(linearArray, srcArray, primArrayIndices, lengths);
+            fillOperation.fill(linearArray, srcArray, indices, lengths);
         }
         else
         {
             int arrayLength = Array.getLength(srcArray);
             for(int i = 0; i < arrayLength; i++)
             {
-                int[] nextIndices = new int[currIndices.length + 1];
-                System.arraycopy(currIndices, 0, nextIndices, 0, currIndices.length);
-                nextIndices[nextIndices.length - 1] = i;
-                
-                linearize_internal(linearArray, Array.get(srcArray, i), fillOperation, lengths, nextIndices);
+                indices[depth] = i;
+                linearize_internal(linearArray, Array.get(srcArray, i), fillOperation, lengths, indices, depth + 1);
             }
         }
     }
