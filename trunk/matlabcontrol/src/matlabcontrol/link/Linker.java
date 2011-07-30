@@ -1112,27 +1112,24 @@ public class Linker
                     {
                         args[i] = ArrayLinearizer.getSetter(args[i]);
                     }
-                }                
+                }
             }
 
             //Invoke function
-            Object[] returnValues = _proxy.invokeAndWait(new CustomFunctionInvocation(info, args));
+            FunctionResult result = _proxy.invokeAndWait(new CustomFunctionInvocation(info, args));
+            if(result.thrownException != null)
+            {
+                result.thrownException.fillInStackTrace();
+                throw result.thrownException;
+            }
+            Object[] returnValues = result.returnArgs;
 
             //For each returned value that is a serialized getter, retrieve it
             for(int i = 0; i < returnValues.length; i++)
             {
                 if(returnValues[i] instanceof MatlabTypeGetter)
                 {
-                    try
-                    {
-                        returnValues[i] = ((MatlabType.MatlabTypeGetter) returnValues[i]).retrieve();
-                    }
-                    catch(IncompatibleReturnException e)
-                    {
-                        throw new IncompatibleReturnException("Required return type is incompatible with the type " +
-                                "actually returned\n" +
-                                "Required Type: " + info.returnTypes[i].getCanonicalName(), e);
-                    }
+                    returnValues[i] = ((MatlabType.MatlabTypeGetter) returnValues[i]).retrieve();
                 }
             }
             
@@ -1161,52 +1158,31 @@ public class Linker
             //1 return values
             else if(result.length == 1)
             {
-                toReturn = validateReturnCompatability(result[0], info.returnTypes[0], info.returnTypeParameters[0]);
+                toReturn = validateAssignability(result[0], info.returnTypes[0], info.returnTypeParameters[0]);
             }
             //2 or more return values
             else
             {
                 for(int i = 0; i < result.length; i++)
                 {
-                    result[i] = validateReturnCompatability(result[i], info.returnTypes[i], info.returnTypeParameters[0]);
+                    result[i] = validateAssignability(result[i], info.returnTypes[i], info.returnTypeParameters[0]);
                 }
                 
-                try
-                {
-                    toReturn = methodReturn.getDeclaredConstructor(Object[].class).newInstance(new Object[]{ result });
-                }
-                catch(IllegalAccessException e)
-                {
-                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
-                }
-                catch(InstantiationException e)
-                {
-                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
-                }
-                catch(InvocationTargetException e)
-                {
-                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
-                }
-                catch(NoSuchMethodException e)
-                {
-                    throw new IncompatibleReturnException("Unable to create " + methodReturn.getCanonicalName(), e);
-                }
+                toReturn = MatlabReturns.getMaxReturn(result);
             }
             
             return toReturn;
         }
         
-        private Object validateReturnCompatability(Object value, Class<?> returnType, Class<?>[] returnTypeParameters)
+        private Object validateAssignability(Object value, Class<?> returnType, Class<?>[] returnTypeParameters)
         {   
             Object toReturn;
             if(value == null)
             {
                 if(returnType.isPrimitive())
                 {
-                    throw new IncompatibleReturnException("Required return type is a primitive which is incompatible " +
-                            "with the return value of null\n" +
-                            "Required type: " + returnType.getCanonicalName() + "\n" +
-                            "Returned value: null");
+                    throw new UnassignableReturnException("Return type is primitive and cannot be assigned null\n" +
+                            "Return type: " + toClassString(returnType, returnTypeParameters));
                 }
                 else
                 {
@@ -1222,34 +1198,29 @@ public class Linker
                 }
                 else
                 {
-                    throw new IncompatibleReturnException("Required return type is incompatible with the type " +
-                            "actually returned\n" + 
-                            "Required types: " + returnType.getCanonicalName() + " OR " +
-                                                 autoboxedClass.getCanonicalName() + "\n" + 
-                            "Returned type: " + toClassString(value));
+                    throw new UnassignableReturnException("Return type cannot be assigned the value returned\n" +
+                            "Return type: " + toClassString(returnType, returnTypeParameters) + "\n" +
+                            "Value type:  " + toClassString(value));
                 }
             }
             else
             {
                 if(!returnType.isAssignableFrom(value.getClass()))
                 {
-                    throw new IncompatibleReturnException("Required return type is incompatible with the type " +
-                            "actually returned\n" +
-                            "Required type: " + toClassString(returnType, returnTypeParameters) + "\n" +
-                            "Returned type: " + toClassString(value));
+                    throw new UnassignableReturnException("Return type cannot be assigned the value returned\n" +
+                            "Return type: " + toClassString(returnType, returnTypeParameters) + "\n" +
+                            "Value type:  " + toClassString(value));
                 }
                 
-                //If the return type is a MatlabNumberArray subclass and is parameterized
-                if(MatlabNumberArray.class.isAssignableFrom(returnType) && returnTypeParameters.length == 1)
+                //If the return type is a MatlabNumberArray subclass
+                if(MatlabNumberArray.class.isAssignableFrom(returnType))
                 {
                     //Check the parameterization matches
-                    Class<?> valueParameterization = ((MatlabNumberArray) value).getOutputArrayType();
-                    if(!valueParameterization.equals(returnTypeParameters[0]))
+                    if(!((MatlabNumberArray) value).getOutputArrayType().equals(returnTypeParameters[0]))
                     {
-                        throw new IncompatibleReturnException("Required return type is incompatible with the type " +
-                                "actually returned\n" +
-                                "Required type: " + toClassString(returnType, returnTypeParameters) + "\n" +
-                                "Returned type: " + toClassString(value));
+                        throw new UnassignableReturnException("Return type cannot be assigned the value returned\n" +
+                                "Return type: " + toClassString(returnType, returnTypeParameters) + "\n" +
+                                "Value type:  " + toClassString(value));
                     }
                 }
                 
@@ -1323,7 +1294,25 @@ public class Linker
         }
     }
     
-    private static class CustomFunctionInvocation implements MatlabThreadCallable<Object[]>, Serializable
+    private static class FunctionResult implements Serializable
+    {
+        private final Object[] returnArgs;
+        private final RuntimeException thrownException;
+        
+        FunctionResult(Object[] returnArgs)
+        {
+            this.returnArgs = returnArgs;
+            this.thrownException = null;
+        }
+        
+        FunctionResult(RuntimeException thrownException)
+        {
+            this.returnArgs = null;
+            this.thrownException = thrownException;
+        }
+    }
+    
+    private static class CustomFunctionInvocation implements MatlabThreadCallable<FunctionResult>, Serializable
     {
         private final InvocationInfo _functionInfo;
         private final Object[] _args;
@@ -1333,9 +1322,24 @@ public class Linker
             _functionInfo = functionInfo;
             _args = args;
         }
-
+        
         @Override
-        public Object[] call(MatlabOperations ops) throws MatlabInvocationException
+        public FunctionResult call(MatlabOperations ops) throws MatlabInvocationException
+        {
+            FunctionResult result;
+            try
+            {
+                result = new FunctionResult(this.invoke(ops));
+            }
+            catch(RuntimeException e)
+            {
+                result = new FunctionResult(e);
+            }
+            
+            return result;
+        }
+
+        private Object[] invoke(MatlabOperations ops) throws MatlabInvocationException
         {
             String initialDir = null;
             
@@ -1521,7 +1525,30 @@ public class Linker
             }
             else
             {
-                MatlabValueSetter.setValue(ops, name, arg);
+                MatlabValueSetter.setInMatlab(ops, name, arg);
+            }
+        }
+        
+        private static class MatlabValueSetter
+        {
+            private static void setInMatlab(MatlabOperations ops, String variableName, Object value)
+                    throws MatlabInvocationException
+            {
+                MatlabValueSetter setter = new MatlabValueSetter(value);
+                ops.setVariable(variableName, setter);
+                ops.eval(variableName + " = " + variableName + ".getValue();");
+            }
+            
+            private final Object _value;
+            
+            private MatlabValueSetter(Object value)
+            {
+                _value = value;
+            }
+            
+            public Object getValue()
+            {
+                return _value;
             }
         }
         
@@ -1654,7 +1681,7 @@ public class Linker
                 }
                 else
                 {
-                    throw new UnsupportedOperationException("Unsupported MATLAB type: " + type);
+                    throw new UnsupportedReturnException("Unsupported MATLAB type: " + type);
                 }
             }
             
@@ -1690,29 +1717,6 @@ public class Linker
             map.put("char", char.class);
             
             MATLAB_TO_JAVA_PRIMITIVE = Collections.unmodifiableMap(map);
-        }
-        
-        private static class MatlabValueSetter
-        {
-            private static void setValue(MatlabOperations ops, String variableName, Object value)
-                    throws MatlabInvocationException
-            {
-                MatlabValueSetter setter = new MatlabValueSetter(value);
-                ops.setVariable(variableName, setter);
-                ops.eval(variableName + " = " + variableName + ".getValue();");
-            }
-            
-            private final Object _value;
-            
-            private MatlabValueSetter(Object value)
-            {
-                _value = value;
-            }
-            
-            public Object getValue()
-            {
-                return _value;
-            }
         }
         
         private static class MatlabValueReceiver
