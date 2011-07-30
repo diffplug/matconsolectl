@@ -1,4 +1,4 @@
-package matlabcontrol.extensions;
+package matlabcontrol;
 
 /*
  * Copyright (c) 2011, Joshua Kaplan
@@ -28,49 +28,47 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import matlabcontrol.MatlabProxy.MatlabThreadCallable;
-import matlabcontrol.MatlabInvocationException;
-import matlabcontrol.MatlabProxy;
-import matlabcontrol.MatlabProxy.DisconnectionListener;
-import matlabcontrol.MatlabProxy.Identifier;
 
 /**
  * Wraps around a {@link MatlabProxy} to provide a log of interactions. The data is not altered. This logger is useful
  * for determining the Java types and structure of data returned from MATLAB.
  * <br><br>
- * Entering a method, exiting a method, and throwing an exception are logged. Method parameters and return values are
- * logged. The contents of a returned array will be recursively explored and its contents logged. As is convention, all
- * of these interactions are logged at {@code Level.FINER}. If the logging system has not been otherwise configured,
- * then the {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their
- * level is too low. To configure the {@code ConsoleHandler} to show these log messages, call
- * {@link #showInConsoleHandler()}.
+ * Interaction with all methods, except those defined in {@code Object} and not overridden, is logged. Entering a
+ * method, exiting a method, and throwing an exception are logged. Method parameters and return values are logged. The
+ * contents of a returned array will be recursively explored and its contents logged. As is convention, all of these
+ * interactions are logged at {@code Level.FINER}. If the logging system has not been otherwise configured, then the
+ * {@code ConsoleHandler} which prints log messages to the console will not show these log messages as their level is
+ * too low. To configure the {@code ConsoleHandler} to show these log messages, call {@link #showInConsoleHandler()}.
  * <br><br>
  * This class is unconditionally thread-safe.
  * 
- * @since 4.0.0
+ * @since 5.0.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabProxyLogger
+public final class LoggingMatlabProxy extends MatlabProxy
 {
-    private static final Logger LOGGER = Logger.getLogger(MatlabProxyLogger.class.getName());
+    private static final String CLASS_NAME = LoggingMatlabProxy.class.getName();
+    
+    private static final Logger LOGGER = Logger.getLogger(CLASS_NAME);
     static
     {
         LOGGER.setLevel(Level.FINER);
     }
-    private static final String CLASS_NAME = MatlabProxyLogger.class.getName();
     
-    private final MatlabProxy _proxy;
+    private final MatlabProxy _delegate;
     
     /**
-     * Constructs the logger. If the provided {@code proxy} throws an exception it will be caught, logged, and
-     * then rethrown.
+     * Constructs the logging proxy. All methods defined in {@code MatlabProxy} will be delegated to
+     * {@code delegateProxy}.
      * 
-     * @param proxy
+     * @param delegateProxy
      */
-    public MatlabProxyLogger(MatlabProxy proxy)
+    public LoggingMatlabProxy(MatlabProxy delegateProxy)
     {
-        _proxy = proxy;
+        super(delegateProxy.getIdentifier(), delegateProxy.isExistingSession());
+        
+        _delegate = delegateProxy;
     }
     
     /**
@@ -218,12 +216,7 @@ public class MatlabProxyLogger
         return data;
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param command
-     * @throws MatlabInvocationException
-     */
+    @Override
     public void eval(final String command) throws MatlabInvocationException
     {           
         this.invoke(new VoidThrowingInvocation("eval(String)", command)
@@ -231,19 +224,12 @@ public class MatlabProxyLogger
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _proxy.eval(command);
+                _delegate.eval(command);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param command
-     * @param nargout
-     * @return
-     * @throws MatlabInvocationExceptio
-     */
+    @Override
     public Object[] returningEval(final String command, final int nargout) throws MatlabInvocationException
     {
         return this.invoke(new ReturnThrowingInvocation<Object[]>("returningEval(String, int)", command, nargout)
@@ -251,18 +237,12 @@ public class MatlabProxyLogger
             @Override
             public Object[] invoke() throws MatlabInvocationException
             {
-                return _proxy.returningEval(command, nargout);
+                return _delegate.returningEval(command, nargout);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param functionName
-     * @param args
-     * @throws MatlabInvocationException
-     */
+    @Override
     public void feval(final String functionName, final Object... args) throws MatlabInvocationException
     {
         this.invoke(new VoidThrowingInvocation("feval(String, Object...)", functionName, args)
@@ -270,20 +250,12 @@ public class MatlabProxyLogger
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _proxy.feval(functionName, args);
+                _delegate.feval(functionName, args);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param functionName
-     * @param nargout
-     * @param args
-     * @return
-     * @throws MatlabInvocationException
-     */
+    @Override
     public Object[] returningFeval(final String functionName, final int nargout, final Object... args)
             throws MatlabInvocationException
     {
@@ -293,18 +265,12 @@ public class MatlabProxyLogger
             @Override
             public Object[] invoke() throws MatlabInvocationException
             {
-                return _proxy.returningFeval(functionName, nargout, args);
+                return _delegate.returningFeval(functionName, nargout, args);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param variableName
-     * @param value
-     * @throws MatlabInvocationException
-     */
+    @Override
     public void setVariable(final String variableName, final Object value) throws MatlabInvocationException
     {   
         this.invoke(new VoidThrowingInvocation("setVariable(String, int)", variableName, value)
@@ -312,18 +278,12 @@ public class MatlabProxyLogger
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _proxy.setVariable(variableName, value);
+                _delegate.setVariable(variableName, value);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param variableName
-     * @return
-     * @throws MatlabInvocationException
-     */
+    @Override
     public Object getVariable(final String variableName) throws MatlabInvocationException
     {
         return this.invoke(new ReturnThrowingInvocation<Object>("getVariable(String)", variableName)
@@ -331,19 +291,12 @@ public class MatlabProxyLogger
             @Override
             public Object invoke() throws MatlabInvocationException
             {
-                return _proxy.getVariable(variableName);
+                return _delegate.getVariable(variableName);
             }
         });
     }
-    
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param <U>
-     * @param callable
-     * @return
-     * @throws MatlabInvocationException
-     */
+
+    @Override
     public <U> U invokeAndWait(final MatlabThreadCallable<U> callable) throws MatlabInvocationException
     {
         return this.invoke(new ReturnThrowingInvocation<U>("invokeAndWait(MatlabThreadCallable)", callable)
@@ -351,16 +304,12 @@ public class MatlabProxyLogger
             @Override
             public U invoke() throws MatlabInvocationException
             {
-                return _proxy.invokeAndWait(callable);
+                return _delegate.invokeAndWait(callable);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @param listener 
-     */
+    @Override
     public void addDisconnectionListener(final DisconnectionListener listener)
     {        
         this.invoke(new VoidInvocation("addDisconnectionListener(DisconnectionListener)", listener)
@@ -368,17 +317,13 @@ public class MatlabProxyLogger
             @Override
             public void invoke()
             {
-                _proxy.addDisconnectionListener(listener);
+                _delegate.addDisconnectionListener(listener);
             }
         });
         
     }
-    
-    /**
-     *  Delegates to the proxy; logs the interaction.
-     * 
-     * @param listener 
-     */
+
+    @Override
     public void removeDisconnectionListener(final DisconnectionListener listener)
     {
         this.invoke(new VoidInvocation("removeDisconnectionListener(DisconnectionListener)", listener)
@@ -386,16 +331,12 @@ public class MatlabProxyLogger
             @Override
             public void invoke()
             {
-                _proxy.removeDisconnectionListener(listener);
+                _delegate.removeDisconnectionListener(listener);
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @return 
-     */
+    @Override
     public boolean disconnect()
     {        
         return this.invoke(new ReturnBooleanInvocation("disconnect()")
@@ -403,16 +344,12 @@ public class MatlabProxyLogger
             @Override
             public boolean invoke()
             {
-                return _proxy.disconnect();
+                return _delegate.disconnect();
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @return 
-     */
+    @Override
     public boolean isExistingSession()
     {
         return this.invoke(new ReturnBooleanInvocation("isExistingSession()")
@@ -420,16 +357,12 @@ public class MatlabProxyLogger
             @Override
             public boolean invoke()
             {
-                return _proxy.isExistingSession();
+                return _delegate.isExistingSession();
             }
         });
     }
-        
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @return 
-     */
+
+    @Override
     public boolean isRunningInsideMatlab()
     {
         return this.invoke(new ReturnBooleanInvocation("isRunningInsideMatlab")
@@ -437,16 +370,12 @@ public class MatlabProxyLogger
             @Override
             public boolean invoke()
             {
-                return _proxy.isRunningInsideMatlab();
+                return _delegate.isRunningInsideMatlab();
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @return 
-     */
+    @Override
     public boolean isConnected()
     {
         return this.invoke(new ReturnBooleanInvocation("isConnected()")
@@ -454,16 +383,12 @@ public class MatlabProxyLogger
             @Override
             public boolean invoke()
             {
-                return _proxy.isConnected();
+                return _delegate.isConnected();
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @return 
-     */
+    @Override
     public Identifier getIdentifier()
     {
         return this.invoke(new ReturnInvocation<Identifier>("getIdentifier()")
@@ -471,16 +396,12 @@ public class MatlabProxyLogger
             @Override
             public Identifier invoke()
             {
-                return _proxy.getIdentifier();
+                return _delegate.getIdentifier();
             }
         });
     }
 
-    /**
-     * Delegates to the proxy; logs the interaction.
-     * 
-     * @throws MatlabInvocationException 
-     */
+    @Override
     public void exit() throws MatlabInvocationException
     {
         this.invoke(new VoidThrowingInvocation("exit")
@@ -488,21 +409,15 @@ public class MatlabProxyLogger
             @Override
             public void invoke() throws MatlabInvocationException
             {
-                _proxy.exit();
+                _delegate.exit();
             }
         });
     }
-        
-    /**
-     * Returns a brief description of this proxy. The exact details of this representation are unspecified and are
-     * subject to change.
-     * 
-     * @return 
-     */
+    
     @Override
     public String toString()
     {
-        return "[" + this.getClass().getName() + " proxy=" + _proxy + "]";
+        return "[" + this.getClass().getName() + " delegateProxy=" + _delegate + "]";
     }
     
     private String formatResult(Object result)
