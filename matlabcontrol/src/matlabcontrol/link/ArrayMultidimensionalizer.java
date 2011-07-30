@@ -26,9 +26,7 @@ import java.util.HashMap;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabInvocationException;
@@ -41,7 +39,7 @@ import static matlabcontrol.link.ArrayTransformUtils.*;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayMultidimensionalizer
-{   
+{
     static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
         private int[] _lengths;
@@ -205,27 +203,26 @@ class ArrayMultidimensionalizer
         Class outputArrayType = getArrayClass(componentType, lengths.length);
         ArrayFillOperation fillOperation = FILL_OPERATIONS.get(componentType);
         
-        return multidimensionalize_internal(linearArray, outputArrayType, lengths, 0, new int[0], fillOperation);
+        return multidimensionalize_internal(linearArray, outputArrayType, fillOperation, lengths, 0, new int[lengths.length]);
     }
     
     /**
-     * The real logic of the {@link #multidimensionalize(double[], java.lang.Class, int[])} method. This method
-     * recurs on itself, hence the need for the extra parameters. This method does not store state in any external
-     * variables.
+     * The real logic of the multidimensionalize. This method recurs on itself, hence the need for the extra parameters.
+     * This method does not store state in any external variables.
      * 
      * @param linearArray
      * @param outputArrayType
-     * @param lengths
-     * @param indexIntoLengths should be {@code 0} initially
-     * @param currIndices should be an empty integer array initially
      * @param fillOperation operation used to fill in single dimension pieces of the array
+     * @param lengths
+     * @param depth should be {@code 0} initially
+     * @param indices must be the length of {@code lengths}
      * @return
      */
-    private static Object multidimensionalize_internal(Object linearArray, Class<?> outputArrayType, int[] lengths,
-            int indexIntoLengths, int[] currIndices, ArrayFillOperation fillOperation)
+    private static Object multidimensionalize_internal(Object linearArray, Class<?> outputArrayType,
+            ArrayFillOperation fillOperation, int[] lengths, int depth, int[] indices)
     {
         Class<?> componentType = outputArrayType.getComponentType();
-        int arrayLength = lengths[indexIntoLengths];
+        int arrayLength = lengths[depth];
         Object array = Array.newInstance(componentType, arrayLength);
         
         //If what was created holds an array, then fill it
@@ -233,21 +230,17 @@ class ArrayMultidimensionalizer
         {
             //If the array that was created holds the primitive array: double[], int[], boolean[] etc.
             if(componentType.getComponentType().isPrimitive())
-            {
-                //The index in the multidimensional array being created
-                int[] primitiveArrayIndices = new int[currIndices.length + 2];
-                System.arraycopy(currIndices, 0, primitiveArrayIndices, 0, currIndices.length);
-                
-                //Iterate over the created array, placing a double[] array in each index
+            {   
+                //Iterate over the created array, placing a primitive array in each index
                 for(int i = 0; i < arrayLength; i++)
                 {
-                    primitiveArrayIndices[primitiveArrayIndices.length - 2] = i;
+                    indices[indices.length - 2] = i;
                 
                     //Create the primitive array
                     Object primitiveArray = Array.newInstance(componentType.getComponentType(), lengths[lengths.length - 1]); 
                     
                     //Fill the primitive array with values from the linear array
-                    fillOperation.fill(primitiveArray, linearArray, primitiveArrayIndices, lengths);
+                    fillOperation.fill(primitiveArray, linearArray, indices, lengths);
                     
                     //Place primitive array into the enclosing array
                     Array.set(array, i, primitiveArray);
@@ -258,12 +251,10 @@ class ArrayMultidimensionalizer
                 //Iterate over the created array, placing an array in each index (using recursion)
                 for(int i = 0; i < arrayLength; i++)
                 {   
-                    int[] nextIndices = new int[currIndices.length + 1];
-                    System.arraycopy(currIndices, 0, nextIndices, 0, currIndices.length);
-                    nextIndices[nextIndices.length - 1] = i;
+                    indices[depth] = i;
                     
-                    Object innerArray = multidimensionalize_internal(linearArray, componentType, lengths,
-                            indexIntoLengths + 1, nextIndices, fillOperation);
+                    Object innerArray = multidimensionalize_internal(linearArray, componentType,
+                            fillOperation, lengths, depth + 1, indices);
                     Array.set(array, i, innerArray);
                 }
             }

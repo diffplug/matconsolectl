@@ -116,7 +116,7 @@ class ArrayLinearizer
         
         //Fill linearArray with values from array
         ArrayFillOperation fillOperation = FILL_OPERATIONS.get(baseClass);
-        linearize_internal(linearArray, array, fillOperation, lengths, new int[lengths.length], 0);
+        linearize_internal(linearArray, array, fillOperation, lengths, 0, new int[lengths.length]);
        
         return linearArray;
     }
@@ -126,13 +126,13 @@ class ArrayLinearizer
      * 
      * @param linearArray array to be filled
      * @param srcArray source array
-     * @param fillOperation  operation to read values from srcArray and write into linearArray
+     * @param fillOperation operation to read values from srcArray and write into linearArray
      * @param lengths the lengths of the array for the initial array supplied before any recursion
-     * @param indices must be the length of {@code indices}
      * @param depth the level of recursion, initially {@code 0}
+     * @param indices must be the length of {@code lengths}
      */
     private static void linearize_internal(Object linearArray, Object srcArray, ArrayFillOperation fillOperation,
-            int[] lengths, int[] indices, int depth)
+            int[] lengths, int depth, int[] indices)
     {
         //Base case - array holding non-array elements
         if(!srcArray.getClass().getComponentType().isArray())
@@ -145,7 +145,7 @@ class ArrayLinearizer
             for(int i = 0; i < arrayLength; i++)
             {
                 indices[depth] = i;
-                linearize_internal(linearArray, Array.get(srcArray, i), fillOperation, lengths, indices, depth + 1);
+                linearize_internal(linearArray, Array.get(srcArray, i), fillOperation, lengths, depth + 1, indices);
             }
         }
     }
