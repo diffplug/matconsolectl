@@ -44,28 +44,8 @@ class ArrayMultidimensionalizer
 {   
     static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
-        //Note: uint8, uint16, uint32, and uint64 are intentionally not supported because MATLAB will convert them
-        //to byte, short, int, and long but that won't work properly for large values due to having one less bit
-        private static final Set<String> SUPPORTED_MATLAB_CLASSES;
-        static
-        {
-            Set<String> set = new HashSet<String>();
-            
-            set.add("int8");
-            set.add("int16");
-            set.add("int32");
-            set.add("int64");
-            set.add("single");
-            set.add("double");
-            set.add("logical");
-            set.add("char");
-            
-            SUPPORTED_MATLAB_CLASSES = Collections.unmodifiableSet(set);
-        }
-        
         private int[] _lengths;
         private Object _array;
-        private IncompatibleReturnException _exception;
         
         private boolean _retreived = false;
         
@@ -98,83 +78,53 @@ class ArrayMultidimensionalizer
         public Object retrieve()
         {
             //Validate
-            if(_retreived)
-            {
-                if(_exception != null)
-                {
-                    _exception.fillInStackTrace();
-                    throw _exception;
-                }
-            }
-            else
+            if(!_retreived)
             {
                 throw new IllegalStateException("array has not yet been retrieved");
             }
             
+            Object array = _array;
             if(_array != null && !_keepLinear)
             {
-                _array = multidimensionalize(_array, _lengths);
+                array = multidimensionalize(_array, _lengths);
             }
             
-            return _array;
+            return array;
         }
 
         @Override
         public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException
-        {
-            //Type
-            String type = (String) ops.returningEval("class(" + variableName + ");", 1)[0];
-            if(!SUPPORTED_MATLAB_CLASSES.contains(type))
+        {   
+            //Retrieve lengths of array
+            double[] size = (double[]) ops.returningEval("size(" + variableName + ");", 1)[0];
+            _lengths = new int[size.length];
+            for(int i = 0; i < size.length; i++)
             {
-                _exception = new IncompatibleReturnException("Type not supported: " + type + "\n" +
-                        "Supported Types: " + SUPPORTED_MATLAB_CLASSES);
+                _lengths[i] = (int) size[i];
             }
-            else
+
+            //Retrieve array
+            String name = (String) ops.returningEval("genvarname('" + variableName + "_getter', who);", 1)[0];
+            ops.setVariable(name, this);
+            try
             {
-                //If an empty array, equivalent to Java null
-                if(((boolean[]) ops.returningEval("isempty(" + variableName + ");", 1)[0])[0])
+                if(_getRealPart)
                 {
-                    _array = null;
-                }
-                //If a scalar (singular) value
-                else if(((boolean[]) ops.returningEval("isscalar(" + variableName + ");", 1)[0])[0])
-                {
-                    _exception = new IncompatibleReturnException("Scalar value of type " + type);
+                    ops.eval(name + ".setArray(reshape(" + variableName + ", 1, []));");
                 }
                 else
                 {
-                    //Retrieve lengths of array
-                    double[] size = (double[]) ops.returningEval("size(" + variableName + ");", 1)[0];
-                    _lengths = new int[size.length];
-                    for(int i = 0; i < size.length; i++)
+                    //If the array has an imaginary part, retrieve it
+                    boolean isReal = ((boolean[]) ops.returningEval("isreal(" + variableName + ");", 1)[0])[0];
+                    if(!isReal)
                     {
-                        _lengths[i] = (int) size[i];
-                    }
-                    
-                    //Retrieve array
-                    String name = (String) ops.returningEval("genvarname('" + variableName + "_getter', who);", 1)[0];
-                    ops.setVariable(name, this);
-                    try
-                    {
-                        if(_getRealPart)
-                        {
-                            ops.eval(name + ".setArray(reshape(" + variableName + ", 1, []));");
-                        }
-                        else
-                        {
-                            //If the array has an imaginary part, retrieve it
-                            boolean isReal = ((boolean[]) ops.returningEval("isreal(" + variableName + ");", 1)[0])[0];
-                            if(!isReal)
-                            {
-                                ops.eval(name + ".setArray(imag(reshape(" + variableName + ", 1, [])));");
-                            }
-                        }
-                    }
-                    finally
-                    {
-                        ops.eval("clear " + name);
+                        ops.eval(name + ".setArray(imag(reshape(" + variableName + ", 1, [])));");
                     }
                 }
+            }
+            finally
+            {
+                ops.eval("clear " + name);
             }
             
             _retreived = true;

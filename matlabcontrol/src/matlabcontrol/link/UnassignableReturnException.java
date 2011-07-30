@@ -23,22 +23,20 @@ package matlabcontrol.link;
  */
 
 /**
- * Issue linking a Java method to a MATLAB function.
+ * The type to be returned is not assignable to the return type. This exception is conceptually similar to a
+ * {@link ClassCastException} except that it is thrown before the cast would ever occur. For primitive return types,
+ * this is similar to a {@link NullPointerException} being thrown when the return value is {@code null} and therefore
+ * cannot be un-boxed.
  * 
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class LinkingException extends RuntimeException
+public class UnassignableReturnException extends RuntimeException
 {
-    private static final long serialVersionUID = 0xD500L;
+    private static final long serialVersionUID = 0xE500L;
     
-    LinkingException(String msg)
+    UnassignableReturnException(String msg)
     {
         super(msg);
-    }
-
-    LinkingException(String msg, Throwable cause)
-    {
-        super(msg, cause);
     }
 }

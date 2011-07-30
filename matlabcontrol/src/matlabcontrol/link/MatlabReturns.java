@@ -297,4 +297,9 @@ public final class MatlabReturns
             return (I) get(8);
         }
     }
+    
+    static ReturnN getMaxReturn(Object[] values)
+    {
+        return new Return9(values);
+    }
 }
