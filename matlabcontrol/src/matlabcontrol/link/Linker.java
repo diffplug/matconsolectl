@@ -84,6 +84,20 @@ public class Linker
     |*                                        Linking & Validation                                                *|
     \**************************************************************************************************************/
     
+    public MatlabOperations getLinkedMatlabOperations(MatlabProxy proxy)
+    {   
+        if(proxy == null)
+        {
+            throw new NullPointerException("proxy may not be null");
+        }
+        
+        Class<?> opsClass = MatlabOperations.class;
+        MatlabOperations operations = (MatlabOperations) Proxy.newProxyInstance(opsClass.getClassLoader(),
+                new Class<?>[] { opsClass },
+                new MatlabFunctionInvocationHandler(proxy, opsClass, new ConcurrentHashMap<Method, InvocationInfo>()));
+        
+        return operations;
+    }
     
     public static <T> T link(Class<T> functionInterface, MatlabProxy proxy)
     {
@@ -103,17 +117,11 @@ public class Linker
         //Validate and retrieve information about all of the methods in the interface
         for(Method method : functionInterface.getMethods())
         {
-            //Methods in MatlabOperations are allowed; no validation necessary
-            if(method.getDeclaringClass().equals(MatlabOperations.class))
-            {
-                continue;
-            }
-            
             //Check method is annotated with function information
             MatlabFunction annotation = method.getAnnotation(MatlabFunction.class);
             if(annotation == null)
             {
-                throw new LinkingException(method + " is not annotated with " + 
+                throw new LinkingException(method + " is not annotated with " +
                         MatlabFunction.class.getCanonicalName());
             }
             
