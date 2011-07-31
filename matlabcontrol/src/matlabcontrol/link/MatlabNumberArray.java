@@ -79,7 +79,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     final L _real;
     
     /**
-     * The linear array of imaginary values; will be {@code null} if this number array is real. Only intended to be
+     * The linear array of imaginary values. Can be {@code null} if this number array is real. Only intended to be
      * accessed directly by subclasses inside this package.
      */
     final L _imag;
@@ -99,18 +99,36 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
      */
     private final Class<?> _baseComponentType;
     
+    /**
+     * Internal linear array type.
+     */
     private final Class<L> _linearArrayType;
     
+    /**
+     * Output array type.
+     */
     private final Class<T> _outputArrayType;
     
     /**
-     * Caches the hash code because it is expensive to compute.
+     * Caches the hash code.
+     * <br><br>
+     * To avoid any form of inter-thread communication this value may in the most degenerate case be recomputed for each
+     * thread.
      */
-    private volatile int _hashCode = 0;
+    private Integer _hashCode = null;
+    
+    /**
+     * Caches if {@link #_imag} contains non-zero elements.
+     * <br><br>
+     * To avoid any form of inter-thread communication this value may in the most degenerate case be recomputed for each
+     * thread.
+     */
+    private Boolean _hasImaginaryValues = null;
     
     /**
      * Data from MATLAB. Provided as the linear arrays and dimensions.
      * 
+     * @param linearArrayType
      * @param realLinear
      * @param imagLinear
      * @param dimensions 
@@ -138,8 +156,8 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
      * concurrently with this class's construction, problems may arise.
      * 
      * @param linearArrayType the type of the linear array(s), ex. {@code byte[]}
-     * @param real may not be null
-     * @param imag may be null
+     * @param real may not be {@code null}
+     * @param imag may be {@code null}
      * @throws NullPointerException if real array is null
      * @throws IllegalArgumentException if the arguments are not arrays with the component type of
      * {@code linearArrayType} or the two arrays are of different types
@@ -182,35 +200,35 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
         }
         
         //Determine dimensions
-        _dimensions = new int[ArrayTransformUtils.getNumberOfDimensions(realClass)];
-        
-        int[] realLengths = ArrayTransformUtils.computeBoundingDimensions(real);
-        for(int i = 0; i < realLengths.length; i++)
+        _dimensions = new int[ArrayTransformUtils.getNumberOfDimensions(_outputArrayType)];
+        int[] realDimensions = ArrayTransformUtils.computeBoundingDimensions(real);
+        for(int i = 0; i < realDimensions.length; i++)
         {
-            _dimensions[i] = Math.max(_dimensions[i], realLengths[i]);
+            _dimensions[i] = Math.max(_dimensions[i], realDimensions[i]);
         }
-        
         if(imag != null)
         {
-            int[] imaginaryLengths = ArrayTransformUtils.computeBoundingDimensions(imag);
-            for(int i = 0; i < imaginaryLengths.length; i++)
+            int[] imagDimensions = ArrayTransformUtils.computeBoundingDimensions(imag);
+            for(int i = 0; i < imagDimensions.length; i++)
             {
-                _dimensions[i] = Math.max(_dimensions[i], imaginaryLengths[i]);
+                _dimensions[i] = Math.max(_dimensions[i], imagDimensions[i]);
             }
         }
         
         //Linearize arrays
-        _real = (L) ArrayLinearizer.linearize(real, _dimensions);
-        _linearLength = Array.getLength(_real);
-        
-        if(containsNonZeroValue(imag))
+        _real = _linearArrayType.cast(ArrayLinearizer.linearize(real, _dimensions));
+        if(imag != null)
         {
-            _imag = (L) ArrayLinearizer.linearize(imag, _dimensions);
+            _imag = _linearArrayType.cast(ArrayLinearizer.linearize(imag, _dimensions));
         }
         else
         {   
             _imag = null;
+            _hasImaginaryValues = false;
         }
+        
+        //Cache number of elements
+        _linearLength = Array.getLength(_real);
     }
     
     /**
@@ -221,8 +239,15 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
      */
     public boolean isReal()
     {
-        return (_imag == null);
+        if(_hasImaginaryValues == null)
+        {   
+            _hasImaginaryValues = containsNonZero(_imag);
+        }
+        
+        return !_hasImaginaryValues;
     }
+    
+    abstract boolean containsNonZero(L array);
     
     /**
      * Returns an array that holds the real values from the MATLAB array. Each call returns a new copy which may be used
@@ -360,8 +385,9 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     {
         return "[" + this.getClass().getName() +
                 " type=" + _outputArrayType.getCanonicalName() + "," +
-                " numberOfDimensions=" + this.getNumberOfDimensions() + "," +
+                " real=" + isReal() + ", " +
                 " numberOfElements=" + this.getNumberOfElements() + "," +
+                " numberOfDimensions=" + this.getNumberOfDimensions() + "," +
                 " lengthsOfDimensions=" + Arrays.toString(_dimensions) + "]";
     }
 
@@ -406,55 +432,22 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     @Override
     public int hashCode()
     {
-        //The hash code might still be computed multiple times if the first invocation of this method overlaps with
-        //other concurrent invocations. This behavior avoids any need for synchronization.
-        int result = _hashCode;
-        if(result == 0)
+        if(_hashCode == null)
         {
-            result= 7;
-            result = 97 * result + this.hashReal();
-            result = 97 * result + this.hashImaginary();
-            result = 97 * result + Arrays.hashCode(_dimensions);
+            int hashCode = 7;
+            hashCode = 97 * hashCode + this.hashReal();
+            hashCode = 97 * hashCode + this.hashImaginary();
+            hashCode = 97 * hashCode + Arrays.hashCode(_dimensions);
 
-            _hashCode = result;
+            _hashCode = hashCode;
         }
         
-        return result;
+        return _hashCode;
     }
     
     abstract int hashReal();
     
     abstract int hashImaginary();
-    
-    private boolean containsNonZeroValue(Object array)
-    {
-        boolean contained = false;
-        
-        if(array != null && array.getClass().isArray())
-        {
-            //Array of arrays
-            if(array.getClass().getComponentType().isArray())
-            {
-                for(Object element : (Object[]) array)
-                {
-                    if(containsNonZeroValue(element))
-                    {
-                        contained = true;
-                        break;
-                    }
-                }
-            }
-            //Array of numeric primitives
-            else
-            {
-                contained = containsNonZero((L) array);
-            }       
-        }
-        
-        return contained;
-    }
-    
-    abstract boolean containsNonZero(L array);
     
     @Override
     MatlabTypeSetter getSetter()

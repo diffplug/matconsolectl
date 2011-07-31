@@ -184,7 +184,7 @@ class ArrayMultidimensionalizer
     {
         //Validate primitive single dimension array
         if(linearArray == null || !linearArray.getClass().isArray() &&
-                !linearArray.getClass().getComponentType().isPrimitive())
+           !linearArray.getClass().getComponentType().isPrimitive())
         {
             throw new RuntimeException("linear array must be a single dimension primitive array");
         }
