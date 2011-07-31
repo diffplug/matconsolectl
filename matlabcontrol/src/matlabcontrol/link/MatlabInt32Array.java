@@ -1,7 +1,5 @@
 package matlabcontrol.link;
 
-import java.util.Arrays;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -24,13 +22,15 @@ import java.util.Arrays;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.util.Arrays;
+
 /**
  *
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  * @param <M> {@code int} array type, ex. {@code int[]}, {@code int[][]}, {@code int[][][]}, ...
  */
-public final class MatlabInt32Array<T> extends MatlabNumberArray<int[], T>
+public class MatlabInt32Array<T> extends MatlabNumberArray<int[], T>
 {
     MatlabInt32Array(int[] real, int[] imag, int[] lengths)
     {
