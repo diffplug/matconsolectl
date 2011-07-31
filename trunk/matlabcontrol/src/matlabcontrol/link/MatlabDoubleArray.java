@@ -1,12 +1,5 @@
 package matlabcontrol.link;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.lang.reflect.Array;
-import java.util.Arrays;
-
 /*
  * Copyright (c) 2011, Joshua Kaplan
  * All rights reserved.
@@ -29,13 +22,15 @@ import java.util.Arrays;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import java.util.Arrays;
+
 /**
  *
  * @since 5.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  * @param <T> {@code double} array type, ex. {@code double[]}, {@code double[][]}, {@code double[][][]}, ...
  */
-public final class MatlabDoubleArray<T> extends MatlabNumberArray<double[], T>
+public class MatlabDoubleArray<T> extends MatlabNumberArray<double[], T>
 { 
     MatlabDoubleArray(double[] real, double[] imag, int[] lengths)
     {
