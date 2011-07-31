@@ -32,6 +32,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.text.NumberFormat;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.imageio.ImageIO;
 import javax.swing.BorderFactory;
@@ -52,9 +53,6 @@ import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabProxyFactory;
 import matlabcontrol.MatlabProxyFactoryOptions;
 import matlabcontrol.PermissiveSecurityManager;
-import matlabcontrol.extensions.CallbackMatlabProxy;
-import matlabcontrol.extensions.CallbackMatlabProxy.MatlabCallback;
-import matlabcontrol.extensions.CallbackMatlabProxy.MatlabDataCallback;
 
 /**
  * A GUI example to demonstrate the main functionality of controlling MATLAB with matlabcontrol. The code in this
@@ -96,7 +94,7 @@ public class DemoFrame extends JFrame
     private final MatlabProxyFactory _factory;
     
     //Proxy to communicate with MATLAB
-    private CallbackMatlabProxy _interactor;
+    private final AtomicReference<MatlabProxy> _proxyHolder = new AtomicReference<MatlabProxy>();
     
     //UI components
     private JButton _invokeButton;
@@ -180,14 +178,14 @@ public class DemoFrame extends JFrame
                         @Override
                         public void proxyCreated(final MatlabProxy proxy)
                         {
-                            _interactor = new CallbackMatlabProxy(proxy);
+                            _proxyHolder.set(proxy);
                         
                             proxy.addDisconnectionListener(new MatlabProxy.DisconnectionListener()
                             {
                                 @Override
                                 public void proxyDisconnected(MatlabProxy proxy)
                                 {
-                                    _interactor = null;
+                                    _proxyHolder.set(null); 
     
                                     //Visual update
                                     EventQueue.invokeLater(new Runnable()
@@ -372,6 +370,7 @@ public class DemoFrame extends JFrame
         methodBox.setSelectedIndex(0);
         
         //Invoke button action
+        /*
         final MatlabCallback voidCallback = new MatlabCallback()
         {
             @Override
@@ -405,6 +404,7 @@ public class DemoFrame extends JFrame
                     _invokeButton.setEnabled(true);
                 }
         };
+         */
         
         
         _invokeButton.addActionListener(new ActionListener()
@@ -417,15 +417,19 @@ public class DemoFrame extends JFrame
                 //eval(String command)
                 if(descriptor == ProxyMethodDescriptor.EVAL)
                 {
-                    _invokeButton.setEnabled(false);
-                    
-                    _interactor.eval(voidCallback, field.getText());
+                    try
+                    {
+                        _proxyHolder.get().eval(field.getText());
+                        displayReturn();
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                 }
                 //returningEval(String command, int nargout)
                 else if(descriptor == ProxyMethodDescriptor.RETURNING_EVAL)
                 {
-                    _invokeButton.setEnabled(false);
-                    
                     int nargout = 0;
                     try
                     {
@@ -433,19 +437,31 @@ public class DemoFrame extends JFrame
                     }
                     catch(Exception ex) { }
                     
-                    _interactor.returningEval(dataCallback, field.getText(), nargout);
+                    try
+                    {
+                        displayResult(_proxyHolder.get().returningEval(field.getText(), nargout));
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                 }
                 //feval(String functionName, Object... args)
                 else if(descriptor == ProxyMethodDescriptor.FEVAL)
                 {
-                    _invokeButton.setEnabled(false);
-                    
-                    _interactor.feval(voidCallback, field.getText(), arrayPanel.getArray());
+                    try
+                    {
+                        _proxyHolder.get().feval(field.getText(), arrayPanel.getArray());
+                        displayReturn();
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                 }
                 //returningFeval(String functionName, int nargout, Object... args)
                 else if(descriptor == ProxyMethodDescriptor.RETURNING_FEVAL)
                 {
-                    _invokeButton.setEnabled(false);
                     
                     int nargout = 0;
                     try
@@ -454,22 +470,40 @@ public class DemoFrame extends JFrame
                     }
                     catch(Exception ex) { }
                             
-                    _interactor.returningFeval(dataCallback, field.getText(), nargout, arrayPanel.getArray());
+                    try
+                    {
+                        displayResult(_proxyHolder.get().returningFeval(field.getText(), nargout, arrayPanel.getArray()));
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                     
                 }
                 //setVariable(String variableName, Object value)
                 else if(descriptor == ProxyMethodDescriptor.SET_VARIABLE)
                 {
-                    _invokeButton.setEnabled(false);
-                    
-                    _interactor.setVariable(voidCallback, field.getText(), arrayPanel.getFirstEntry());
+                    try
+                    {
+                        _proxyHolder.get().setVariable(field.getText(), arrayPanel.getFirstEntry());
+                        displayReturn();
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                 }
                 //getVariable(String variableName)
                 else if(descriptor == ProxyMethodDescriptor.GET_VARIABLE)
                 {
-                    _invokeButton.setEnabled(false);
-                            
-                    _interactor.getVariable(dataCallback, field.getText());
+                    try
+                    {
+                        displayResult(_proxyHolder.get().getVariable(field.getText()));
+                    }
+                    catch(MatlabInvocationException ex)
+                    {
+                        displayException(ex);
+                    }
                 }
             }
         });
