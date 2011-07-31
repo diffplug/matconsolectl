@@ -32,8 +32,8 @@ _Versions of MATLAB prior to `R2007b` [http://www.mathworks.com/support/solution
 *^†^* matlabcontrol requires Java 6. OS X versions of MATLAB R2009a and earlier are [http://www.mathworks.com/support/sysreq/release2009a/macintosh.html 32-bit only]. Apple only released 64-bit Java 6 for OS X 10.5. There are unofficial ways to run 32-bit Java 6 on OS X 10.5.
 
 Due to the large diversity of Linux distributions, Linux is not included in the above chart. However, the following configurations have been reported to work:
-  * Debian 2.6 & `R2008b`
-  * Debian 2.6 & `R2010a`
-  * Debian 2.6 & `R2010b`
+  * Debian 6 & `R2008b`
+  * Debian 6 & `R2010a`
+  * Debian 6 & `R2010b`
 
 If when matlabcontrol launches MATLAB, MATLAB displays the error <font color="red">`??? Undefined variable "matlabcontrol" or class "matlabcontrol.MatlabConnector.connectFromMatlab"`</font> this is most likely because your version of MATLAB is using a Java Virtual Machine (JVM) that is too old to be compatible with matlabcontrol. matlabcontrol 4.0.0 makes use of Java 6, which is Java Class Version 50. To check which Java Class Version your MATLAB JVM supports, in MATLAB enter `java.lang.System.getProperty('java.class.version')`. If it is less than 50, matlabcontrol is not compatible with your version of MATLAB.
