@@ -22,6 +22,9 @@ package matlabcontrol;
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+import com.mathworks.jmi.Matlab;
+import com.mathworks.jmi.NativeMatlab;
+
 import java.awt.AWTEvent;
 import java.awt.EventQueue;
 import java.awt.Toolkit;
@@ -29,9 +32,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
-
-import com.mathworks.jmi.Matlab;
-import com.mathworks.jmi.NativeMatlab;
 
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
 
@@ -60,7 +60,24 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  */
 class JMIWrapper
 {
-    private static final MatlabOperations THREAD_INTERACTOR = new MatlabThreadProxyImpl();
+    private static final MatlabOperations THREAD_OPERATIONS = new MatlabThreadOperations();
+    
+    private static final EventQueue EVENT_QUEUE = Toolkit.getDefaultToolkit().getSystemEventQueue();
+    private static final Method EVENT_QUEUE_DISPATCH_METHOD;
+    static
+    {
+        try
+        {
+            EVENT_QUEUE_DISPATCH_METHOD = EventQueue.class.getDeclaredMethod("dispatchEvent", AWTEvent.class);
+        }
+        catch(NoSuchMethodException e)
+        {
+            throw new IllegalStateException("java.awt.EventQueue's protected void dispatchEvent(java.awt.AWTEvent) " +
+                    "method could not be found", e);
+        }
+        
+        EVENT_QUEUE_DISPATCH_METHOD.setAccessible(true);
+    }
      
     private JMIWrapper() { }
     
@@ -195,7 +212,7 @@ class JMIWrapper
         {
             try
             {
-                result = callable.call(THREAD_INTERACTOR);
+                result = callable.call(THREAD_OPERATIONS);
             }
             catch(RuntimeException e)
             {
@@ -216,7 +233,7 @@ class JMIWrapper
                     
                     try
                     {
-                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_INTERACTOR));
+                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_OPERATIONS));
                     }
                     catch(MatlabInvocationException e)
                     {
@@ -237,32 +254,19 @@ class JMIWrapper
             //Pump event queue while waiting for MATLAB to complete the computation
             try
             {
-                EventQueue eventQueue = Toolkit.getDefaultToolkit().getSystemEventQueue();
-                Method dispatchMethod = EventQueue.class.getDeclaredMethod("dispatchEvent", AWTEvent.class);
-                dispatchMethod.setAccessible(true);
                 while(returnRef.get() == null)
                 {
-                    AWTEvent nextEvent = eventQueue.peekEvent();
-                    if(nextEvent != null)
+                    if(EVENT_QUEUE.peekEvent() != null)
                     {
-                        nextEvent = eventQueue.getNextEvent();
-                        dispatchMethod.invoke(eventQueue, nextEvent);
+                        EVENT_QUEUE_DISPATCH_METHOD.invoke(EVENT_QUEUE, EVENT_QUEUE.getNextEvent());
                     }
                 }
-            }
-            catch(NoSuchMethodException e)
-            {
-                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
             }
             catch(InterruptedException e)
             {
                 throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
             }
             catch(IllegalAccessException e)
-            {
-                throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
-            }
-            catch(IllegalArgumentException e)
             {
                 throw MatlabInvocationException.Reason.EVENT_DISPATCH_THREAD.asException(e);
             }
@@ -299,7 +303,7 @@ class JMIWrapper
                     
                     try
                     {
-                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_INTERACTOR));
+                        matlabReturn = new MatlabReturn<T>(callable.call(THREAD_OPERATIONS));
                     }
                     catch(MatlabInvocationException e)
                     {
@@ -350,8 +354,8 @@ class JMIWrapper
      */
     private static class MatlabReturn<T>
     {
-        private final T data;
-        private final MatlabInvocationException exception;
+        final T data;
+        final MatlabInvocationException exception;
         
         MatlabReturn(T value)
         {
@@ -369,7 +373,7 @@ class JMIWrapper
      * Interacts with MATLAB on MATLAB's main thread. Interacting on MATLAB's main thread is not enforced by this class,
      * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)}.
      */
-    private static class MatlabThreadProxyImpl implements MatlabOperations
+    private static class MatlabThreadOperations implements MatlabOperations
     {   
         @Override
         public void setVariable(String variableName, Object value) throws MatlabInvocationException
@@ -413,8 +417,8 @@ class JMIWrapper
             try
             {   
                 Object matlabResult = Matlab.mtFevalConsoleOutput(functionName, args, nargout);
-                Object[] resultArray;
                 
+                Object[] resultArray;
                 if(nargout == 0)
                 {
                     resultArray = new Object[0];
@@ -442,16 +446,16 @@ class JMIWrapper
                     if(nargout != resultArray.length)
                     {
                         String errorMsg = "Expected " + nargout + " return arguments, instead " + resultArray.length +
-                                (resultArray.length == 1 ? "argument was" : "arguments were") + " returned";
+                                (resultArray.length == 1 ? " argument was" : " arguments were") + " returned";
                         throw MatlabInvocationException.Reason.NARGOUT_MISMATCH.asException(errorMsg);
                     }
                 }
                 
                 return resultArray;
             }
-            catch(Exception ex)
+            catch(Exception e)
             {
-                throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(new ThrowableWrapper(ex));
+                throw MatlabInvocationException.Reason.INTERNAL_EXCEPTION.asException(new ThrowableWrapper(e));
             }
         }
     }
