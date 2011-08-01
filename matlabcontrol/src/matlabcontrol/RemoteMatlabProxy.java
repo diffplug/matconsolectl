@@ -54,7 +54,7 @@ class RemoteMatlabProxy extends MatlabProxy
     /**
      * A timer that periodically checks if still connected.
      */
-    private final Timer _connectionTimer = new Timer();
+    private final Timer _connectionTimer;
     
     /**
      * Whether the proxy is connected. If the value is {@code false} the proxy is definitely disconnected. If the value
@@ -81,6 +81,7 @@ class RemoteMatlabProxy extends MatlabProxy
     {
         super(id, existingSession);
         
+        _connectionTimer = new Timer("MLC Connection Listener " + id);
         _jmiWrapper = internalProxy;
         _receiver = receiver;
     }
@@ -107,8 +108,8 @@ class RemoteMatlabProxy extends MatlabProxy
                 //Notify listeners
                 notifyDisconnectionListeners();
 
-                //Cancel task, which will terminate the timer's thread
-                this.cancel();
+                //Cancel timer, which will terminate the timer's thread
+                _connectionTimer.cancel();
             }
         }
     }
