@@ -30,7 +30,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
@@ -52,13 +54,13 @@ class MatlabConnector
     /**
      * Used to establish connections on a separate thread.
      */
-    private static final ExecutorService _connectionExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService _connectionExecutor =
+            Executors.newSingleThreadExecutor(new NamedThreadFactory("MLC Connection Establisher"));
     
     /**
      * The most recently connected receiver retrieved from a Java program running outside of MATLAB.
      */
-    private static final AtomicReference<RequestReceiver> _receiverRef =
-            new AtomicReference<RequestReceiver>();
+    private static final AtomicReference<RequestReceiver> _receiverRef = new AtomicReference<RequestReceiver>();
     
     /**
      * If a connection is currently in progress.
@@ -70,9 +72,27 @@ class MatlabConnector
      */
     private MatlabConnector() { }
     
+    private static class NamedThreadFactory implements ThreadFactory
+    {
+        private static final AtomicInteger COUNTER = new AtomicInteger();
+            
+        private final String _name;
+        
+        NamedThreadFactory(String name)
+        {
+            _name = name;
+        }
+
+        @Override
+        public Thread newThread(Runnable r)
+        {
+            return new Thread(r, _name + "-" + COUNTER.getAndIncrement());
+        }
+    }
+    
     /**
-     * If this session of MATLAB is available to be connected to from an external Java program. It will be available
-     * if it is not currently connected to and there is no connection in progress.
+     * If this session of MATLAB is available to be connected to from an external Java program. It will be available if
+     * it is not currently connected to and there is no connection in progress.
      * 
      * @return 
      */
