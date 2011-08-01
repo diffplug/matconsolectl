@@ -169,10 +169,10 @@ class MatlabConnector
             {
                 JMIValidator.validateJMIMethods();
             }
-            catch(MatlabConnectionException e)
+            catch(MatlabConnectionException ex)
             {
                 System.err.println("matlabcontrol is not compatible with this version of MATLAB");
-                e.printStackTrace();
+                ex.printStackTrace();
                 return;
             }
             
@@ -200,8 +200,42 @@ class MatlabConnector
                 //Get registry
                 Registry registry = LocalHostRMIHelper.getRegistry(_port);
 
-                //Get the receiver from the registry
-                RequestReceiver receiver = (RequestReceiver) registry.lookup(_receiverID);
+                //Get the receiver from the registry, if it cannot be retrieved, retry once after waiting.
+                //The retry is attempted because the factory checks periodically to see if the receiver is bound and
+                //will attempt a rebind if it is not.
+                RequestReceiver receiver;
+                try
+                {
+                    receiver = (RequestReceiver) registry.lookup(_receiverID);
+                }
+                catch(NotBoundException nbe1)
+                {
+                    try
+                    {
+                        Thread.sleep(RemoteMatlabProxyFactory.RECEIVER_CHECK_PERIOD);
+                        
+                        try
+                        {
+                            receiver = (RequestReceiver) registry.lookup(_receiverID);
+                        }
+                        catch(NotBoundException nbe2)
+                        {
+                            System.err.println("First attempt to connect to Java application failed");
+                            nbe1.printStackTrace();
+                            System.err.println("Second attempt to connect to Java application failed");
+                            nbe2.printStackTrace();
+                            return;
+                        }
+                    }
+                    catch(InterruptedException ie)
+                    {
+                        System.err.println("First attempt to connect to Java application failed");
+                        nbe1.printStackTrace();
+                        System.err.println("Interrupted while waiting to retry connection to Java application");
+                        ie.printStackTrace();
+                        return;
+                    }
+                }
 
                  //Hold on the to receiver
                 _receiverRef.set(receiver);
@@ -236,11 +270,6 @@ class MatlabConnector
                 receiver.receiveJMIWrapper(new JMIWrapperRemoteImpl(), _existingSession);
             }
             catch(RemoteException ex)
-            {
-                System.err.println("Connection to Java application could not be established");
-                ex.printStackTrace();
-            }
-            catch(NotBoundException ex)
             {
                 System.err.println("Connection to Java application could not be established");
                 ex.printStackTrace();

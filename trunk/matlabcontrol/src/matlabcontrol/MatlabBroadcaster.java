@@ -57,7 +57,7 @@ class MatlabBroadcaster
     /**
      * The timer used to check if still connected to the registry.
      */
-    private static final Timer _broadcastTimer = new Timer();
+    private static final Timer _broadcastTimer = new Timer("MLC Broadcast Maintainer");
     
     /**
      * Private constructor so this class cannot be constructed.

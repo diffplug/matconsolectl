@@ -28,12 +28,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.UUID;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import matlabcontrol.MatlabProxy.Identifier;
@@ -62,9 +65,14 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     private final CopyOnWriteArrayList<RemoteRequestReceiver> _receivers = new CopyOnWriteArrayList<RemoteRequestReceiver>();
     
     /**
+     * The frequency (in milliseconds) with which to check if a receiver is still bound to the registry.
+     */
+    static final long RECEIVER_CHECK_PERIOD = 1000L;
+    
+    /**
      * The RMI registry used to communicate between JVMs.
      */
-    private Registry _registry = null;
+    private volatile Registry _registry = null;
     
     public RemoteMatlabProxyFactory(MatlabProxyFactoryOptions options)
     {
@@ -80,7 +88,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         Request request;
         
         //Initialize the registry (does nothing if already initialized)
-        initRegistry();
+        initRegistry(false);
         
         //Create and bind the receiver
         RemoteRequestReceiver receiver = new RemoteRequestReceiver(requestCallback, proxyID,
@@ -102,23 +110,25 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         
         //Connect to MATLAB
+        RequestMaintainer maintainer = new RequestMaintainer(receiver);
         try
         {
             //If allowed to connect to a previously controlled session and a connection could be made
             if(_options.getUsePreviouslyControlledSession() &&
                MatlabSessionImpl.connectToRunningSession(receiver.getReceiverID(), _options.getPort()))
             {
-                request = new RemoteRequest(proxyID, null, receiver);
+                request = new RemoteRequest(proxyID, null, receiver, maintainer);
             }
             //Else, launch a new session of MATLAB
             else
             {
                 Process process = createProcess(receiver);
-                request = new RemoteRequest(proxyID, process, receiver);
+                request = new RemoteRequest(proxyID, process, receiver, maintainer);
             }
         }
         catch(MatlabConnectionException e)
         {
+            maintainer.shutdown();
             receiver.shutdown();
             throw e;
         }
@@ -171,12 +181,13 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     /**
      * Initializes the registry if it has not already been set up.
      * 
+     * @param force if {@code true}, forces creating / getting a registry
      * @throws MatlabConnectionException
      */
-    private synchronized void initRegistry() throws MatlabConnectionException
+    private synchronized void initRegistry(boolean force) throws MatlabConnectionException
     {
         //If the registry hasn't been created
-        if(_registry == null)
+        if(_registry == null || force)
         {   
             //Create a RMI registry
             try
@@ -417,6 +428,87 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
     }
     
+    /**
+     * Uses a timer to ensure that a {@link RemoteRequestReceiver} stays bound to the registry.
+     */
+    private class RequestMaintainer
+    {
+        private final Timer _timer;
+        
+        RequestMaintainer(final RemoteRequestReceiver receiver)
+        {
+            _timer = new Timer("MLC Request Maintainer " + receiver.getReceiverID());
+            
+            _timer.schedule(new TimerTask()
+            {
+                @Override
+                public void run()
+                {
+                    //Check if the registry is connected
+                    try
+                    {
+                        //Will succeed if connected and the receiver is still exported
+                        _registry.lookup(receiver.getReceiverID());
+                    }
+                    //Receiver is no longer exported
+                    catch(NotBoundException e)
+                    {
+                        //Force unexport (it might be bound to a previous registry)
+                        try
+                        {
+                            UnicastRemoteObject.unexportObject(receiver, true);
+                        }
+                        catch(NoSuchObjectException ex) { }
+                        
+                        //Bind the receiver
+                        try
+                        {
+                            _registry.bind(receiver.getReceiverID(), LocalHostRMIHelper.exportObject(receiver));
+                        }
+                        catch(RemoteException ex) { }
+                        catch(AlreadyBoundException ex) { }
+                    }
+                    //Registry is no longer connected
+                    catch(RemoteException e)
+                    {
+                        try
+                        {
+                            //Create new registry
+                            initRegistry(true);
+                            
+                            //Force unexport (it might be bound to a previous registry)
+                            try
+                            {
+                                UnicastRemoteObject.unexportObject(receiver, true);
+                            }
+                            catch(NoSuchObjectException ex) { }
+                            
+                            //Bind the receiver
+                            try
+                            {
+                                _registry.bind(receiver.getReceiverID(), LocalHostRMIHelper.exportObject(receiver));
+                            }
+                            catch(RemoteException ex) { }
+                            catch(AlreadyBoundException ex) { }
+                        }
+                        catch(MatlabConnectionException ex) { }
+                    }
+
+                    //Shutdown maintainer once the JMI wrapper has been received
+                    if(receiver.hasReceivedJMIWrapper())
+                    {
+                        _timer.cancel();
+                    }
+                }
+            }, RECEIVER_CHECK_PERIOD, RECEIVER_CHECK_PERIOD);
+        }
+        
+        void shutdown()
+        {
+            _timer.cancel();
+        }
+    }
+    
     private static class GetProxyRequestCallback implements RequestCallback
     {
         private final Thread _requestingThread;
@@ -490,13 +582,16 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         private final Identifier _proxyID;
         private final Process _process;
         private final RemoteRequestReceiver _receiver;
+        private final RequestMaintainer _maintainer;
         private boolean _isCancelled = false;
         
-        private RemoteRequest(Identifier proxyID, Process process, RemoteRequestReceiver receiver)
+        private RemoteRequest(Identifier proxyID, Process process, RemoteRequestReceiver receiver,
+                RequestMaintainer maintainer)
         {
             _proxyID = proxyID;
             _process = process;
             _receiver = receiver;
+            _maintainer = maintainer;
         }
         
         @Override
@@ -510,6 +605,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         {
             if(!_isCancelled)
             {
+                _maintainer.shutdown();
+                
                 boolean success;
                 if(!this.isCompleted())
                 {
