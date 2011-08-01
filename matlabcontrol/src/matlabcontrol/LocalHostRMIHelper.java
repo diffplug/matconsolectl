@@ -88,6 +88,17 @@ class LocalHostRMIHelper
         {
             return 5;
         }
+        
+        /**
+         * Overridden to provide a better name for the RMI RenewClean thread.
+         * 
+         * @return 
+         */
+        @Override
+        public String toString()
+        {
+            return "MLC localhost Socket Factory";
+        }
     }
     
     static class LocalHostRemoteObject extends UnicastRemoteObject
