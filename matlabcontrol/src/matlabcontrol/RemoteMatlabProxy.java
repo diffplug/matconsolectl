@@ -111,10 +111,6 @@ class RemoteMatlabProxy extends MatlabProxy
                 //Cancel timer, which will terminate the timer's thread
                 _connectionTimer.cancel();
             }
-            //else
-            //{
-            //    System.out.println(getIdentifier() + " is connected");
-            //}
         }
     }
         
