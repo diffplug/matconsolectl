@@ -111,6 +111,10 @@ class RemoteMatlabProxy extends MatlabProxy
                 //Cancel timer, which will terminate the timer's thread
                 _connectionTimer.cancel();
             }
+            //else
+            //{
+            //    System.out.println(getIdentifier() + " is connected");
+            //}
         }
     }
         
@@ -147,6 +151,8 @@ class RemoteMatlabProxy extends MatlabProxy
     @Override
     public boolean disconnect()
     {
+        _connectionTimer.cancel();
+        
         //Unexport the receiver so that the RMI threads can shut down
         try
         {
