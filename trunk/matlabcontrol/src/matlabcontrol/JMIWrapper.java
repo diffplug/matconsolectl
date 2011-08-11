@@ -34,6 +34,7 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 
 /**
  * Interacts with MATLAB via the undocumented Java MATLAB Interface (JMI).
@@ -60,7 +61,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadCallable;
  */
 class JMIWrapper
 {
-    private static final MatlabOperations THREAD_OPERATIONS = new MatlabThreadOperations();
+    private static final MatlabThreadOperations THREAD_OPERATIONS = new MatlabThreadOperations();
     
     private static final EventQueue EVENT_QUEUE = Toolkit.getDefaultToolkit().getSystemEventQueue();
     private static final Method EVENT_QUEUE_DISPATCH_METHOD;
@@ -122,9 +123,9 @@ class JMIWrapper
         invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabOperations ops) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                ops.setVariable(variableName, value);
+                proxy.setVariable(variableName, value);
                 
                 return null;
             }
@@ -136,9 +137,9 @@ class JMIWrapper
         return invokeAndWait(new MatlabThreadCallable<Object>()
         {
             @Override
-            public Object call(MatlabOperations ops) throws MatlabInvocationException
+            public Object call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                return ops.getVariable(variableName);
+                return proxy.getVariable(variableName);
             }
         });
     }
@@ -148,9 +149,9 @@ class JMIWrapper
         invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabOperations ops) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                ops.eval(command);
+                proxy.eval(command);
                 
                 return null;
             }
@@ -162,9 +163,9 @@ class JMIWrapper
         return invokeAndWait(new MatlabThreadCallable<Object[]>()
         {
             @Override
-            public Object[] call(MatlabOperations ops) throws MatlabInvocationException
+            public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                return ops.returningEval(command, nargout);
+                return proxy.returningEval(command, nargout);
             }
         });
     }
@@ -174,9 +175,9 @@ class JMIWrapper
         invokeAndWait(new MatlabThreadCallable<Void>()
         {
             @Override
-            public Void call(MatlabOperations ops) throws MatlabInvocationException
+            public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                ops.feval(functionName, args);
+                proxy.feval(functionName, args);
                 
                 return null;
             }
@@ -189,10 +190,10 @@ class JMIWrapper
         return invokeAndWait(new MatlabThreadCallable<Object[]>()
         {
             @Override
-            public Object[] call(MatlabOperations ops) throws MatlabInvocationException
+            public Object[] call(MatlabThreadProxy proxy) throws MatlabInvocationException
             {
-                return ops.returningFeval(functionName, nargout, args);
-            }      
+                return proxy.returningFeval(functionName, nargout, args);
+            }
         });
     }
     
@@ -373,7 +374,7 @@ class JMIWrapper
      * Interacts with MATLAB on MATLAB's main thread. Interacting on MATLAB's main thread is not enforced by this class,
      * that is done by its use in {@link JMIWrapper#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable)}.
      */
-    private static class MatlabThreadOperations implements MatlabOperations
+    private static class MatlabThreadOperations implements MatlabThreadProxy
     {   
         @Override
         public void setVariable(String variableName, Object value) throws MatlabInvocationException

@@ -279,8 +279,8 @@ public abstract class MatlabProxy implements MatlabOperations
     /**
      * Whether this proxy is connected to MATLAB.
      * <br><br>
-     * The most likely reasons for this method to return {@code false} if the proxy has been disconnected via
-     * {@link #disconnect()} or is if MATLAB has been closed (when running outside MATLAB).
+     * The most likely reasons for this method to return {@code false} are if the proxy has been disconnected via
+     * {@link #disconnect()} or MATLAB has been closed (when running outside MATLAB).
      * 
      * @return if connected
      * 
@@ -335,15 +335,33 @@ public abstract class MatlabProxy implements MatlabOperations
     public static interface MatlabThreadCallable<T>
     {
         /**
-         * Performs the computation in MATLAB. The {@code ops} provided will invoke its methods directly on MATLAB's
-         * main thread without delay. This {@code ops} should be used to interact with MATLAB, not a {@code MatlabProxy}
-         * (or any class delegating to it).
+         * Performs the computation in MATLAB. The {@code proxy} provided will invoke its methods directly on MATLAB's
+         * main thread without delay. This {@code proxy} should be used to interact with MATLAB, not a
+         * {@code MatlabProxy} (or any class delegating to it).
          * 
-         * @param ops
+         * @param proxy
          * @return result of the computation
          * @throws MatlabInvocationException
          */
-        public T call(MatlabOperations ops) throws MatlabInvocationException;
+        public T call(MatlabThreadProxy proxy) throws MatlabInvocationException;
+    }
+     
+    /**
+     * Operates on MATLAB's main thread without interruption. Currently this interface has only the methods defined in
+     * {@link MatlabOperations}, but this may change in future releases.
+     * <br><br>
+     * An implementation of this interface is provided to
+     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy)} so that the callable can interact with
+     * MATLAB. Implementations of this interface behave identically to a {@link MatlabProxy} running inside of MATLAB
+     * except that they are <b>not</b> thread-safe. They must be used solely on the thread that calls
+     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
+     * <br><br>
+     * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
+     * to this interface, and these additions will not be considered breaking binary compatability.
+     */
+    public static interface MatlabThreadProxy extends MatlabOperations
+    {
+        
     }
     
     /**
@@ -367,9 +385,12 @@ public abstract class MatlabProxy implements MatlabOperations
     }
     
     /**
-     * Uniquely identifies a proxy. This interface is not intended to be implemented by users of matlabcontrol.
+     * Uniquely identifies a proxy.
      * <br><br>
      * Implementations of this interface are unconditionally thread-safe.
+     * <br><br>
+     * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
+     * to this interface, and these additions will not be considered breaking binary compatability.
      * 
      * @since 4.0.0
      * 

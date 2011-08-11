@@ -60,6 +60,7 @@ import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabProxy;
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
 import matlabcontrol.link.MatlabNumber.MatlabNumberGetter;
 import matlabcontrol.link.MatlabFunctionHandle.MatlabFunctionHandleGetter;
@@ -1323,12 +1324,12 @@ public class Linker
         }
         
         @Override
-        public FunctionResult call(MatlabOperations ops) throws MatlabInvocationException
+        public FunctionResult call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             FunctionResult result;
             try
             {
-                result = new FunctionResult(this.invoke(ops));
+                result = new FunctionResult(this.invoke(proxy));
             }
             catch(RuntimeException e)
             {

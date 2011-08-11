@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import matlabcontrol.MatlabProxy.MatlabThreadCallable;
+import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import matlabcontrol.internal.MatlabRMIClassLoaderSpi;
 
 /**
@@ -316,10 +317,10 @@ class MatlabConnector
         }
 
         @Override
-        public Void call(MatlabOperations ops) throws MatlabInvocationException
+        public Void call(MatlabThreadProxy proxy) throws MatlabInvocationException
         {
             //Current dynamic class path
-            String[] curr = (String[]) ops.returningFeval("javaclasspath", 1, "-dynamic")[0];
+            String[] curr = (String[]) proxy.returningFeval("javaclasspath", 1, "-dynamic")[0];
             
             //Build new dynamic class path
             List<String> newDynamic = new ArrayList<String>();
@@ -330,7 +331,7 @@ class MatlabConnector
             //If the class path is different, set it
             if(!newDynamic.equals(Arrays.asList(curr)))
             {
-                ops.feval("javaclasspath", new Object[] { newDynamic.toArray(new String[newDynamic.size()]) });
+                proxy.feval("javaclasspath", new Object[] { newDynamic.toArray(new String[newDynamic.size()]) });
             }
             
             return null;
