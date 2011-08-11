@@ -84,7 +84,7 @@ public class Linker
     |*                                        Linking & Validation                                                *|
     \**************************************************************************************************************/
     
-    public MatlabOperations getLinkedMatlabOperations(MatlabProxy proxy)
+    static MatlabOperations getLinkedMatlabOperations(MatlabProxy proxy)
     {   
         if(proxy == null)
         {
