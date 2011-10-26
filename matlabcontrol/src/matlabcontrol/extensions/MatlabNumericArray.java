@@ -74,8 +74,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * <b>WARNING:</b> This class will deprecated in a future release and its functionality will be provided by new classes.
  * 
  * @see TypeConverter#setNumericArray(java.lang.String, matlabcontrol.extensions.MatlabNumericArray)
- * @see TypeConverter#getNumericArray(java.lang.String) 
+ * @see TypeConverter#getNumericArray(java.lang.String)
+ * 
  * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public final class MatlabNumericArray
