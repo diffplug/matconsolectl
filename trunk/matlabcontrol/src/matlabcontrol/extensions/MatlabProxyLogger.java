@@ -50,6 +50,7 @@ import matlabcontrol.MatlabProxy.Identifier;
  * This class is unconditionally thread-safe.
  * 
  * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabProxyLogger

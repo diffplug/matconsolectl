@@ -28,7 +28,8 @@ package matlabcontrol;
  * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added to
  * this interface, and these additions will not be considered breaking binary compatability.
  * 
- * @since 5.0.0
+ * @since 4.1.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public interface MatlabOperations

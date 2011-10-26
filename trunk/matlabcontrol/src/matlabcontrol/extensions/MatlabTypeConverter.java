@@ -37,6 +37,7 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * <b>WARNING:</b> This class will deprecated in a future release; its functionality will be present in other classes.
  * 
  * @since 4.0.0
+ * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 public class MatlabTypeConverter

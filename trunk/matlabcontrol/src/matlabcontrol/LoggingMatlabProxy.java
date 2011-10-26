@@ -42,7 +42,7 @@ import java.util.logging.Logger;
  * <br><br>
  * This class is unconditionally thread-safe.
  * 
- * @since 5.0.0
+ * @since 4.1.0
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
