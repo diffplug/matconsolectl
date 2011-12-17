@@ -10,7 +10,7 @@ You can contribute to this chart by leaving a comment on this page. Please test 
 ||                       || `R2011b` || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
 || OS X 10.5       || N/A          || N/A          || Yes            || ?             || Yes         || No^†^     || No^†^    || No^†^     || No^†^     ||      
 || OS X 10.6       || Yes           || Yes           || Yes           || Yes          || ?              || ?             || ?             || ?             || ?               ||
-|| OS X 10.7       || ?               || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| OS X 10.7       || ?               || Yes            || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows XP    || Yes           || Yes           || Yes           || Yes          || ?              || ?             || ?             || ?             || ?               ||
 || Windows Vista|| ?               || ?               || Yes           || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows 7      || ?               || Yes           || Yes           || Yes          || ?              || ?             || ?             || ?             || Yes          ||
@@ -20,7 +20,7 @@ You can contribute to this chart by leaving a comment on this page. Please test 
 ||                       || `R2011b` || `R2011a` || `R2010b` ||`R2010a`||`R2009b`||`R2009a`||`R2008b`||`R2008a`||`R2007b`||
 || OS X 10.5       || N/A           || N/A          || Yes            || ?             || Yes         || No^†^     || No^†^    || No^†^     || No^†^     ||      
 || OS X 10.6       || Yes            || Yes           || Yes           || Yes          || ?              || ?             || ?             || ?             || ?               ||
-|| OS X 10.7       || ?                || ?               || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
+|| OS X 10.7       || ?                || Yes           || ?               || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows XP    || Yes            || Yes           || Yes           || Yes          || ?              || ?             || ?             || ?             || ?               ||
 || Windows Vista|| ?                || ?               || Yes           || ?              || ?              || ?             || ?             || ?             || ?               ||
 || Windows 7      || ?                || Yes          || Yes          || Yes          || ?              || ?             || ?             || ?             || Yes          ||
