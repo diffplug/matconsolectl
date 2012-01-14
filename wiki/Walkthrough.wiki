@@ -253,7 +253,7 @@ public static void main(String[] args) throws MatlabConnectionException, MatlabI
 
 Like the non-returning variety of `feval`, the number of arguments provided is variable and can be 0 as is the case for `inmem`. By specifying there are 3 return arguments for `inmem` the loaded Java classes were returned.
 
-`feval` interrupts its arguments literally. This means that Java `String`s become MATLAB `char` arrays, they never reference a MATLAB variable. The following will *not* add together variables `a` and `b`:
+`feval` interprets its arguments literally. This means that Java `String`s become MATLAB `char` arrays, they never reference a MATLAB variable. The following will *not* add together variables `a` and `b`:
 
 {{{
 proxy.feval("+", "a", "b");
