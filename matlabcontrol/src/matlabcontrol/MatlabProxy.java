@@ -239,7 +239,7 @@ public abstract class MatlabProxy implements MatlabOperations
     }
     
     /**
-     * Adds a disconnection that will be notified when this proxy becomes disconnected from MATLAB.
+     * Adds a disconnection listener that will be notified when this proxy becomes disconnected from MATLAB.
      * 
      * @param listener 
      */
