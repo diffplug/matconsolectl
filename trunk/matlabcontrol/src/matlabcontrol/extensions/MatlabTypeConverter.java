@@ -89,7 +89,7 @@ public class MatlabTypeConverter
             double[] imaginaryValues = null;
             if(!isReal)
             {
-                Object imaginaryObject = proxy.returningEval("imag(" + _arrayName + ");", 1);
+                Object imaginaryObject = proxy.returningEval("imag(" + _arrayName + ");", 1)[0];
                 imaginaryValues = (double[]) imaginaryObject;
             }
 
