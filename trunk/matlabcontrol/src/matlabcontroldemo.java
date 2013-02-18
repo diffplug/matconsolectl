@@ -1,6 +1,6 @@
 
 /*
- * Copyright (c) 2011, Joshua Kaplan
+ * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
