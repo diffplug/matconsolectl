@@ -28,7 +28,6 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-
 /**
  * Wraps around a {@link MatlabProxy} to provide a log of interactions. The data is not altered. This logger is useful
  * for determining the Java types and structure of data returned from MATLAB.
@@ -73,8 +72,7 @@ public final class LoggingMatlabProxy extends MatlabProxy
     
     /**
      * Configures the {@code ConsoleHandler} responsible for showing logging records to show the records that are
-     * logged by this interactor. This is behavior is useful if you have not otherwise configured logging in your
-     * application.
+     * logged by this proxy. This behavior is useful if you have not otherwise configured logging in your application.
      */
     public static void showInConsoleHandler()
     {
@@ -191,15 +189,14 @@ public final class LoggingMatlabProxy extends MatlabProxy
             
             throw e;
         }
+        
         return data;
     }
     
     private <T> T invoke(ReturnInvocation<T> invocation)
-    {
-        T data;
-        
+    {   
         LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
-        data = invocation.invoke();
+        T data = invocation.invoke();
         LOGGER.exiting(CLASS_NAME, invocation.name, formatResult(data));
         
         return data;
@@ -207,10 +204,8 @@ public final class LoggingMatlabProxy extends MatlabProxy
     
     private boolean invoke(ReturnBooleanInvocation invocation)
     {
-        boolean data;
-        
         LOGGER.entering(CLASS_NAME, invocation.name, invocation.args);
-        data = invocation.invoke();
+        boolean data = invocation.invoke();
         LOGGER.exiting(CLASS_NAME, invocation.name, "boolean: " + data);
         
         return data;
@@ -365,7 +360,7 @@ public final class LoggingMatlabProxy extends MatlabProxy
     @Override
     public boolean isRunningInsideMatlab()
     {
-        return this.invoke(new ReturnBooleanInvocation("isRunningInsideMatlab")
+        return this.invoke(new ReturnBooleanInvocation("isRunningInsideMatlab()")
         {
             @Override
             public boolean invoke()
@@ -404,7 +399,7 @@ public final class LoggingMatlabProxy extends MatlabProxy
     @Override
     public void exit() throws MatlabInvocationException
     {
-        this.invoke(new VoidThrowingInvocation("exit")
+        this.invoke(new VoidThrowingInvocation("exit()")
         {
             @Override
             public void invoke() throws MatlabInvocationException
