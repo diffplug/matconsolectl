@@ -232,7 +232,7 @@ class Configuration
     {
         //domain should never be null
         ProtectionDomain domain = Configuration.class.getProtectionDomain();
-
+        
         //codeSource can be null
         CodeSource codeSource = domain.getCodeSource();
         if (codeSource != null)
@@ -267,7 +267,8 @@ class Configuration
                                         "URI Location: " + uri + "\n" +
                                         "URL Location: " + url + "\n" +
                                         "Code Source: " + codeSource + "\n" +
-                                        "Protection Domain: " + domain);
+                                        "Protection Domain: " + domain + "\n" +
+                                        "Class Loader: " + Configuration.class.getClassLoader());
                             }
                         }
                         //Unable to resolve canconical path
@@ -279,7 +280,8 @@ class Configuration
                                     "URI Location: " + uri + "\n" +
                                     "URL Location: " + url + "\n" +
                                     "Code Source: " + codeSource + "\n" +
-                                    "Protection Domain: " + domain, e);
+                                    "Protection Domain: " + domain + "\n" +
+                                    "Class Loader: " + Configuration.class.getClassLoader(), e);
                         }
                     }
                     //path was null
@@ -290,7 +292,8 @@ class Configuration
                                 "URI Location: " + uri + "\n" +
                                 "URL Location: " + url + "\n" +
                                 "Code Source: " + codeSource + "\n" +
-                                "Protection Domain: " + domain);
+                                "Protection Domain: " + domain + "\n" +
+                                "Class Loader: " + Configuration.class.getClassLoader());
                     }
                 }
                 //Unable to convert URL to URI
@@ -300,7 +303,8 @@ class Configuration
                             "Could not convert from URL to URI location.\n" +
                             "URL Location: " + url + "\n" +
                             "Code Source: " + codeSource + "\n" +
-                            "Protection Domain: " + domain, e);
+                            "Protection Domain: " + domain + "\n" +
+                            "Class Loader: " + Configuration.class.getClassLoader(), e);
                 }
             }
             //url was null
@@ -309,7 +313,8 @@ class Configuration
                 throw new MatlabConnectionException("Support code location could not be determined. " +
                         "Could not get URL from CodeSource.\n" +
                         "Code Source: " + codeSource + "\n" +
-                        "Protection Domain: " + domain);
+                        "Protection Domain: " + domain + "\n" +
+                        "Class Loader: " + Configuration.class.getClassLoader());
             }
         }
         //code source was null
@@ -317,7 +322,8 @@ class Configuration
         {  
             throw new MatlabConnectionException("Support code location could not be determined. " +
                     "Could not get CodeSource from ProtectionDomain.\n" +
-                    "Protection Domain: " + domain);
+                    "Protection Domain: " + domain + "\n" +
+                    "Class Loader: " + Configuration.class.getClassLoader());
         }
     }
     
