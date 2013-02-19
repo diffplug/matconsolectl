@@ -25,8 +25,11 @@ package matlabcontrol;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.security.CodeSource;
+import java.security.ProtectionDomain;
 
 /**
  * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
@@ -213,35 +216,108 @@ class Configuration
     }
     
     /**
-     * Determines the location of this source code. Either it will be the directory or jar this .class file is in. (That
-     * is, the .class file built from compiling this .java file.) Returned as a string so that it may be used by MATLAB.
+     * Determines the location of this code at runtime. Either it will be the directory or jar this .class file is in.
+     * (That is, the .class file built from compiling this .java file.) Returned as a string so that it may be used by
+     * MATLAB.
+     * <br><br>
+     * It may not be possible to determine the location of the code due to the class loader for this class. The class
+     * loader will determine if a code source was set and the format of its location. Due to the problematic nature
+     * of determining code location this method has been designed to throw exceptions with very detailed exceptions to
+     * aid in improving this method further based on anticipated bug reports.
      * 
      * @return
      * @throws MatlabConnectionException
      */
     static String getSupportCodeLocation() throws MatlabConnectionException
     {
-        try
-        {
-            URL url = Configuration.class.getProtectionDomain().getCodeSource().getLocation();
-            File file = new File(url.toURI().getPath()).getCanonicalFile();
+        //domain should never be null
+        ProtectionDomain domain = Configuration.class.getProtectionDomain();
 
-            //Confirm the file's location actually exists
-            if(!file.exists())
+        //codeSource can be null
+        CodeSource codeSource = domain.getCodeSource();
+        if (codeSource != null)
+        {
+            //url can be null
+            URL url = codeSource.getLocation();
+            if (url != null)
             {
-                throw new MatlabConnectionException("Support code location was determined improperly; location does " +
-                        "not actually exist. Location determined as: " + file.getAbsolutePath());
+                //Convert from url to absolute path
+                try
+                {
+                    //uri cannot be null, but this method can throw a URISyntaxException
+                    URI uri = url.toURI();
+                    
+                    //path could be null
+                    String path = uri.getPath();
+                    if (path != null)
+                    {
+                        try
+                        {
+                            File file = new File(path).getCanonicalFile();
+                            if (file.exists())
+                            {
+                                return file.getAbsolutePath();
+                            }
+                            else
+                            {
+                                throw new MatlabConnectionException("Support code location was determined improperly." +
+                                        " Location does not exist.\n" +
+                                        "Location determined as: " + file.getAbsolutePath() + "\n" +
+                                        "Path: " + path + "\n" + 
+                                        "URI Location: " + uri + "\n" +
+                                        "URL Location: " + url + "\n" +
+                                        "Code Source: " + codeSource + "\n" +
+                                        "Protection Domain: " + domain);
+                            }
+                        }
+                        //Unable to resolve canconical path
+                        catch(IOException e)
+                        {
+                            throw new MatlabConnectionException("Support code location could not be determined. " +
+                                    "Could not resolve canonical path.\n" +
+                                    "Path: " + path + "\n" +
+                                    "URI Location: " + uri + "\n" +
+                                    "URL Location: " + url + "\n" +
+                                    "Code Source: " + codeSource + "\n" +
+                                    "Protection Domain: " + domain, e);
+                        }
+                    }
+                    //path was null
+                    else
+                    {
+                        throw new MatlabConnectionException("Support code location could not be determined. " +
+                                "Could not get path from URI location.\n" +
+                                "URI Location: " + uri + "\n" +
+                                "URL Location: " + url + "\n" +
+                                "Code Source: " + codeSource + "\n" +
+                                "Protection Domain: " + domain);
+                    }
+                }
+                //Unable to convert URL to URI
+                catch(URISyntaxException e)
+                {
+                    throw new MatlabConnectionException("Support code location could not be determined. " +
+                            "Could not convert from URL to URI location.\n" +
+                            "URL Location: " + url + "\n" +
+                            "Code Source: " + codeSource + "\n" +
+                            "Protection Domain: " + domain, e);
+                }
             }
-
-            return file.getAbsolutePath();
+            //url was null
+            else
+            {
+                throw new MatlabConnectionException("Support code location could not be determined. " +
+                        "Could not get URL from CodeSource.\n" +
+                        "Code Source: " + codeSource + "\n" +
+                        "Protection Domain: " + domain);
+            }
         }
-        catch(IOException e)
-        {
-            throw new MatlabConnectionException("Support code location could not be determined", e);
-        }
-        catch(URISyntaxException e)
-        {
-            throw new MatlabConnectionException("Support code location could not be determined", e);
+        //code source was null
+        else
+        {  
+            throw new MatlabConnectionException("Support code location could not be determined. " +
+                    "Could not get CodeSource from ProtectionDomain.\n" +
+                    "Protection Domain: " + domain);
         }
     }
     
