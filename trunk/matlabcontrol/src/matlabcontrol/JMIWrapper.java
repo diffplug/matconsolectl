@@ -385,19 +385,19 @@ class JMIWrapper
         @Override
         public Object getVariable(String variableName) throws MatlabInvocationException
         {
-            return this.returningFeval("eval", 1, variableName)[0];
+            return this.returningFeval("evalin", 1, "base", variableName)[0];
         }
 
         @Override
         public void eval(String command) throws MatlabInvocationException
         {
-            this.returningFeval("eval", 0, command);
+            this.returningFeval("evalin", 0, "base", command);
         }
 
         @Override
         public Object[] returningEval(String command, int nargout) throws MatlabInvocationException
         {
-            return this.returningFeval("eval", nargout, command);
+            return this.returningFeval("evalin", nargout, "base", command);
         }
 
         @Override
