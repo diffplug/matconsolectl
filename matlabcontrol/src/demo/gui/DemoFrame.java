@@ -370,43 +370,6 @@ public class DemoFrame extends JFrame
         methodBox.setSelectedIndex(0);
         
         //Invoke button action
-        /*
-        final MatlabCallback voidCallback = new MatlabCallback()
-        {
-            @Override
-            public void invocationSucceeded()
-            {
-                displayReturn();
-                _invokeButton.setEnabled(true);
-            }
-
-            @Override
-            public void invocationFailed(MatlabInvocationException ex)
-            {
-                displayException(ex);
-                _invokeButton.setEnabled(true);
-            }
-        };
-        
-        final MatlabDataCallback dataCallback = new MatlabDataCallback()
-        {
-                @Override
-                public void invocationSucceeded(Object data)
-                {
-                    displayResult(data);
-                    _invokeButton.setEnabled(true);
-                }
-
-                @Override
-                public void invocationFailed(MatlabInvocationException ex)
-                {
-                    displayException(ex);
-                    _invokeButton.setEnabled(true);
-                }
-        };
-         */
-        
-        
         _invokeButton.addActionListener(new ActionListener()
         {
             @Override
@@ -462,7 +425,6 @@ public class DemoFrame extends JFrame
                 //returningFeval(String functionName, int nargout, Object... args)
                 else if(descriptor == ProxyMethodDescriptor.RETURNING_FEVAL)
                 {
-                    
                     int nargout = 0;
                     try
                     {
