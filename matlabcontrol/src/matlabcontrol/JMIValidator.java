@@ -57,7 +57,7 @@ class JMIValidator
                 new Class<?>[] { String.class, Object[].class, int.class},
                 new Class<?>[] { Exception.class });
 
-        //Method: public static void whenMatlabReady(Runnable)
+        //Method: public static void whenMatlabIdle(Runnable)
         checkMethod(matlabClass, Void.TYPE, "whenMatlabIdle",
                 new Class<?>[] { Runnable.class },
                 new Class<?>[0]);
