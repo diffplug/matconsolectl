@@ -302,7 +302,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         {
             Process process = builder.start();
             
-            //If running under UNIX and MATLAB ishidden the output stream needs to be read so that MATLAB does not block
+            //If running under UNIX and MATLAB is hidden these streams need to be read so that MATLAB does not block
             if(_options.getHidden() && !Configuration.isWindows())
             {
                 new ProcessStreamDrainer(process.getInputStream(), "Input").start();
@@ -313,7 +313,14 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         }
         catch(IOException e)
         {
-            throw new MatlabConnectionException("Could not launch MATLAB. Command: " + builder.command(), e);
+            //Generate a detailed exception to help in debugging a common cause of this issue
+            String errorMsg = "Could not launch MATLAB. This is likely caused by MATLAB not being in a known " +
+                    "location or on a known path. MATLAB's location can be explicitly provided by using " +
+                    MatlabProxyFactoryOptions.Builder.class.getCanonicalName() +"'s setMatlabLocation(...) method.\n" +
+                    "OS: " + Configuration.getOperatingSystem() + "\n" +
+                    "Command: " + builder.command() + "\n" +
+                    "Environment: " + builder.environment();
+            throw new MatlabConnectionException(errorMsg, e);
         }
     }
     

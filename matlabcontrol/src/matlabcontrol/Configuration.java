@@ -77,7 +77,7 @@ class Configuration
      * 
      * @return 
      */
-    private static String getOperatingSystem()
+    static String getOperatingSystem()
     {
         return System.getProperty("os.name");
     }
