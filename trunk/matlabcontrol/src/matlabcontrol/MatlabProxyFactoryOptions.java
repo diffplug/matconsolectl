@@ -164,8 +164,9 @@ public class MatlabProxyFactoryOptions
          * <li>App Paths defined in the registry with key
          *     {@code HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\App Paths}</li>
          * </ul>
-         * By default on Windows, MATLAB places an App Path entry in the registry so that {@code matlab} can be used to
-         * launch MATLAB. If this property is not set, this App Path entry will be used.
+         * By default on Windows, MATLAB adds itself to the {@code PATH} environment variable as well as places an
+         * App Path entry in the registry so that {@code matlab} can be used to launch MATLAB. If this property is not
+         * set, then the {@code PATH} environment variable or the App Path entry will be used.
          * <br><br>
          * <strong>OS X</strong><br>
          * Locations relative to the following will be understood:
