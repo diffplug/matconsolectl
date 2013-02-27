@@ -33,8 +33,6 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
  * Converts between MATLAB and Java types. Currently only supports numeric arrays.
  * <br><br>
  * This class is unconditionally thread-safe.
- * <br><br>
- * <b>WARNING:</b> This class will deprecated in a future release; its functionality will be present in other classes.
  * 
  * @since 4.0.0
  * 
