@@ -70,8 +70,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * <br><br>
  * Once constructed, this class is unconditionally thread-safe. If the data provided to a constructor is modified while
  * construction is occurring, problems may occur.
- * <br><br>
- * <b>WARNING:</b> This class will deprecated in a future release and its functionality will be provided by new classes.
  * 
  * @see MatlabTypeConverter#setNumericArray(java.lang.String, matlabcontrol.extensions.MatlabNumericArray)
  * @see MatlabTypeConverter#getNumericArray(java.lang.String)
