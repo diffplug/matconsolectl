@@ -6,7 +6,7 @@ This is a walkthrough for how to use matlabcontrol. The matlabcontrol API can be
 
 This walkthrough assumes basic applicable Java knowledge. Additionally, if running inside MATLAB this walkthrough assumes knowledge of how to use third-party code in MATLAB. The MathWorks provides [http://www.mathworks.com/help/techdoc/matlab_external/f4863.html documentation] on how to use Java classes in MATLAB.
 
-This walkthrough refers to matlabcontrol v4.0.0. It is possible that at times this walkthrough will for a short while refer to a prior version after a new version has been released.
+This walkthrough refers to matlabcontrol v4.1.0. It is possible that at times this walkthrough will for a short while refer to a prior version after a new version has been released.
 
 = Running the Demo =
 
