@@ -357,7 +357,7 @@ public abstract class MatlabProxy implements MatlabOperations
      * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
      * <br><br>
      * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
-     * to this interface, and these additions will not be considered breaking binary compatability.
+     * to this interface, and these additions will not be considered breaking binary compatibility.
      */
     public static interface MatlabThreadProxy extends MatlabOperations
     {
@@ -390,7 +390,7 @@ public abstract class MatlabProxy implements MatlabOperations
      * Implementations of this interface are unconditionally thread-safe.
      * <br><br>
      * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
-     * to this interface, and these additions will not be considered breaking binary compatability.
+     * to this interface, and these additions will not be considered breaking binary compatibility.
      * 
      * @since 4.0.0
      * 
