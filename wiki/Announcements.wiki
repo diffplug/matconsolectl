@@ -4,6 +4,10 @@ This is a record of announcements that have been made regarding the development 
 
 =Announcements=
 
+==March 1, 2013==
+
+Version 4.1.0 has been released! It includes minor additions and bug fixes. See the [VersionHistory version history] page for more information. 
+
 ==July 8, 2011==
 
 Version 4.0.0 has been released! It is a massive overhaul of matlabcontrol and includes many new features and far better documentation. See the [VersionHistory version history] page for more information.
