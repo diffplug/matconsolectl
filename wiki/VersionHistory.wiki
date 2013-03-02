@@ -10,6 +10,19 @@ Versions use a `α.β.γ` format to indicate information about the release. `α`
 
 == Releases == 
 
+===4.1.0===
+Improvements and bug fixes from the 4.0.0 release, includes:
+  * When running inside of MATLAB, it is now possible to call from MATLAB's Event Dispatch Thread (the thread used by Swing and AWT).
+  * `matlabcontrol.extensions.CallbackMatlabProxy` has been deprecated; it previously existed as a workaround for the limitation in being unable to use the proxy on MATLAB's Event Dispatch Thread.
+  * `matlabcontrol.extensions.MatlabProxyLogger` has been deprecated and replaced with `matlabcontrol.LoggingMatlabProxy`. `LoggingMatlabProxy` is a `MatlabProxy` which makes it easy to wrap a `MatlabProxy` instance in a `LoggingMatlabProxy` to aid in debugging.
+  * Fixes a bug preventing arrays with imaginary values from being retrieved using `matlabcontrol.extensions.MatlabNumericArray`.
+  * Fixes a bug where eval could occur not in base workspace.
+  * Threads created by matlabcontrol have more descriptive names.
+  * Improved exception messages.
+  * Various improvements to documentation.
+
+This release is fully backwards compatible with 4.0.0.
+
 ===4.0.0===
 
 A major overhaul of matlabcontrol, it includes the following:
