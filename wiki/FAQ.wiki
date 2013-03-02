@@ -14,7 +14,7 @@ They can return anything, it depends on how you are using the methods. The [http
 
 * Is the source code for the demo available? *
 
-Yes. The source code can also be viewed or checked out by using the [http://code.google.com/p/matlabcontrol/source/checkout Source tab]. The demo is not intended to be an example of how to use matlabcontrol, but instead an interactive demonstration of its capabilities. See the [Walkthrough walkthrough] for examples.
+Yes. The source code can be viewed or checked out by using the [http://code.google.com/p/matlabcontrol/source/checkout Source tab]. The demo is not intended to be an example of how to use matlabcontrol, but instead an interactive demonstration of its capabilities. See the [Walkthrough walkthrough] for examples.
 
 * When running outside MATLAB can I have it control an already running session of MATLAB? *
 
