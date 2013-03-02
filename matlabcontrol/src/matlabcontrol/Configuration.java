@@ -235,11 +235,11 @@ class Configuration
         
         //codeSource can be null
         CodeSource codeSource = domain.getCodeSource();
-        if (codeSource != null)
+        if(codeSource != null)
         {
             //url can be null
             URL url = codeSource.getLocation();
-            if (url != null)
+            if(url != null)
             {
                 //Convert from url to absolute path
                 try
@@ -249,17 +249,18 @@ class Configuration
                     
                     //path could be null
                     String path = uri.getPath();
-                    if (path != null)
+                    if(path != null)
                     {
                         try
                         {
                             File file = new File(path).getCanonicalFile();
-                            if (file.exists())
+                            if(file.exists())
                             {
                                 return file.getAbsolutePath();
                             }
                             else
                             {
+                                ClassLoader loader = Configuration.class.getClassLoader();
                                 throw new MatlabConnectionException("Support code location was determined improperly." +
                                         " Location does not exist.\n" +
                                         "Location determined as: " + file.getAbsolutePath() + "\n" +
@@ -268,12 +269,14 @@ class Configuration
                                         "URL Location: " + url + "\n" +
                                         "Code Source: " + codeSource + "\n" +
                                         "Protection Domain: " + domain + "\n" +
-                                        "Class Loader: " + Configuration.class.getClassLoader());
+                                        "Class Loader: " + loader +
+                                        (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()));
                             }
                         }
                         //Unable to resolve canconical path
                         catch(IOException e)
                         {
+                            ClassLoader loader = Configuration.class.getClassLoader();
                             throw new MatlabConnectionException("Support code location could not be determined. " +
                                     "Could not resolve canonical path.\n" +
                                     "Path: " + path + "\n" +
@@ -281,49 +284,58 @@ class Configuration
                                     "URL Location: " + url + "\n" +
                                     "Code Source: " + codeSource + "\n" +
                                     "Protection Domain: " + domain + "\n" +
-                                    "Class Loader: " + Configuration.class.getClassLoader(), e);
+                                    "Class Loader: " + loader +
+                                    (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()), e);
                         }
                     }
                     //path was null
                     else
                     {
+                        ClassLoader loader = Configuration.class.getClassLoader();
                         throw new MatlabConnectionException("Support code location could not be determined. " +
                                 "Could not get path from URI location.\n" +
                                 "URI Location: " + uri + "\n" +
                                 "URL Location: " + url + "\n" +
                                 "Code Source: " + codeSource + "\n" +
                                 "Protection Domain: " + domain + "\n" +
-                                "Class Loader: " + Configuration.class.getClassLoader());
+                                "Class Loader: " + loader +
+                                (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()));
                     }
                 }
                 //Unable to convert URL to URI
                 catch(URISyntaxException e)
                 {
+                    ClassLoader loader = Configuration.class.getClassLoader();
                     throw new MatlabConnectionException("Support code location could not be determined. " +
                             "Could not convert from URL to URI location.\n" +
                             "URL Location: " + url + "\n" +
                             "Code Source: " + codeSource + "\n" +
                             "Protection Domain: " + domain + "\n" +
-                            "Class Loader: " + Configuration.class.getClassLoader(), e);
+                            "Class Loader: " + loader +
+                            (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()), e);
                 }
             }
             //url was null
             else
             {
+                ClassLoader loader = Configuration.class.getClassLoader();
                 throw new MatlabConnectionException("Support code location could not be determined. " +
                         "Could not get URL from CodeSource.\n" +
                         "Code Source: " + codeSource + "\n" +
                         "Protection Domain: " + domain + "\n" +
-                        "Class Loader: " + Configuration.class.getClassLoader());
+                        "Class Loader: " + loader +
+                        (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()));
             }
         }
         //code source was null
         else
         {  
+            ClassLoader loader = Configuration.class.getClassLoader();
             throw new MatlabConnectionException("Support code location could not be determined. " +
                     "Could not get CodeSource from ProtectionDomain.\n" +
                     "Protection Domain: " + domain + "\n" +
-                    "Class Loader: " + Configuration.class.getClassLoader());
+                    "Class Loader: " + loader +
+                    (loader == null ? "" : "\nClass Loader Class: " +loader.getClass()));
         }
     }
     
