@@ -77,6 +77,6 @@ public class MatlabProxyTest
     @Test
     public void testEval() throws MatlabInvocationException
     {
-        _proxy.eval("disp('Hello World'");
+        _proxy.eval("disp('Hello World')");
     }
 }
