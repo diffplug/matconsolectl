@@ -1,0 +1,196 @@
+package matlabcontrol.link;
+
+/*
+ * Copyright (c) 2013, Joshua Kaplan
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
+ * following conditions are met:
+ *  - Redistributions of source code must retain the above copyright notice, this list of conditions and the following
+ *    disclaimer.
+ *  - Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the
+ *    following disclaimer in the documentation and/or other materials provided with the distribution.
+ *  - Neither the name of matlabcontrol nor the names of its contributors may be used to endorse or promote products
+ *    derived from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
+ * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
+ * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+import java.lang.reflect.Array;
+import java.util.Arrays;
+
+/**
+ *
+ * @since 4.2.0
+ * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+ * 
+ * @param <L> underlying linear array - single dimensional array type, ex. {@code byte[]}
+ * @param <T> output array - primitive numeric array type, ex. {@code byte[][][]}
+ *            (1 or more dimensions is acceptable, including for example {@code byte[]})
+ */
+class DenseArray<L, T> extends BaseArray<L, T>
+{
+    /**
+     * The linear array of real values.
+     */
+    final L _real;
+    
+    /**
+     * The linear array of imaginary values. Can be {@code null} if this number array is real.
+     */
+    final L _imag;
+    
+    /**
+     * Caches if {@link #_imag} contains non-zero elements.
+     * <br><br>
+     * To avoid any form of inter-thread communication this value may in the most degenerate case be recomputed for each
+     * thread.
+     */
+    private Boolean _hasImaginaryValues = null;
+    
+    /**
+     * Caches the hash code.
+     * <br><br>
+     * To avoid any form of inter-thread communication this value may in the most degenerate case be recomputed for each
+     * thread.
+     */
+    private Integer _hashCode = null;
+    
+    /**
+     * Data from MATLAB. Provided as the linear arrays and dimensions.
+     * 
+     * @param linearArrayType
+     * @param realLinear
+     * @param imagLinear
+     * @param dimensions 
+     */
+    DenseArray(Class<L> linearArrayType, L real, L imag, int[] dimensions)
+    {
+        super(linearArrayType, dimensions);
+        
+        //The real and imaginary arrays should always be of type L, but validate it
+        _real = linearArrayType.cast(real);
+        _imag = linearArrayType.cast(imag);
+    }
+
+    @Override
+    boolean isReal()
+    {
+        if(_hasImaginaryValues == null)
+        {   
+            _hasImaginaryValues = DynamicArrays.containsNonDefaultValue(_imag);
+        }
+        
+        return !_hasImaginaryValues;
+    }
+
+    @Override
+    T toRealArray()
+    {
+        return _outputArrayType.cast(ArrayMultidimensionalizer.multidimensionalize(_real, _dimensions));
+    }
+
+    @Override
+    T toImaginaryArray()
+    {
+        T array;
+        if(isReal())
+        {
+            array = _outputArrayType.cast(Array.newInstance(_baseComponentType, _dimensions));
+        }
+        else
+        {
+            array = _outputArrayType.cast(ArrayMultidimensionalizer.multidimensionalize(_imag, _dimensions));
+        }
+        
+        return array;
+    }
+
+    @Override
+    boolean isSparse()
+    {
+        return false;
+    }
+    
+    int getLinearIndex(int row, int column)
+    {
+        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
+    }
+    
+    int getLinearIndex(int row, int column, int page)
+    {
+        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
+    }
+    
+    int getLinearIndex(int row, int column, int[] pages)
+    {
+        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
+    }
+    
+    
+    
+    @Override
+    public boolean equals(Object obj)
+    {   
+        boolean equal = false;
+        
+        //Same object
+        if(this == obj)
+        {
+            equal = true;
+        }
+        //Same class
+        else if(obj != null && this.getClass().equals(obj.getClass()))
+        {
+            DenseArray other = (DenseArray) obj;
+            
+            //If the two instances are equal their hashcodes must be equal (but not the converse)
+            if(this.hashCode() == other.hashCode())
+            {
+                //Check equality of the elements of the arrays in expected increasing order of computational complexity
+                
+                //Same base components
+                if(_baseComponentType.equals(other._baseComponentType))
+                {
+                    //Both real values, or both complex values
+                    if((this.isReal() && other.isReal()) || (!this.isReal() && !other.isReal()))
+                    {
+                        //Same dimensions
+                        if(Arrays.equals(_dimensions, other._dimensions))
+                        {
+                            //Finally, compare the inner arrays
+                            equal = DynamicArrays.equals(_real, other._real) &&
+                                    DynamicArrays.equals(_imag, other._imag);
+                        }
+                    }
+                }
+            }
+        }
+        
+        return equal;
+    }
+    
+    @Override
+    public int hashCode()
+    {
+        if(_hashCode == null)
+        {
+            int hashCode = 7;
+            
+            hashCode = 97 * hashCode + _baseComponentType.hashCode();
+            hashCode = 97 * hashCode + DynamicArrays.hashCode(_real);
+            hashCode = 97 * hashCode + DynamicArrays.hashCode(_imag);
+            hashCode = 97 * hashCode + Arrays.hashCode(_dimensions);
+
+            _hashCode = hashCode;
+        }
+        
+        return _hashCode;
+    }
+}

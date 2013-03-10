@@ -139,6 +139,132 @@ class ArrayTransformUtils
     }
     
     /**
+     * Multidimensional indices to linear index where there must be at least two indices {@code row} and {@code column}.
+     * The length of the {@code dimensions} and the indices must be the same, where the length of the indices is
+     * determined as {@code pages.length + 2}. Each index must be less than the length of the corresponding dimension.
+     * 
+     * @param dimensions the dimensions of the array
+     * @param row the row index
+     * @param column the column index
+     * @param pages the zero or more page indices
+     * @return 
+     * @throws IllegalArgumentException if the number of indices does not equal the number of dimensions
+     * @throws ArrayIndexOutOfBoundsException if the index is greater than or equal to the length of the corresponding
+     * dimension
+     */
+    static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column, int pages[])
+    {
+        //Check the number of indices provided was correct
+        if(dimensions.length != pages.length + 2)
+        {
+            throw new IllegalArgumentException("Array has " + dimensions.length + " dimension(s), it cannot be " +
+                    "indexed into using " + (pages.length + 2) + " indices");
+        }
+        
+        //Check the row index is in bounds
+        if(row >= dimensions[0])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + row + "] is out of bounds for dimension 0 where the " +
+                    "length is " + dimensions[0]);
+        }
+        //Check the column index is in bounds
+        if(column >= dimensions[1])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + column + "] is out of bounds for dimension 1 where the " +
+                    "length is " + dimensions[1]);
+        }
+        //Check the page indices are in bounds
+        for(int i = 0; i < pages.length; i++)
+        {
+            if(pages[i] >= dimensions[i + 2])
+            {
+                throw new ArrayIndexOutOfBoundsException("[" + pages[i] + "] is out of bounds for dimension " +
+                        (i + 2) + " where the length is " + dimensions[i + 2]);
+            }
+        }
+        
+        //Convert the indices to a linear index
+        int linearIndex = 0;
+        
+        int accumSize = 1;
+        
+        //row
+        linearIndex += accumSize * row;
+        accumSize *= dimensions[0];
+        
+        //column
+        linearIndex += accumSize * column;
+        accumSize *= dimensions[1];
+        
+        //pages
+        for(int i = 0; i < pages.length; i++)
+        {   
+            linearIndex += accumSize * pages[i];
+            accumSize *= dimensions[i + 2];
+        }
+        
+        return linearIndex;
+    }
+    
+    //Optimized for 2 indices
+    static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column)
+    {
+        //Check the number of indices provided was correct
+        if(dimensions.length != 2)
+        {
+            throw new IllegalArgumentException("Array has " + dimensions.length + " dimension(s), it cannot be " +
+                    "indexed into using 2 indices");
+        }
+        
+        //Check the row index is in bounds
+        if(row >= dimensions[0])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + row + "] is out of bounds for dimension 0 where the " +
+                    "length is " + dimensions[0]);
+        }
+        //Check the column index is in bounds
+        if(column >= dimensions[1])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + column + "] is out of bounds for dimension 1 where the " +
+                    "length is " + dimensions[1]);
+        }
+        
+        return column * dimensions[0] + row;
+    }
+    
+    //Optimized for 3 indices
+    static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column, int page)
+    {
+        //Check the number of indices provided was correct
+        if(dimensions.length != 3)
+        {
+            throw new IllegalArgumentException("Array has " + dimensions.length + " dimension(s), it cannot be " +
+                    "indexed into using 3 indices");
+        }
+        
+        //Check the row index is in bounds
+        if(row >= dimensions[0])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + row + "] is out of bounds for dimension 0 where the " +
+                    "length is " + dimensions[0]);
+        }
+        //Check the column index is in bounds
+        if(column >= dimensions[1])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + column + "] is out of bounds for dimension 1 where the " +
+                    "length is " + dimensions[1]);
+        }
+        //Check the page index is in bounds
+        if(page >= dimensions[2])
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + column + "] is out of bounds for dimension 2 where the " +
+                    "length is " + dimensions[2]);
+        }
+        
+        return page * (dimensions[0] * dimensions[1]) + column * dimensions[0] + row;
+    }
+    
+    /**
      * Linear index to multidimensional indices. Similar to MATLAB's (@code ind2sub} function.
      * 
      * @param dimensions the lengths of the array in each dimension
