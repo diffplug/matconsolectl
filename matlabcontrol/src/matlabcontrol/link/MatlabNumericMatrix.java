@@ -27,7 +27,7 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-abstract class MatlabNumericArray_2<L, T> extends MatlabArray_2<L, T>
+abstract class MatlabNumericMatrix<L, T> extends MatlabMatrix<L, T>
 {   
     /**
      * Returns {@code true} if the array has no imaginary values, {@code false} otherwise. Equivalent to the MATLAB
@@ -63,15 +63,32 @@ abstract class MatlabNumericArray_2<L, T> extends MatlabArray_2<L, T>
         return getBaseArray().toImaginaryArray();
     }
     
-    @Override
+    
+    /**
+     * Gets the element at {@code index} treating this array as a MATLAB column vector. This is equivalent to indexing
+     * into a MATLAB array with just one subscript.
+     * 
+     * @param index
+     * @return element at {@code index}
+     * @throws ArrayIndexOutOfBoundsException if {@code index} is out of bounds
+     */
     public abstract MatlabNumber<?> getElementAtLinearIndex(int index);
     
-    @Override
     public abstract MatlabNumber<?> getElementAtIndices(int row, int column);
     
-    @Override
     public abstract MatlabNumber<?> getElementAtIndices(int row, int column, int page);
     
-    @Override
+    
+    
+    /**
+     * Gets the element at the specified {@code row}, {@code column}, and {@code pages}.
+     * 
+     * @param row
+     * @param column
+     * @param pages
+     * @return element at {@code row}, {@code column}, and {@code pages}
+     * @throws IllegalArgumentException if number of indices does not equal this array's number of dimensions
+     * @throws ArrayIndexOutOfBoundsException if the indices are out of bound
+     */
     public abstract MatlabNumber<?> getElementAtIndices(int row, int column, int... pages);
 }

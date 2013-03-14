@@ -23,11 +23,12 @@ package matlabcontrol.link;
  */
 
 /**
+ * The base class for all MATLAB matrices.
  *
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-abstract class MatlabArray_2<L, T>
+abstract class MatlabMatrix<L, T>
 {   
     abstract BaseArray<L, T> getBaseArray();
     
@@ -65,30 +66,4 @@ abstract class MatlabArray_2<L, T>
     {
         return getBaseArray().getNumberOfDimensions();
     }
-    
-    /**
-     * Gets the element at {@code index} treating this array as a MATLAB column vector. This is equivalent to indexing
-     * into a MATLAB array with just one subscript.
-     * 
-     * @param index
-     * @return element at {@code index}
-     * @throws ArrayIndexOutOfBoundsException if {@code index} is out of bounds
-     */
-    public abstract MatlabType getElementAtLinearIndex(int index);
-    
-    public abstract MatlabType getElementAtIndices(int row, int column);
-    
-    public abstract MatlabType getElementAtIndices(int row, int column, int page);
-    
-    /**
-     * Gets the element at the specified {@code row}, {@code column}, and {@code pages}.
-     * 
-     * @param row
-     * @param column
-     * @param pages
-     * @return element at {@code row}, {@code column}, and {@code pages}
-     * @throws IllegalArgumentException if number of indices does not equal this array's number of dimensions
-     * @throws ArrayIndexOutOfBoundsException if the indices are out of bound
-     */
-    public abstract MatlabType getElementAtIndices(int row, int column, int... pages);
 }

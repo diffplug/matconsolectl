@@ -23,43 +23,21 @@ package matlabcontrol.link;
  */
 
 /**
+ * 
  *
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public abstract class MatlabDoubleArray_2<T> extends MatlabNumericArray_2<double[], T>
+abstract class MatlabNonNumericMatrix<L, T> extends MatlabMatrix<L, T>
 {
-    MatlabDoubleArray_2() { }
-    
-    public abstract double getRealElementAtLinearIndex(int linearIndex);
-    
-    public abstract double getImaginaryElementAtLinearIndex(int linearIndex);
-    
-    
-    
-    public abstract double getRealElementAtIndices(int row, int column);
-    
-    public abstract double getRealElementAtIndices(int row, int column, int page);
-    
-    public abstract double getRealElementAtIndices(int row, int column, int[] pages);
-    
-    
-    
-    public abstract double getImaginaryElementAtIndices(int row, int column);
-    
-    public abstract double getImaginaryElementAtIndices(int row, int column, int page);
-    
-    public abstract double getImaginaryElementAtIndices(int row, int column, int[] pages);
-    
-    
-    
-    public abstract MatlabDouble getElementAtLinearIndex(int linearIndex);
-    
-    
-    
-    public abstract MatlabDouble getElementAtIndices(int row, int column);
-    
-    public abstract MatlabDouble getElementAtIndices(int row, int column, int page);
-    
-    public abstract MatlabDouble getElementAtIndices(int row, int column, int[] pages);
+    /**
+     * Returns an array that holds the values from the MATLAB matrix. Each call returns a new copy which may be used in
+     * any manner; modifications to it will have no effect on this instance.
+     * 
+     * @return array
+     */
+    public T toArray()
+    {
+        return getBaseArray().toRealArray();
+    }
 }
