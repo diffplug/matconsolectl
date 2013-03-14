@@ -191,7 +191,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
     private static <L> L[] sparseTo2DArray(Class<L[]> array2DType, int[] rowIndices, int[] colIndices, L values,
             int[] dimensions)
     {
-        L[] array2D = ArrayTransformUtils.createArray(array2DType, dimensions);
+        L[] array2D = ArrayUtils.createArray(array2DType, dimensions);
         if(values != null)
         {
             SparseArrayFillOperation fillOperation = SPARSE_FILL_OPERATIONS.get(array2DType);
@@ -347,7 +347,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
      */
     int getSparseIndexForIndices(int row, int column)
     {
-        int linearIndex = ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
+        int linearIndex = ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
         
         return Arrays.binarySearch(_linearIndices, linearIndex);
     }
@@ -364,7 +364,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
     int getSparseIndexForIndices(int row, int column, int page)
     {
         int linearIndex =
-                ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
+                ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
         
         return Arrays.binarySearch(_linearIndices, linearIndex);
     }
@@ -381,7 +381,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
     int getSparseIndexForIndices(int row, int column, int[] pages)
     {
         int linearIndex =
-                ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
+                ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
         
         return Arrays.binarySearch(_linearIndices, linearIndex);
     }
@@ -419,8 +419,8 @@ class SparseArray<L> extends BaseArray<L, L[]>
                             if(Arrays.equals(_linearIndices, other._linearIndices))
                             {
                                 //Finally, compare the inner arrays
-                                equal = DynamicArrays.equals(_realValues, other._realValues) &&
-                                        DynamicArrays.equals(_imagValues, other._imagValues);
+                                equal = ArrayUtils.equals(_realValues, other._realValues) &&
+                                        ArrayUtils.equals(_imagValues, other._imagValues);
                             }
                         }
                     }
@@ -440,8 +440,8 @@ class SparseArray<L> extends BaseArray<L, L[]>
             
             hashCode = 97 * hashCode + _baseComponentType.hashCode();
             hashCode = 97 * hashCode + Arrays.hashCode(_linearIndices);
-            hashCode = 97 * hashCode + DynamicArrays.hashCode(_realValues);
-            hashCode = 97 * hashCode + DynamicArrays.hashCode(_imagValues);
+            hashCode = 97 * hashCode + ArrayUtils.hashCode(_realValues);
+            hashCode = 97 * hashCode + ArrayUtils.hashCode(_imagValues);
             hashCode = 97 * hashCode + Arrays.hashCode(_dimensions);
 
             _hashCode = hashCode;
@@ -543,7 +543,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
         
         //Confirm the realValues is of the supported type
         Class<?> requiredBaseComponentType = linearArrayType.getComponentType();
-        Class<?> realBaseComponentType = ArrayTransformUtils.getBaseComponentType(realClass);
+        Class<?> realBaseComponentType = ArrayUtils.getBaseComponentType(realClass);
         if(!realBaseComponentType.equals(requiredBaseComponentType))
         {
             throw new IllegalArgumentException("realValues is not an array of the required class\n" +
@@ -581,7 +581,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
         
         SparseKey(int row, int col, int numRows)
         {
-            this.linearIndex = ArrayTransformUtils.multidimensionalIndicesToLinearIndex(numRows, row, col);
+            this.linearIndex = ArrayUtils.multidimensionalIndicesToLinearIndex(numRows, row, col);
             this.row = row;
             this.col = col;
         }
@@ -589,7 +589,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
         SparseKey(int linearIndex, int[] dimensions)
         {
             this.linearIndex = linearIndex;
-            int[] indices = ArrayTransformUtils.linearIndexToMultidimensionalIndices(dimensions, linearIndex);
+            int[] indices = ArrayUtils.linearIndexToMultidimensionalIndices(dimensions, linearIndex);
             this.row = indices[0];
             this.col = indices[1];
         }

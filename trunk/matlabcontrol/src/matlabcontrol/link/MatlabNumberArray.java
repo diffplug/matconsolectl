@@ -146,7 +146,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
         //Make class information at run time
         _baseComponentType = linearArrayType.getComponentType();
         _linearArrayType = linearArrayType;
-        _outputArrayType = (Class<T>) ArrayTransformUtils.getArrayClass(_baseComponentType, dimensions.length);
+        _outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
     }
     
     /**
@@ -183,7 +183,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
         }
         
         //Confirm the real array is of the supported type
-        Class<?> realBaseComponentType = ArrayTransformUtils.getBaseComponentType(realClass);
+        Class<?> realBaseComponentType = ArrayUtils.getBaseComponentType(realClass);
         if(!realBaseComponentType.equals(_baseComponentType))
         {
             throw new IllegalArgumentException("Real array is not an array of the required class\n" +
@@ -200,15 +200,15 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
         }
         
         //Determine dimensions
-        _dimensions = new int[ArrayTransformUtils.getNumberOfDimensions(_outputArrayType)];
-        int[] realDimensions = ArrayTransformUtils.computeBoundingDimensions(real);
+        _dimensions = new int[ArrayUtils.getNumberOfDimensions(_outputArrayType)];
+        int[] realDimensions = ArrayUtils.computeBoundingDimensions(real);
         for(int i = 0; i < realDimensions.length; i++)
         {
             _dimensions[i] = Math.max(_dimensions[i], realDimensions[i]);
         }
         if(imag != null)
         {
-            int[] imagDimensions = ArrayTransformUtils.computeBoundingDimensions(imag);
+            int[] imagDimensions = ArrayUtils.computeBoundingDimensions(imag);
             for(int i = 0; i < imagDimensions.length; i++)
             {
                 _dimensions[i] = Math.max(_dimensions[i], imagDimensions[i]);
@@ -371,7 +371,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
                     "cannot be indexed into using " + indices.length + " indices");
         }
         
-        return ArrayTransformUtils.multidimensionalIndicesToLinearIndex(_dimensions, indices);
+        return ArrayUtils.multidimensionalIndicesToLinearIndex(_dimensions, indices);
     }
     
     /**

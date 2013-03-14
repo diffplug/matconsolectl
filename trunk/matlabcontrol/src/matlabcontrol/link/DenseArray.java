@@ -84,7 +84,7 @@ class DenseArray<L, T> extends BaseArray<L, T>
     {
         if(_hasImaginaryValues == null)
         {   
-            _hasImaginaryValues = DynamicArrays.containsNonDefaultValue(_imag);
+            _hasImaginaryValues = ArrayUtils.containsNonDefaultValue(_imag);
         }
         
         return !_hasImaginaryValues;
@@ -120,17 +120,17 @@ class DenseArray<L, T> extends BaseArray<L, T>
     
     int getLinearIndex(int row, int column)
     {
-        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
+        return ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
     }
     
     int getLinearIndex(int row, int column, int page)
     {
-        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
+        return ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
     }
     
     int getLinearIndex(int row, int column, int[] pages)
     {
-        return ArrayTransformUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
+        return ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
     }
     
     
@@ -165,8 +165,8 @@ class DenseArray<L, T> extends BaseArray<L, T>
                         if(Arrays.equals(_dimensions, other._dimensions))
                         {
                             //Finally, compare the inner arrays
-                            equal = DynamicArrays.equals(_real, other._real) &&
-                                    DynamicArrays.equals(_imag, other._imag);
+                            equal = ArrayUtils.equals(_real, other._real) &&
+                                    ArrayUtils.equals(_imag, other._imag);
                         }
                     }
                 }
@@ -184,8 +184,8 @@ class DenseArray<L, T> extends BaseArray<L, T>
             int hashCode = 7;
             
             hashCode = 97 * hashCode + _baseComponentType.hashCode();
-            hashCode = 97 * hashCode + DynamicArrays.hashCode(_real);
-            hashCode = 97 * hashCode + DynamicArrays.hashCode(_imag);
+            hashCode = 97 * hashCode + ArrayUtils.hashCode(_real);
+            hashCode = 97 * hashCode + ArrayUtils.hashCode(_imag);
             hashCode = 97 * hashCode + Arrays.hashCode(_dimensions);
 
             _hashCode = hashCode;

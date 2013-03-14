@@ -31,7 +31,7 @@ import java.util.Map;
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.link.MatlabType.MatlabTypeGetter;
-import static matlabcontrol.link.ArrayTransformUtils.*;
+import static matlabcontrol.link.ArrayUtils.*;
 
 /**
  *

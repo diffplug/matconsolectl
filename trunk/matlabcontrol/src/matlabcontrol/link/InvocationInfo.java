@@ -687,6 +687,6 @@ class InvocationInfo
             }
         }
         
-        return ArrayTransformUtils.getArrayClass((Class<?>) componentType, dimensions);
+        return ArrayUtils.getArrayClass((Class<?>) componentType, dimensions);
     }
 }
