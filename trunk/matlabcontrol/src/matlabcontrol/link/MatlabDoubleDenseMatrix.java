@@ -27,11 +27,11 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabDoubleDenseArray<T> extends MatlabDoubleArray_2<T>
+class MatlabDoubleDenseMatrix<T> extends MatlabDoubleMatrix<T>
 {
     private final DenseArray<double[], T> _array;
     
-    MatlabDoubleDenseArray(double[] real, double[] imag, int[] dimensions)
+    MatlabDoubleDenseMatrix(double[] real, double[] imag, int[] dimensions)
     {
         _array = new DenseArray<double[], T>(double[].class, real, imag, dimensions);
     }

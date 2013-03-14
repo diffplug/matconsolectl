@@ -27,17 +27,19 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabDoubleSparseArray<T> extends MatlabDoubleArray_2<T>
+class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]>
 {
-    private final SparseArray<double[], T> _array;
+    private final SparseArray<double[]> _array;
     
-    MatlabDoubleSparseArray(int[] indices, double[] real, double[] imag, int[] dimensions)
+    MatlabDoubleSparseMatrix(int[] linearIndices, int[] rowIndices, int[] colIndices, double[] real, double[] imag,
+            int[] dimensions)
     {
-        _array = new SparseArray<double[], T>(double[].class, indices, real, imag, dimensions);
+        _array = new SparseArray<double[]>(double[].class, linearIndices, rowIndices, colIndices, real, imag,
+                dimensions);
     }
     
     @Override
-    BaseArray<double[], T> getBaseArray()
+    BaseArray<double[], double[][]> getBaseArray()
     {
         return _array;
     }
@@ -47,7 +49,7 @@ class MatlabDoubleSparseArray<T> extends MatlabDoubleArray_2<T>
         double val = 0;
         if(sparseIndex >= 0)
         {
-            val = _array._real[sparseIndex];
+            val = _array._realValues[sparseIndex];
         }
         
         return val;
@@ -58,7 +60,7 @@ class MatlabDoubleSparseArray<T> extends MatlabDoubleArray_2<T>
         double val = 0;
         if(!_array.isReal() && sparseIndex >= 0)
         {
-            val = _array._imag[sparseIndex];
+            val = _array._imagValues[sparseIndex];
         }
         
         return val;
@@ -174,7 +176,7 @@ class MatlabDoubleSparseArray<T> extends MatlabDoubleArray_2<T>
         }
         else if(obj != null && this.getClass().equals(obj.getClass()))
         {
-            MatlabDoubleSparseArray other = (MatlabDoubleSparseArray) obj;
+            MatlabDoubleSparseMatrix other = (MatlabDoubleSparseMatrix) obj;
             equal = _array.equals(other._array);
         }
         

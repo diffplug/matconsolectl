@@ -36,6 +36,37 @@ import java.util.Map;
 class ArrayTransformUtils
 {
     /**
+     * Creates an array as specified by {@code type}. The number of dimensions of the array must match the size of
+     * {@code lengths}; this is not validated inside this method - but it will not work properly if this is not the
+     * case.
+     * 
+     * @param <T>
+     * @param type
+     * @param lengths
+     * @return
+     */
+    static <T> T createArray(Class<T> type, int[] lengths)
+    {   
+        Class<?> arrayType = type.getComponentType();
+        T instance = (T) Array.newInstance(arrayType, lengths[0]);
+        
+        //If what was created holds an array, then fill it recursively
+        if(arrayType.isArray())
+        {
+            //Next set of lengths will be all but the first entry in the current lengths array
+            int[] nextLengths = new int[lengths.length - 1];
+            System.arraycopy(lengths, 1, nextLengths, 0, nextLengths.length);
+              
+            for(int i = 0; i < lengths[0]; i++)
+            {   
+                Array.set(instance, i, createArray(arrayType, nextLengths));
+            }
+        }
+        
+        return instance;
+    }
+    
+    /**
      * Deeply copies a primitive array. If the array is not primitive then the {@code Object}s in the array will not
      * be copies, although the arrays will be copied.
      * 
@@ -130,6 +161,11 @@ class ArrayTransformUtils
     static int multidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column)
     {
         return column * dimensions[0] + row;
+    }
+    
+    static int multidimensionalIndicesToLinearIndex(int numRows, int row, int column)
+    {
+        return column * numRows + row;
     }
     
     //Optimized version for 3 indices
@@ -435,15 +471,18 @@ class ArrayTransformUtils
     
     private static String getObjectArrayBinaryName(Class<?> componentType, int rank)
     {
-        StringBuilder builder = new StringBuilder();
+        String componentName = componentType.getName();
+        int componentNameLength = componentName.length();
+        
+        char[] nameChars = new char[componentNameLength + rank + 2];
         for(int i = 0; i < rank; i++)
         {
-            builder.append("[");
+            nameChars[i] = '[';
         }
-        builder.append("L");
-        builder.append(componentType.getName());
-        builder.append(";");
+        nameChars[rank] = 'L';
+        System.arraycopy(componentName.toCharArray(), 0, nameChars, rank + 1, componentNameLength);
+        nameChars[nameChars.length - 1] = ';';
         
-        return builder.toString();
+        return new String(nameChars);
     }
 }
