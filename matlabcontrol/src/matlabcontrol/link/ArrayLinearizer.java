@@ -30,7 +30,7 @@ import java.util.Map;
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
 import matlabcontrol.link.MatlabType.MatlabTypeSetter;
-import static matlabcontrol.link.ArrayTransformUtils.*;
+import static matlabcontrol.link.ArrayUtils.*;
 
 /**
  *

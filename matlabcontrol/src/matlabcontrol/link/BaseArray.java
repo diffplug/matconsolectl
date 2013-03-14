@@ -64,12 +64,12 @@ abstract class BaseArray<L, T>
         //Multidimensional dimensions
         _dimensions = dimensions;
         
-        _numberOfElements = ArrayTransformUtils.getNumberOfElements(dimensions);
+        _numberOfElements = ArrayUtils.getNumberOfElements(dimensions);
         
         //Make class information at run time
         _baseComponentType = linearArrayType.getComponentType();
         _linearArrayType = linearArrayType;
-        _outputArrayType = (Class<T>) ArrayTransformUtils.getArrayClass(_baseComponentType, dimensions.length);
+        _outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
     }
     
     /**
