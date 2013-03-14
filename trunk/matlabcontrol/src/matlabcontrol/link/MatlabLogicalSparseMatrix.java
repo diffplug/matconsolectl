@@ -31,10 +31,16 @@ class MatlabLogicalSparseMatrix extends MatlabLogicalMatrix<boolean[][]>
 {
     private final SparseArray<boolean[]> _array;
     
-    MatlabLogicalSparseMatrix(int[] linearIndices, int[] rowIndices, int[] colIndices, boolean[] values, int[] dimensions)
+    MatlabLogicalSparseMatrix(int[] linearIndices, int[] rowIndices, int[] colIndices, boolean[] values,
+            int numRows, int numCols)
     {
         _array = new SparseArray<boolean[]>(boolean[].class, linearIndices, rowIndices, colIndices, values, null,
-                dimensions);
+                numRows, numCols);
+    }
+    
+    MatlabLogicalSparseMatrix(int[] rowIndices, int[] colIndices, boolean[] values, int numRows, int numCols)
+    {
+        _array = new SparseArray<boolean[]>(boolean[].class, rowIndices, colIndices, values, null, numRows, numCols);
     }
     
     @Override
@@ -69,12 +75,13 @@ class MatlabLogicalSparseMatrix extends MatlabLogicalMatrix<boolean[][]>
     @Override
     public boolean getElementAtIndices(int row, int column, int page)
     {
-        return getElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, page));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using 3 indices");
     }
 
     @Override
     public boolean getElementAtIndices(int row, int column, int[] pages)
     {
-        return getElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, pages));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using " +
+                (2 + pages.length) + " indices");
     }
 }

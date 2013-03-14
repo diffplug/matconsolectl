@@ -32,46 +32,7 @@ package matlabcontrol.link;
  *            (1 or more dimensions is acceptable, including for example {@code byte[]})
  */
 abstract class BaseArray<L, T>
-{   
-    /**
-     * The lengths of each dimension of the array when represented as an array of type {@code T}.
-     */
-    final int[] _dimensions;
-    
-    /**
-     * The total number of elements represented by this sparse array. This includes the zero elements represented by
-     * this array. This is equivalent to multiplying all values of {@link #_dimensions} together.
-     */
-    private final int _numberOfElements;
-    
-    /**
-     * The primitive numeric type stored by the arrays.
-     */
-    final Class<?> _baseComponentType;
-    
-    /**
-     * Internal linear array type.
-     */
-    final Class<L> _linearArrayType;
-    
-    /**
-     * Output array type.
-     */
-    final Class<T> _outputArrayType;
-    
-    BaseArray(Class<L> linearArrayType, int[] dimensions)
-    {
-        //Multidimensional dimensions
-        _dimensions = dimensions;
-        
-        _numberOfElements = ArrayUtils.getNumberOfElements(dimensions);
-        
-        //Make class information at run time
-        _baseComponentType = linearArrayType.getComponentType();
-        _linearArrayType = linearArrayType;
-        _outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
-    }
-    
+{
     /**
      * Returns {@code true} if the array has no imaginary values, {@code false} otherwise. Equivalent to the MATLAB
      * {@code isreal} function.
@@ -86,10 +47,7 @@ abstract class BaseArray<L, T>
      * 
      * @return number of elements
      */
-    int getNumberOfElements()
-    {
-        return _numberOfElements;
-    }
+    abstract int getNumberOfElements();
     
     /**
      * Returns the length of the dimension specified by {@code dimension}. Dimensions use 0-based indexing. So the
@@ -100,26 +58,14 @@ abstract class BaseArray<L, T>
      * @return length of {@code dimension}
      * @throws IllegalArgumentException if {@code dimension} is not a dimension of the array
      */
-    int getLengthOfDimension(int dimension)
-    {
-        if(dimension >= _dimensions.length || dimension < 0)
-        {
-            throw new IllegalArgumentException(dimension + " is not a dimension of this array. This array has " +
-                    getNumberOfDimensions() + " dimensions");
-        }
-        
-        return _dimensions[dimension];
-    }
+    abstract int getLengthOfDimension(int dimension);
     
     /**
      * Returns the number of dimensions of the array.
      * 
      * @return number of dimensions
      */
-    int getNumberOfDimensions()
-    {
-        return _dimensions.length;
-    }
+    abstract int getNumberOfDimensions();
     
     /**
      * Returns an array that holds the real values from the MATLAB array. Each call returns a new copy which may be used

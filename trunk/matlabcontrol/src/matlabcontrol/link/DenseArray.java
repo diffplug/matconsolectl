@@ -37,6 +37,32 @@ import java.util.Arrays;
 class DenseArray<L, T> extends BaseArray<L, T>
 {
     /**
+     * The lengths of each dimension of the array when represented as an array of type {@code T}.
+     */
+    final int[] _dimensions;
+    
+    /**
+     * The total number of elements represented by this sparse array. This includes the zero elements represented by
+     * this array. This is equivalent to multiplying all values of {@link #_dimensions} together.
+     */
+    private final int _numberOfElements;
+    
+    /**
+     * The primitive numeric type stored by the arrays.
+     */
+    final Class<?> _baseComponentType;
+    
+    /**
+     * Internal linear array type.
+     */
+    final Class<L> _linearArrayType;
+    
+    /**
+     * Output array type.
+     */
+    final Class<T> _outputArrayType;
+    
+    /**
      * The linear array of real values.
      */
     final L _real;
@@ -72,11 +98,109 @@ class DenseArray<L, T> extends BaseArray<L, T>
      */
     DenseArray(Class<L> linearArrayType, L real, L imag, int[] dimensions)
     {
-        super(linearArrayType, dimensions);
+        //Dimensions of the array
+        _dimensions = dimensions;
+        _numberOfElements = ArrayUtils.getNumberOfElements(_dimensions);
         
         //The real and imaginary arrays should always be of type L, but validate it
         _real = linearArrayType.cast(real);
         _imag = linearArrayType.cast(imag);
+        
+        //Make class information at run time
+        _baseComponentType = linearArrayType.getComponentType();
+        _linearArrayType = linearArrayType;
+        _outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
+    }
+    
+    DenseArray(Class<L> linearArrayType, T real, T imag)
+    {
+        //Real array cannot be null
+        if(real == null)
+        {
+            throw new NullPointerException("Real array may not be null");
+        }
+        
+        //Make class information at run time
+        _baseComponentType = linearArrayType.getComponentType();
+        _linearArrayType = linearArrayType;
+        _outputArrayType = (Class<T>) real.getClass();
+        
+        //Confirm real array is actually an array
+        Class<?> realClass = real.getClass();
+        if(!realClass.isArray())
+        {
+            throw new IllegalArgumentException("Real array is not an array, type: " + realClass.getCanonicalName());
+        }
+        
+        //Confirm the real array is of the supported type
+        Class<?> realBaseComponentType = ArrayUtils.getBaseComponentType(realClass);
+        if(!realBaseComponentType.equals(_baseComponentType))
+        {
+            throw new IllegalArgumentException("Real array is not an array of the required class\n" +
+                    "Required base component type: " + _baseComponentType.getCanonicalName() + "\n" +
+                    "Provided base component type: " + realBaseComponentType.getCanonicalName());
+        }
+        
+        //Confirm the imag array is of the same type as the real array
+        if(imag != null && !imag.getClass().equals(realClass))
+        {
+            throw new IllegalArgumentException("Imaginary array is not of the same class as the real array\n" +
+                    "Real array class: " + realClass.getCanonicalName() + "\n" +
+                    "Imaginary array class: " + imag.getClass().getCanonicalName());
+        }
+        
+        //Determine dimensions
+        _dimensions = new int[ArrayUtils.getNumberOfDimensions(_outputArrayType)];
+        int[] realDimensions = ArrayUtils.computeBoundingDimensions(real);
+        for(int i = 0; i < realDimensions.length; i++)
+        {
+            _dimensions[i] = Math.max(_dimensions[i], realDimensions[i]);
+        }
+        if(imag != null)
+        {
+            int[] imagDimensions = ArrayUtils.computeBoundingDimensions(imag);
+            for(int i = 0; i < imagDimensions.length; i++)
+            {
+                _dimensions[i] = Math.max(_dimensions[i], imagDimensions[i]);
+            }
+        }
+        _numberOfElements = ArrayUtils.getNumberOfElements(_dimensions);
+        
+        //Linearize arrays
+        _real = _linearArrayType.cast(ArrayLinearizer.linearize(real, _dimensions));
+        if(imag != null)
+        {
+            _imag = _linearArrayType.cast(ArrayLinearizer.linearize(imag, _dimensions));
+        }
+        else
+        {   
+            _imag = null;
+            _hasImaginaryValues = false;
+        }
+    }
+    
+    @Override
+    int getNumberOfElements()
+    {
+        return _numberOfElements;
+    }
+
+    @Override
+    int getLengthOfDimension(int dimension)
+    {
+        if(dimension >= _dimensions.length || dimension < 0)
+        {
+            throw new IllegalArgumentException(dimension + " is not a dimension of this array. This array has " +
+                    getNumberOfDimensions() + " dimensions");
+        }
+        
+        return _dimensions[dimension];
+    }
+
+    @Override
+    int getNumberOfDimensions()
+    {
+        return _dimensions.length;
     }
 
     @Override
@@ -132,8 +256,6 @@ class DenseArray<L, T> extends BaseArray<L, T>
     {
         return ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
     }
-    
-    
     
     @Override
     public boolean equals(Object obj)
@@ -192,5 +314,5 @@ class DenseArray<L, T> extends BaseArray<L, T>
         }
         
         return _hashCode;
-    }
+    }    
 }

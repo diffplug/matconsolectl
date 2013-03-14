@@ -39,24 +39,6 @@ import java.util.Map;
  */
 class SparseArray<L> extends BaseArray<L, L[]>
 {
-    /*
-     * MATLAB's find(array) returns the linear indices of non-zero values
-     * 
-     * MATLAB's nonzeros(array) returns a column vector of the non-zero values
-     */
-    
-    
-    /**
-    S = sparse(i,j,s,m,n,nzmax) uses vectors i, j, and s to generate an
-    m-by-n sparse matrix such that S(i(k),j(k)) = s(k), with space
-    allocated for nzmax nonzeros.  Vectors i, j, and s are all the same
-    length.  Any elements of s that are zero are ignored, along with the
-    corresponding values of i and j.  Any elements of s that have duplicate
-    values of i and j are added together.  The argument s and one of the
-    arguments i or j may be scalars, in which case the scalars are expanded
-    so that the first three arguments all have the same length.
-    */
-    
     /**
      * The values in this array are the linear indices in the sparse array that have values. The index of an element
      * in this array maps to the index in {@link #_realValues} and {@link #_imagValues} that contain the value at the
@@ -103,22 +85,49 @@ class SparseArray<L> extends BaseArray<L, L[]>
     private Integer _hashCode = null;
     
     /**
+     * The primitive numeric type stored by the arrays.
+     */
+    private final Class<?> _baseComponentType;
+    
+    /**
+     * Internal array type for storing the sparse values.
+     */
+    private final Class<L> _linearArrayType;
+    
+    /**
+     * Output array type.
+     */
+    private final Class<L[]> _outputArrayType;
+    
+    private final int _numRows;
+    
+    private final int _numCols;
+    
+    /**
      * Data from MATLAB. Provided as the indices, linear arrays of values, and dimensions. The indices are expected to
      * be sorted in increasing value and the real and imaginary values are to correspond to these indices.
      * 
      * @param linearArrayType
-     * @param indices need to be sorted in ascending value
+     * @param linearIndices need to be sorted in ascending value
      * @param realLinear
      * @param imagLinear
-     * @param dimensions 
+     * @param numRows
+     * @param numCols
      */
-    SparseArray(Class<L> linearArrayType, int[] indices, int[] rowIndices, int[] colIndices, L real, L imag,
-            int[] dimensions)
+    SparseArray(Class<L> linearArrayType, int[] linearIndices, int[] rowIndices, int[] colIndices, L real, L imag,
+            int numRows, int numCols)
     {
-        super(linearArrayType, dimensions);
+        //Dimensions
+        _numRows = numRows;
+        _numCols = numCols;
+        
+        //Make class information at run time
+        _baseComponentType = linearArrayType.getComponentType();
+        _linearArrayType = linearArrayType;
+        _outputArrayType = (Class<L[]>) ArrayUtils.getArrayClass(_baseComponentType, 2);
         
         //Indices
-        _linearIndices = indices;
+        _linearIndices = linearIndices;
         _rowIndices = rowIndices;
         _colIndices = colIndices;
         
@@ -138,23 +147,29 @@ class SparseArray<L> extends BaseArray<L, L[]>
      * @param numRows
      * @param numCols 
      */
-    SparseArray(Class<L> arrayType, int[] rowIndices, int[] colIndices, L realValues, L imagValues,
+    SparseArray(Class<L> linearArrayType, int[] rowIndices, int[] colIndices, L realValues, L imagValues,
             int numRows, int numCols)
     {
-        super(arrayType, new int[] { numRows, numCols });
+        validateUserSuppliedParameters(linearArrayType, rowIndices, colIndices, realValues, imagValues);
         
-        validateUserSuppliedParameters(arrayType, rowIndices, colIndices, realValues, imagValues);
+        //Make class information at run time
+        _baseComponentType = linearArrayType.getComponentType();
+        _linearArrayType = linearArrayType;
+        _outputArrayType = (Class<L[]>) ArrayUtils.getArrayClass(_baseComponentType, 2);
         
         //Construct a sparse mapping, sort by keys, and then set these values in to the indice and value arrays
-        Map<SparseKey, SparseValue> sparseMap = createSparseMap(arrayType, rowIndices, colIndices, realValues,
+        Map<SparseKey, SparseValue> sparseMap = createSparseMap(linearArrayType, rowIndices, colIndices, realValues,
                 imagValues, numRows, numCols);
+        _numRows = numRows;
+        _numCols = numCols;
         ArrayList<SparseKey> keys = new ArrayList<SparseKey>(sparseMap.keySet());
         Collections.sort(keys);
         _rowIndices = new int[keys.size()];
         _colIndices = new int[keys.size()];
         _linearIndices = new int[keys.size()];
-        _realValues = arrayType.cast(Array.newInstance(_baseComponentType, keys.size()));
-        _imagValues = imagValues == null ? null : arrayType.cast(Array.newInstance(_baseComponentType, keys.size()));
+        _realValues = linearArrayType.cast(Array.newInstance(_baseComponentType, keys.size()));
+        _imagValues = imagValues == null ? null :
+                linearArrayType.cast(Array.newInstance(_baseComponentType, keys.size()));
         for(int i = 0; i < keys.size(); i++)
         {
             SparseKey key = keys.get(i);
@@ -179,19 +194,19 @@ class SparseArray<L> extends BaseArray<L, L[]>
     @Override
     L[] toRealArray()
     {
-        return sparseTo2DArray(_outputArrayType, _rowIndices, _colIndices, _realValues, _dimensions);
+        return sparseTo2DArray(_outputArrayType, _rowIndices, _colIndices, _realValues, _numRows, _numCols);
     }
     
     @Override
     L[] toImaginaryArray()
     {
-        return sparseTo2DArray(_outputArrayType, _rowIndices, _colIndices, _imagValues, _dimensions);
+        return sparseTo2DArray(_outputArrayType, _rowIndices, _colIndices, _imagValues, _numRows, _numCols);
     }
     
     private static <L> L[] sparseTo2DArray(Class<L[]> array2DType, int[] rowIndices, int[] colIndices, L values,
-            int[] dimensions)
+            int numRows, int numCols)
     {
-        L[] array2D = ArrayUtils.createArray(array2DType, dimensions);
+        L[] array2D = (L[]) Array.newInstance(array2DType, numRows, numCols);
         if(values != null)
         {
             SparseArrayFillOperation fillOperation = SPARSE_FILL_OPERATIONS.get(array2DType);
@@ -216,6 +231,39 @@ class SparseArray<L> extends BaseArray<L, L[]>
         map.put(char[][].class, new CharArrayFillOperation());
         
         SPARSE_FILL_OPERATIONS = Collections.unmodifiableMap(map);
+    }
+
+    @Override
+    int getNumberOfElements()
+    {
+        return _numCols * _numRows;
+    }
+
+    @Override
+    int getLengthOfDimension(int dimension)
+    {
+        int length;
+        if(dimension == 0)
+        {
+            length = _numRows;
+        }
+        else if(dimension == 1)
+        {
+            length = _numCols;
+        }
+        else
+        {
+            throw new IllegalArgumentException(dimension + " is not a dimension of this array. This array has 2 " +
+                    "dimensions");
+        }
+        
+        return length;
+    }
+
+    @Override
+    int getNumberOfDimensions()
+    {
+        return 2;
     }
     
     private static interface SparseArrayFillOperation<T>
@@ -347,41 +395,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
      */
     int getSparseIndexForIndices(int row, int column)
     {
-        int linearIndex = ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column);
-        
-        return Arrays.binarySearch(_linearIndices, linearIndex);
-    }
-    
-    /**
-     * Converts from row, column, and page indices for the array to the corresponding index in {@link #_real} and
-     * {@link #_imag}. If no corresponding index was found then the value returned will be negative.
-     * 
-     * @param row
-     * @param column
-     * @param page
-     * @return sparse index
-     */
-    int getSparseIndexForIndices(int row, int column, int page)
-    {
-        int linearIndex =
-                ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, page);
-        
-        return Arrays.binarySearch(_linearIndices, linearIndex);
-    }
-    
-    /**
-     * Converts from row, column, and pages indices for the array to the corresponding index in {@link #_real} and
-     * {@link #_imag}. If no corresponding index was found then the value returned will be negative.
-     * 
-     * @param row
-     * @param column
-     * @param pages
-     * @return sparse index
-     */
-    int getSparseIndexForIndices(int row, int column, int[] pages)
-    {
-        int linearIndex =
-                ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_dimensions, row, column, pages);
+        int linearIndex = ArrayUtils.checkedMultidimensionalIndicesToLinearIndex(_numRows, _numCols, row, column);
         
         return Arrays.binarySearch(_linearIndices, linearIndex);
     }
@@ -413,7 +427,7 @@ class SparseArray<L> extends BaseArray<L, L[]>
                     if((this.isReal() && other.isReal()) || (!this.isReal() && !other.isReal()))
                     {
                         //Same dimensions
-                        if(Arrays.equals(_dimensions, other._dimensions))
+                        if(_numRows == other._numRows && _numCols == other._numCols)
                         {
                             //Same indices
                             if(Arrays.equals(_linearIndices, other._linearIndices))
@@ -442,14 +456,14 @@ class SparseArray<L> extends BaseArray<L, L[]>
             hashCode = 97 * hashCode + Arrays.hashCode(_linearIndices);
             hashCode = 97 * hashCode + ArrayUtils.hashCode(_realValues);
             hashCode = 97 * hashCode + ArrayUtils.hashCode(_imagValues);
-            hashCode = 97 * hashCode + Arrays.hashCode(_dimensions);
+            hashCode = 97 * hashCode + _numRows;
+            hashCode = 97 * hashCode + _numCols;
 
             _hashCode = hashCode;
         }
         
         return _hashCode;
     }
-    
     
     
     /******************************************************************************************************************\

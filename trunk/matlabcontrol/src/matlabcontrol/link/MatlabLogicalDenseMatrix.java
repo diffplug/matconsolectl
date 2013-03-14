@@ -35,6 +35,11 @@ class MatlabLogicalDenseMatrix<T> extends MatlabLogicalMatrix<T>
     {
         _array = new DenseArray<boolean[], T>(boolean[].class, values, null, dimensions);
     }
+    
+    MatlabLogicalDenseMatrix(T values)
+    {
+        _array = new DenseArray<boolean[], T>(boolean[].class, values, null);
+    }
 
     @Override
     BaseArray<boolean[], T> getBaseArray()

@@ -32,10 +32,15 @@ class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]>
     private final SparseArray<double[]> _array;
     
     MatlabDoubleSparseMatrix(int[] linearIndices, int[] rowIndices, int[] colIndices, double[] real, double[] imag,
-            int[] dimensions)
+            int numRows, int numCols)
     {
         _array = new SparseArray<double[]>(double[].class, linearIndices, rowIndices, colIndices, real, imag,
-                dimensions);
+                numRows, numCols);
+    }
+    
+    MatlabDoubleSparseMatrix(int[] rowIndices, int[] colIndices, double[] real, double[] imag, int numRows, int numCols)
+    {
+        _array = new SparseArray<double[]>(double[].class, rowIndices, colIndices, real, imag, numRows, numCols);
     }
     
     @Override
@@ -91,13 +96,14 @@ class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]>
     @Override
     public double getRealElementAtIndices(int row, int column, int page)
     {
-        return this.getRealElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, page));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using 3 indices");
     }
     
     @Override
     public double getRealElementAtIndices(int row, int column, int[] pages)
     {
-        return this.getRealElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, pages));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using " +
+                (2 + pages.length) + " indices");
     }
     
     
@@ -111,13 +117,14 @@ class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]>
     @Override
     public double getImaginaryElementAtIndices(int row, int column, int page)
     {
-        return this.getImaginaryElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, page));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using 3 indices");
     }
     
     @Override
     public double getImaginaryElementAtIndices(int row, int column, int[] pages)
     {
-        return this.getImaginaryElementAtSparseIndex(_array.getSparseIndexForIndices(row, column, pages));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using " +
+                (2 + pages.length) + " indices");
     }
     
     
@@ -145,19 +152,14 @@ class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]>
     @Override
     public MatlabDouble getElementAtIndices(int row, int column, int page)
     {
-        int sparseIndex = _array.getSparseIndexForIndices(row, column, page);
-        
-        return new MatlabDouble(this.getRealElementAtSparseIndex(sparseIndex),
-                this.getImaginaryElementAtSparseIndex(sparseIndex));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using 3 indices");
     }
     
     @Override
     public MatlabDouble getElementAtIndices(int row, int column, int[] pages)
     {
-        int sparseIndex = _array.getSparseIndexForIndices(row, column, pages);
-        
-        return new MatlabDouble(this.getRealElementAtSparseIndex(sparseIndex),
-                this.getImaginaryElementAtSparseIndex(sparseIndex));
+        throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using " +
+                (2 + pages.length) + " indices");
     }
     
     @Override
