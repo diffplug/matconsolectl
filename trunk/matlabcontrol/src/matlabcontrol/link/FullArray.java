@@ -34,7 +34,7 @@ import java.util.Arrays;
  * @param <T> output array - primitive numeric array type, ex. {@code byte[][][]}
  *            (1 or more dimensions is acceptable, including for example {@code byte[]})
  */
-class DenseArray<L, T> extends BaseArray<L, T>
+class FullArray<L, T> extends BaseArray<L, T>
 {
     /**
      * The lengths of each dimension of the array when represented as an array of type {@code T}.
@@ -42,7 +42,7 @@ class DenseArray<L, T> extends BaseArray<L, T>
     final int[] _dimensions;
     
     /**
-     * The total number of elements represented by this sparse array. This includes the zero elements represented by
+     * The total number of elements represented by this full array. This includes the zero elements represented by
      * this array. This is equivalent to multiplying all values of {@link #_dimensions} together.
      */
     private final int _numberOfElements;
@@ -96,7 +96,7 @@ class DenseArray<L, T> extends BaseArray<L, T>
      * @param imagLinear
      * @param dimensions 
      */
-    DenseArray(Class<L> linearArrayType, L real, L imag, int[] dimensions)
+    FullArray(Class<L> linearArrayType, L real, L imag, int[] dimensions)
     {
         //Dimensions of the array
         _dimensions = dimensions;
@@ -112,7 +112,7 @@ class DenseArray<L, T> extends BaseArray<L, T>
         _outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
     }
     
-    DenseArray(Class<L> linearArrayType, T real, T imag)
+    FullArray(Class<L> linearArrayType, T real, T imag)
     {
         //Real array cannot be null
         if(real == null)
@@ -270,7 +270,7 @@ class DenseArray<L, T> extends BaseArray<L, T>
         //Same class
         else if(obj != null && this.getClass().equals(obj.getClass()))
         {
-            DenseArray other = (DenseArray) obj;
+            FullArray other = (FullArray) obj;
             
             //If the two instances are equal their hashcodes must be equal (but not the converse)
             if(this.hashCode() == other.hashCode())

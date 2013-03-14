@@ -27,18 +27,18 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabDoubleDenseMatrix<T> extends MatlabDoubleMatrix<T>
+class MatlabDoubleFullMatrix<T> extends MatlabDoubleMatrix<T>
 {
-    private final DenseArray<double[], T> _array;
+    private final FullArray<double[], T> _array;
     
-    MatlabDoubleDenseMatrix(double[] real, double[] imag, int[] dimensions)
+    MatlabDoubleFullMatrix(double[] real, double[] imag, int[] dimensions)
     {
-        _array = new DenseArray<double[], T>(double[].class, real, imag, dimensions);
+        _array = new FullArray<double[], T>(double[].class, real, imag, dimensions);
     }
     
-    MatlabDoubleDenseMatrix(T real, T imag)
+    MatlabDoubleFullMatrix(T real, T imag)
     {
-        _array = new DenseArray<double[], T>(double[].class, real, imag);
+        _array = new FullArray<double[], T>(double[].class, real, imag);
     }
     
     @Override

@@ -31,9 +31,9 @@ public abstract class MatlabLogicalMatrix<T> extends MatlabNonNumericMatrix<bool
 {
     MatlabLogicalMatrix() { }
     
-    public static <T> MatlabLogicalMatrix<T> get(T values)
+    public static <T> MatlabLogicalMatrix<T> getFull(T values)
     {
-        return new MatlabLogicalDenseMatrix<T>(values);
+        return new MatlabLogicalFullMatrix<T>(values);
     }
     
     public static MatlabLogicalMatrix<boolean[][]> getSparse(int[] rowIndices, int[] colIndices, boolean[] values,
