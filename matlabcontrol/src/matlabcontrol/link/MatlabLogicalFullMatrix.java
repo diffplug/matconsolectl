@@ -27,18 +27,18 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabLogicalDenseMatrix<T> extends MatlabLogicalMatrix<T>
+class MatlabLogicalFullMatrix<T> extends MatlabLogicalMatrix<T>
 {
-    private final DenseArray<boolean[], T> _array;
+    private final FullArray<boolean[], T> _array;
 
-    MatlabLogicalDenseMatrix(boolean[] values, int[] dimensions)
+    MatlabLogicalFullMatrix(boolean[] values, int[] dimensions)
     {
-        _array = new DenseArray<boolean[], T>(boolean[].class, values, null, dimensions);
+        _array = new FullArray<boolean[], T>(boolean[].class, values, null, dimensions);
     }
     
-    MatlabLogicalDenseMatrix(T values)
+    MatlabLogicalFullMatrix(T values)
     {
-        _array = new DenseArray<boolean[], T>(boolean[].class, values, null);
+        _array = new FullArray<boolean[], T>(boolean[].class, values, null);
     }
 
     @Override

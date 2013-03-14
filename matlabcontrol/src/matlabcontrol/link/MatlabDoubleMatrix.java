@@ -31,9 +31,9 @@ public abstract class MatlabDoubleMatrix<T> extends MatlabNumericMatrix<double[]
 {
     MatlabDoubleMatrix() { }
     
-    public static <T> MatlabDoubleMatrix<T> get(T real, T imag)
+    public static <T> MatlabDoubleMatrix<T> getFull(T real, T imag)
     {
-        return new MatlabDoubleDenseMatrix<T>(real, imag);
+        return new MatlabDoubleFullMatrix<T>(real, imag);
     }
     
     public static MatlabDoubleMatrix<double[][]> getSparse(int[] rowIndices, int[] colIndices,
