@@ -36,6 +36,11 @@ class MatlabDoubleDenseMatrix<T> extends MatlabDoubleMatrix<T>
         _array = new DenseArray<double[], T>(double[].class, real, imag, dimensions);
     }
     
+    MatlabDoubleDenseMatrix(T real, T imag)
+    {
+        _array = new DenseArray<double[], T>(double[].class, real, imag);
+    }
+    
     @Override
     BaseArray<double[], T> getBaseArray()
     {

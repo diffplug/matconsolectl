@@ -40,37 +40,6 @@ class ArrayUtils
     private ArrayUtils() { }
     
     /**
-     * Creates an array as specified by {@code type}. The number of dimensions of the array must match the size of
-     * {@code lengths}; this is not validated inside this method - but it will not work properly if this is not the
-     * case.
-     * 
-     * @param <T>
-     * @param type
-     * @param lengths
-     * @return
-     */
-    static <T> T createArray(Class<T> type, int[] lengths)
-    {   
-        Class<?> arrayType = type.getComponentType();
-        T instance = (T) Array.newInstance(arrayType, lengths[0]);
-        
-        //If what was created holds an array, then fill it recursively
-        if(arrayType.isArray())
-        {
-            //Next set of lengths will be all but the first entry in the current lengths array
-            int[] nextLengths = new int[lengths.length - 1];
-            System.arraycopy(lengths, 1, nextLengths, 0, nextLengths.length);
-              
-            for(int i = 0; i < lengths[0]; i++)
-            {   
-                Array.set(instance, i, createArray(arrayType, nextLengths));
-            }
-        }
-        
-        return instance;
-    }
-    
-    /**
      * Deeply copies a primitive array. If the array is not primitive then the {@code Object}s in the array will not
      * be copies, although the arrays will be copied.
      * 
@@ -247,15 +216,27 @@ class ArrayUtils
     }
     
     //Optimized for 2 indices
-    static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column)
+    static int checkedMultidimensionalIndicesToLinearIndex(int numRows, int numCols, int row, int column)
     {
-        //Check the number of indices provided was correct
-        if(dimensions.length != 2)
+        //Check the row index is in bounds
+        if(row >= numRows)
         {
-            throw new IllegalArgumentException("Array has " + dimensions.length + " dimension(s), it cannot be " +
-                    "indexed into using 2 indices");
+            throw new ArrayIndexOutOfBoundsException("[" + row + "] is out of bounds for dimension 0 where the " +
+                    "length is " + numRows);
+        }
+        //Check the column index is in bounds
+        if(column >= numCols)
+        {
+            throw new ArrayIndexOutOfBoundsException("[" + column + "] is out of bounds for dimension 1 where the " +
+                    "length is " + numCols);
         }
         
+        return column * numRows + row;
+    }
+    
+    //Optimized for 2 indices
+    static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column)
+    {
         //Check the row index is in bounds
         if(row >= dimensions[0])
         {
@@ -275,13 +256,6 @@ class ArrayUtils
     //Optimized for 3 indices
     static int checkedMultidimensionalIndicesToLinearIndex(int[] dimensions, int row, int column, int page)
     {
-        //Check the number of indices provided was correct
-        if(dimensions.length != 3)
-        {
-            throw new IllegalArgumentException("Array has " + dimensions.length + " dimension(s), it cannot be " +
-                    "indexed into using 3 indices");
-        }
-        
         //Check the row index is in bounds
         if(row >= dimensions[0])
         {
