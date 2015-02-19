@@ -7,6 +7,9 @@ This was forked from 4.1.0.
 ## Changes from 4.1.0
 
 - Switched to gradle, which makes the jmistub subproject unnecessary.
+- Added `CopyPasteCallback` to the set of options for creating a `MatlabProxyFactory`.  The factory sends a chunk of code to the callback, and the user copy-pastes this code into a MATLAB terminal to initiate a connection.
+	+ At first, I got a bunch of Serialization errors.  There were a bunch of `Serializable` classes that didn't specify a `serialVersionUID`.  Specifying these seemed to fix the problem.
+	+ It seems like you can connect over and over this way, and the MATLAB instance stays happy.
 
 ## Quickstart
 
