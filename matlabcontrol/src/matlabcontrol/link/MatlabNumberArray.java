@@ -462,6 +462,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     
     private static class MatlabNumberArraySetter implements MatlabTypeSetter
     {
+        private static final long serialVersionUID = -1170898489714890087L;
         private final Object _real;
         private final Object _imag;
         private final int[] _lengths;
@@ -513,6 +514,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType
     
     static class MatlabNumberArrayGetter implements MatlabTypeGetter
     {
+        private static final long serialVersionUID = 5757315814250115890L;
         private Object _real;
         private Object _imag;
         private int[] _lengths;

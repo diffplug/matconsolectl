@@ -68,6 +68,7 @@ public class MatlabTypeConverter
     
     private static class GetArrayCallable implements MatlabThreadCallable<ArrayInfo>, Serializable
     {
+        private static final long serialVersionUID = -1269094288040717603L;
         private final String _arrayName;
         
         public GetArrayCallable(String arrayName)
@@ -105,6 +106,7 @@ public class MatlabTypeConverter
     
     private static class ArrayInfo implements Serializable
     {
+        private static final long serialVersionUID = 4464014916120235711L;
         private final double[] real, imaginary;
         private final int[] lengths;
         
@@ -130,6 +132,7 @@ public class MatlabTypeConverter
     
     private static class SetArrayCallable implements MatlabThreadCallable<Object>, Serializable
     {
+        private static final long serialVersionUID = -7403498224028558628L;
         private final String _arrayName;
         private final double[] _realArray, _imaginaryArray;
         private final int[] _lengths;

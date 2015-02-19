@@ -120,6 +120,7 @@ public final class MatlabVariable extends MatlabType
     
     static class MatlabVariableGetter implements MatlabTypeGetter
     {
+        private static final long serialVersionUID = 7724337165919355824L;
         private String _name;
         private boolean _retrieved;
         
@@ -150,6 +151,7 @@ public final class MatlabVariable extends MatlabType
 
     private static class MatlabVariableSetter implements MatlabTypeSetter
     {
+        private static final long serialVersionUID = -2208485477826441076L;
         private final String _name;
 
         private MatlabVariableSetter(String name)

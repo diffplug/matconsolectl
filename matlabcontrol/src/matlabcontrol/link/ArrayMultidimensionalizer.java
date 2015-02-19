@@ -42,6 +42,7 @@ class ArrayMultidimensionalizer
 {
     static class PrimitiveArrayGetter implements MatlabTypeGetter
     {
+        private static final long serialVersionUID = -3228683201238234004L;
         private int[] _lengths;
         private Object _array;
         

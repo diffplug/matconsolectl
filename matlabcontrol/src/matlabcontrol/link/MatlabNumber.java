@@ -139,6 +139,7 @@ abstract class MatlabNumber<T extends Number> extends MatlabType
     //This is very non-object oriented to have this here instead of each subclass, but it saves a lot of boilerplate
     private static class MatlabNumberSetter implements MatlabTypeSetter
     {
+        private static final long serialVersionUID = -8427476815084218279L;
         private final Number _real;
         private final Number _imag;
         
@@ -187,6 +188,7 @@ abstract class MatlabNumber<T extends Number> extends MatlabType
     
     static class MatlabNumberGetter implements MatlabTypeGetter
     {
+        private static final long serialVersionUID = 1339080882185682568L;
         private Object _real;
         private Object _imag;
         private boolean _retrieved;

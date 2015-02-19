@@ -46,6 +46,7 @@ class ArrayLinearizer
     
     private static class MultidimensionalPrimitiveArraySetter implements MatlabTypeSetter
     {
+        private static final long serialVersionUID = 7871972881461753065L;
         private final Object _linearArray;
         private final int[] _lengths;
         

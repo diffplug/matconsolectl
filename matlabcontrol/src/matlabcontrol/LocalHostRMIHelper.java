@@ -65,6 +65,7 @@ class LocalHostRMIHelper
     
     private static class LocalHostRMISocketFactory implements RMIClientSocketFactory, RMIServerSocketFactory, Serializable
     {
+        private static final long serialVersionUID = 2973279795727940224L;
         @Override
         public Socket createSocket(String host, int port) throws IOException
         {
@@ -103,6 +104,7 @@ class LocalHostRMIHelper
     
     static class LocalHostRemoteObject extends UnicastRemoteObject
     {
+        private static final long serialVersionUID = -7160502485279570444L;
         LocalHostRemoteObject() throws RemoteException
         {
             super(0, SOCKET_FACTORY, SOCKET_FACTORY);

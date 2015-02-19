@@ -529,6 +529,7 @@ public class Linker
     
     private static class FunctionResult implements Serializable
     {
+        private static final long serialVersionUID = -5636384730122824487L;
         private final Object[] returnArgs;
         private final RuntimeException thrownException;
         
@@ -547,6 +548,7 @@ public class Linker
     
     private static class CustomFunctionInvocation implements MatlabThreadCallable<FunctionResult>, Serializable
     {
+        private static final long serialVersionUID = -7108052527648813829L;
         private final InvocationInfo _functionInfo;
         private final Object[] _args;
         

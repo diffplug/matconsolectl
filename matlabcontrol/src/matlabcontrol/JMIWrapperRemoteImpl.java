@@ -38,6 +38,7 @@ import java.rmi.RemoteException;
  */
 class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject implements JMIWrapperRemote
 {   
+    private static final long serialVersionUID = 6263244863419922018L;
     public JMIWrapperRemoteImpl() throws RemoteException { }
     
     @Override
