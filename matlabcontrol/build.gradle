@@ -1,0 +1,91 @@
+
+// gradlew
+task wrapper(type: Wrapper) {
+	gradleVersion VER_GRADLE
+}
+
+// build
+apply plugin: 'java'
+sourceSets {
+	main { java {
+			srcDir 'src'
+	} }
+	test { java {
+			srcDir 'test'
+	} }
+}
+
+// matlablcontrol requires at least Java 1.6,
+// but older MATLABs run on even older versions
+//
+// Best bet is to stay at 1.6
+sourceCompatibility = 1.6
+targetCompatibility = 1.6
+def JRE6_HOME = 'C:/Program Files/Java/jre6'
+def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar;${JRE6_HOME}/lib/jsse.jar"
+project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
+    ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
+})
+
+// eclipse
+apply plugin: 'eclipse'
+// eclipse forces cleanEclipse
+tasks.eclipse.dependsOn(cleanEclipse)
+
+repositories {
+	maven {
+		url "${dp_maven}/repo"
+		credentials {
+			username "${dp_maven_user}"
+			password "${dp_maven_pass}"
+		}
+	}
+}
+
+dependencies {
+	testCompile "junit:junit:${VER_JUNIT}"
+}
+
+// the package of the jmi stub (which we're going to leave out of all the jars we make)
+def JMI_STUB = 'com/mathworks/jmi/**'
+
+// make a source jar
+task sourceJar(type: Jar) {
+	from sourceSets.main.allJava
+	exclude(JMI_STUB) 
+}
+
+jar {
+	exclude(JMI_STUB) 
+}
+
+// publish
+apply plugin: 'maven-publish'
+group = 'com.diffplug.matlabcontrol'
+
+publishing {
+	publications {
+		mavenJava(MavenPublication) {
+			from components.java
+
+			artifact sourceJar {
+				classifier 'sources'
+			}
+		}
+	}
+
+	repositories {
+		maven {
+			if (project.version.endsWith('-SNAPSHOT')) {
+				url "${dp_maven}/libs-snapshot-local"
+			} else {
+				url "${dp_maven}/libs-release-local"
+			}
+
+			credentials {
+				username "${dp_maven_user}"
+				password "${dp_maven_pass}"
+			}
+		}
+	}
+}
