@@ -25,6 +25,8 @@ package matlabcontrol;
 import java.io.File;
 import java.util.concurrent.atomic.AtomicLong;
 
+import matlabcontrol.MatlabProxyFactory.CopyPasteCallback;
+
 /**
  * Options that configure how a factory operates. Use a {@link Builder} to create an instance of this class.
  * <br><br>
@@ -40,6 +42,7 @@ public class MatlabProxyFactoryOptions
     private final File _startingDirectory;
     private final boolean _hidden;
     private final boolean _usePreviouslyControlled;
+    private final CopyPasteCallback _copyPasteCallback;
     private final long _proxyTimeout;
     private final String _logFile;
     private final Integer _jdbPort;
@@ -53,6 +56,7 @@ public class MatlabProxyFactoryOptions
         _startingDirectory = options._startingDirectory;
         _hidden = options._hidden;
         _usePreviouslyControlled = options._usePreviouslyControlled;
+        _copyPasteCallback = options._copyPasteCallback;
         _proxyTimeout = options._proxyTimeout.get();
         _logFile = options._logFile;
         _jdbPort = options._jdbPort;
@@ -79,6 +83,11 @@ public class MatlabProxyFactoryOptions
     boolean getUsePreviouslyControlledSession()
     {
         return _usePreviouslyControlled;
+    }
+
+    CopyPasteCallback getCopyPasteCallback()
+    {
+        return _copyPasteCallback;
     }
 
     long getProxyTimeout()
@@ -136,6 +145,7 @@ public class MatlabProxyFactoryOptions
         private volatile File _startingDirectory = null;
         private volatile boolean _hidden = false;
         private volatile boolean _usePreviouslyControlled = false;
+        private volatile CopyPasteCallback _copyPasteCallback = null;
         private volatile String _logFile = null;
         private volatile Integer _jdbPort = null;
         private volatile String _licenseFile = null;
@@ -335,6 +345,19 @@ public class MatlabProxyFactoryOptions
         public final Builder setUsePreviouslyControlledSession(boolean usePreviouslyControlled)
         {
             _usePreviouslyControlled = usePreviouslyControlled;
+            
+            return this;
+        }
+        
+        /**
+         * If this is set, then the factory will pass some MATLAB code to the given callback,
+         * which should be pasted into the MATLAB command prompt to initiate the connection.
+         *
+         * This trumps every other property besides setProxyTimeout().
+         */
+        public final Builder setCopyPasteCallback(CopyPasteCallback copyPasteCallback)
+        {
+            _copyPasteCallback = copyPasteCallback;
             
             return this;
         }

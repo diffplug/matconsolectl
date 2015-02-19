@@ -155,4 +155,15 @@ public class MatlabProxyFactory implements ProxyFactory
          */
         public boolean isCompleted();
     }
+    
+    /**
+     * A callback interface for receiving the commands which must be
+     * copy-pasted into MATLAB to initiate a connection.
+     */
+    public interface CopyPasteCallback {
+        /**
+         * The given code should be copy-pasted into MATLAB.
+         */
+        void copyPaste(String matlabCmdsToConnect);
+    }
 }

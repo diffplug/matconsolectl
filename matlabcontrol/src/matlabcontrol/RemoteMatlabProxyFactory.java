@@ -113,8 +113,13 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         RequestMaintainer maintainer = new RequestMaintainer(receiver);
         try
         {
+            if(_options.getCopyPasteCallback() != null) {
+            	// send the copy-paste code to the user, and then begin the request
+                _options.getCopyPasteCallback().copyPaste(getRunArg(receiver));
+                request = new RemoteRequest(proxyID, null, receiver, maintainer);
+            } 
             //If allowed to connect to a previously controlled session and a connection could be made
-            if(_options.getUsePreviouslyControlledSession() &&
+            else if(_options.getUsePreviouslyControlledSession() &&
                MatlabSessionImpl.connectToRunningSession(receiver.getReceiverID(), _options.getPort()))
             {
                 request = new RemoteRequest(proxyID, null, receiver, maintainer);
@@ -280,19 +285,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         
         //Argument to follow this will be the code to run on startup
         processArguments.add("-r");
-        
-        //Code that MATLAB will run on start. Tells MATLAB to:
-        // - Adds matlabcontrol to MATLAB's dynamic class path
-        // - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
-        // - Removes matlabcontrol from MATLAB's dynamic class path
-        // - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
-        String codeLocation = Configuration.getSupportCodeLocation();
-        String runArg = "javaaddpath '" + codeLocation + "'; " + 
-                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
-                        "javarmpath '" + codeLocation + "'; " +
-                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
-                            _options.getPort() + ");";
-        processArguments.add(runArg);
+        processArguments.add(getRunArg(receiver));
         
         //Create process
         ProcessBuilder builder = new ProcessBuilder(processArguments);
@@ -322,6 +315,23 @@ class RemoteMatlabProxyFactory implements ProxyFactory
                     "Environment: " + builder.environment();
             throw new MatlabConnectionException(errorMsg, e);
         }
+    }
+    
+    /**
+     * Returns a chunk of MATLAB code which will cause MATLAB to connect with us.
+     * - Adds matlabcontrol to MATLAB's dynamic class path
+     * - Adds matlabcontrol to Java's system class loader's class path (to work with RMI properly)
+     * - Removes matlabcontrol from MATLAB's dynamic class path
+     * - Tells matlabcontrol running in MATLAB to establish the connection to this JVM
+     */
+    private String getRunArg(RemoteRequestReceiver receiver) throws MatlabConnectionException {
+        String codeLocation = Configuration.getSupportCodeLocation();
+        String runArg = "javaaddpath '" + codeLocation + "'; " + 
+                        MatlabClassLoaderHelper.class.getName() + ".configureClassLoading(); " +
+                        "javarmpath '" + codeLocation + "'; " +
+                        MatlabConnector.class.getName() + ".connectFromMatlab('" + receiver.getReceiverID() + "', " +
+                            _options.getPort() + ");";
+        return runArg;
     }
     
     /**
