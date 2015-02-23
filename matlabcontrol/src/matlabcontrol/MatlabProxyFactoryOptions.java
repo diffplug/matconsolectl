@@ -42,6 +42,7 @@ public class MatlabProxyFactoryOptions
     private final File _startingDirectory;
     private final boolean _hidden;
     private final boolean _usePreviouslyControlled;
+    private final boolean _osgiClassloaderFriendly;
     private final CopyPasteCallback _copyPasteCallback;
     private final long _proxyTimeout;
     private final String _logFile;
@@ -56,6 +57,7 @@ public class MatlabProxyFactoryOptions
         _startingDirectory = options._startingDirectory;
         _hidden = options._hidden;
         _usePreviouslyControlled = options._usePreviouslyControlled;
+        _osgiClassloaderFriendly = options._osgiClassloaderFriendly;
         _copyPasteCallback = options._copyPasteCallback;
         _proxyTimeout = options._proxyTimeout.get();
         _logFile = options._logFile;
@@ -78,6 +80,11 @@ public class MatlabProxyFactoryOptions
     boolean getHidden()
     {
         return _hidden;
+    }
+
+    boolean getOsgiClassloaderFriendly()
+    {
+        return _osgiClassloaderFriendly;
     }
 
     boolean getUsePreviouslyControlledSession()
@@ -145,6 +152,7 @@ public class MatlabProxyFactoryOptions
         private volatile File _startingDirectory = null;
         private volatile boolean _hidden = false;
         private volatile boolean _usePreviouslyControlled = false;
+        private volatile boolean _osgiClassloaderFriendly = false;
         private volatile CopyPasteCallback _copyPasteCallback = null;
         private volatile String _logFile = null;
         private volatile Integer _jdbPort = null;
@@ -345,6 +353,17 @@ public class MatlabProxyFactoryOptions
         public final Builder setUsePreviouslyControlledSession(boolean usePreviouslyControlled)
         {
             _usePreviouslyControlled = usePreviouslyControlled;
+            
+            return this;
+        }
+        
+        /**
+         * If this is set, then RMI will be initiated in a way
+         * that doesn't get bogged down by OSGi.
+         */
+        public final Builder setOSGiClassloaderFriendly(boolean osgiClassloaderFriendly)
+        {
+        	_osgiClassloaderFriendly = osgiClassloaderFriendly;
             
             return this;
         }

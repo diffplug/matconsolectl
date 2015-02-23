@@ -13,6 +13,8 @@ This was forked from 4.1.0.
 	+ It seems like you can connect over and over this way, and the MATLAB instance stays happy.
 - **4.2.1**
 - ThrowableWrapper now initializes the `getMessage()` field with MATLAB's raw error text.
+- **4.3.0**
+- Added `OSGiClassloaderFriendly` to the set of factory options.  When this flag is set to true, RMI is started in a way that doesn't get hosed by OSGi.
 
 ## Quickstart
 

@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import matlabcontrol.MatlabProxy.Identifier;
@@ -80,7 +81,44 @@ class RemoteMatlabProxyFactory implements ProxyFactory
     }
     
     @Override
-    public Request requestProxy(RequestCallback requestCallback) throws MatlabConnectionException
+    public Request requestProxy(final RequestCallback requestCallback) throws MatlabConnectionException
+    {
+        if (_options.getOsgiClassloaderFriendly()) {
+            return callWithClassLoader(new Callable<Request>() {
+                @Override
+                public Request call() throws Exception {
+                    return requestProxyImp(requestCallback);
+                }
+            });
+        } else {
+            return requestProxyImp(requestCallback);
+        }
+    }
+    
+    /** Calls the given callable while temporarily using our classloader. */
+    private Request callWithClassLoader(Callable<Request> callable) throws MatlabConnectionException {
+        Thread currentThread = Thread.currentThread();
+        ClassLoader originalClassLoader = null;
+        try {
+            // backup the "real" classloader (likely to be OSGi's) 
+            originalClassLoader = currentThread.getContextClassLoader();
+            // set it to the classloader that loaded this class (if it has us, it probably has the rest of what we need too.)
+            currentThread.setContextClassLoader(RemoteMatlabProxyFactory.class.getClassLoader());
+            // call the callable
+            return callable.call();
+        } catch (MatlabConnectionException e) {
+        	throw e;
+        } catch (Exception e) {
+        	throw new RuntimeException(e);
+        } finally {
+            // if we succeeded in backing up the classloader, restore what we backed up
+            if (originalClassLoader != null) {
+                currentThread.setContextClassLoader(originalClassLoader);
+            }
+        }
+    }
+    
+    private Request requestProxyImp(RequestCallback requestCallback) throws MatlabConnectionException
     {
         //Unique identifier for the proxy
         RemoteIdentifier proxyID = new RemoteIdentifier();
@@ -114,7 +152,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory
         try
         {
             if(_options.getCopyPasteCallback() != null) {
-            	// send the copy-paste code to the user, and then begin the request
+                // send the copy-paste code to the user, and then begin the request
                 _options.getCopyPasteCallback().copyPaste(getRunArg(receiver));
                 request = new RemoteRequest(proxyID, null, receiver, maintainer);
             } 
