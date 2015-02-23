@@ -48,6 +48,7 @@ class ThrowableWrapper extends Throwable
      */
     ThrowableWrapper(Throwable innerThrowable)
     {
+    	super(msgFromToString(innerThrowable));
         //Store innerThrowable's toString() value
         _toString = innerThrowable.toString();
         
@@ -58,6 +59,21 @@ class ThrowableWrapper extends Throwable
         if(innerThrowable.getCause() != null)
         {
             this.initCause(new ThrowableWrapper(innerThrowable.getCause()));
+        }
+    }
+    
+    /**
+     * The innerThrowable seems to not implement getMessage() properly.
+     * 
+     * So we extract the message from the exception's toString() method.
+     */
+    static String msgFromToString(Throwable e) {
+        String msg = e.toString();
+        int idx = msg.indexOf(':');
+        if (idx >= 0 && idx < msg.length() - 1) {
+            return msg.substring(idx + 1);
+        } else {
+            return msg;
         }
     }
     
