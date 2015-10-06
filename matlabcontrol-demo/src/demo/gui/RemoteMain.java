@@ -1,5 +1,3 @@
-package demo.gui;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package demo.gui;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package demo.gui;
 
 import java.awt.EventQueue;
 
@@ -31,23 +30,19 @@ import javax.swing.WindowConstants;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class RemoteMain
-{
-    public static void main(String[] args)
-    {   
-        OSXAppearance.applyIfApplicable();
-        
-        final String matlabLocation = (args.length == 1 ? args[0] : null);
-        
-        EventQueue.invokeLater(new Runnable()
-        {
-            @Override
-            public void run()
-            {
-                DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB", matlabLocation);
-                frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-                frame.setVisible(true);
-            }
-        });
-    }
+public class RemoteMain {
+	public static void main(String[] args) {
+		OSXAppearance.applyIfApplicable();
+
+		final String matlabLocation = (args.length == 1 ? args[0] : null);
+
+		EventQueue.invokeLater(new Runnable() {
+			@Override
+			public void run() {
+				DemoFrame frame = new DemoFrame("matlabcontrol demo - Running Outside MATLAB", matlabLocation);
+				frame.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+				frame.setVisible(true);
+			}
+		});
+	}
 }

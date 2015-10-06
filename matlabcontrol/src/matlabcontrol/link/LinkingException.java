@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 /**
  * Issue linking a Java method to a MATLAB function.
@@ -28,17 +27,14 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class LinkingException extends RuntimeException
-{
-    private static final long serialVersionUID = 0xD500L;
-    
-    LinkingException(String msg)
-    {
-        super(msg);
-    }
+public class LinkingException extends RuntimeException {
+	private static final long serialVersionUID = 0xD500L;
 
-    LinkingException(String msg, Throwable cause)
-    {
-        super(msg, cause);
-    }
+	LinkingException(String msg) {
+		super(msg);
+	}
+
+	LinkingException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
 }

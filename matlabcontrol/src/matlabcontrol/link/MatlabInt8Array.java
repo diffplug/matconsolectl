@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 import java.util.Arrays;
 
@@ -30,86 +29,73 @@ import java.util.Arrays;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  * @param <M> {@code byte} array type, ex. {@code byte[]}, {@code byte[][]}, {@code byte[][][]}, ...
  */
-public class MatlabInt8Array<T> extends MatlabNumberArray<byte[], T>
-{
-    MatlabInt8Array(byte[] real, byte[] imag, int[] lengths)
-    {
-        super(byte[].class, real, imag, lengths);
-    }
-    
-    public static <T> MatlabInt8Array<T> getInstance(T real, T imaginary)
-    {
-        return new MatlabInt8Array(real, imaginary);
-    }
-    
-    private MatlabInt8Array(T real, T imaginary)
-    {
-        super(byte[].class, real, imaginary);
-    }
-        
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
-     */
-    @Override
-    public MatlabInt8 getElementAtLinearIndex(int index)
-    {
-        return new MatlabInt8(_real[index], (_imag == null ? 0 : _imag[index]));
-    }
-        
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws IllegalArgumentException {@inheritDoc}
-     * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
-     */
-    @Override
-    public MatlabInt8 getElementAtIndices(int row, int column, int... pages)
-    {
-        int linearIndex = getLinearIndex(row, column, pages);
-        
-        return new MatlabInt8(_real[linearIndex], (_imag == null ? 0 : _imag[linearIndex]));
-    }
+public class MatlabInt8Array<T> extends MatlabNumberArray<byte[], T> {
+	MatlabInt8Array(byte[] real, byte[] imag, int[] lengths) {
+		super(byte[].class, real, imag, lengths);
+	}
 
-    @Override
-    boolean equalsRealArray(byte[] other)
-    {
-        return Arrays.equals(_real, other);
-    }
+	public static <T> MatlabInt8Array<T> getInstance(T real, T imaginary) {
+		return new MatlabInt8Array(real, imaginary);
+	}
 
-    @Override
-    boolean equalsImaginaryArray(byte[] other)
-    {
-        return Arrays.equals(_imag, other);
-    }
+	private MatlabInt8Array(T real, T imaginary) {
+		super(byte[].class, real, imaginary);
+	}
 
-    @Override
-    int hashReal()
-    {
-        return Arrays.hashCode(_real);
-    }
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
+	 */
+	@Override
+	public MatlabInt8 getElementAtLinearIndex(int index) {
+		return new MatlabInt8(_real[index], (_imag == null ? 0 : _imag[index]));
+	}
 
-    @Override
-    int hashImaginary()
-    {
-        return Arrays.hashCode(_imag);
-    }
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @throws IllegalArgumentException {@inheritDoc}
+	 * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
+	 */
+	@Override
+	public MatlabInt8 getElementAtIndices(int row, int column, int... pages) {
+		int linearIndex = getLinearIndex(row, column, pages);
 
-    @Override
-    boolean containsNonZero(byte[] array)
-    {
-        boolean contained = false;
-        
-        for(byte val : array)
-        {
-            if(val != 0)
-            {
-                contained = true;
-                break;
-            }
-        }
-        
-        return contained;
-    }
+		return new MatlabInt8(_real[linearIndex], (_imag == null ? 0 : _imag[linearIndex]));
+	}
+
+	@Override
+	boolean equalsRealArray(byte[] other) {
+		return Arrays.equals(_real, other);
+	}
+
+	@Override
+	boolean equalsImaginaryArray(byte[] other) {
+		return Arrays.equals(_imag, other);
+	}
+
+	@Override
+	int hashReal() {
+		return Arrays.hashCode(_real);
+	}
+
+	@Override
+	int hashImaginary() {
+		return Arrays.hashCode(_imag);
+	}
+
+	@Override
+	boolean containsNonZero(byte[] array) {
+		boolean contained = false;
+
+		for (byte val : array) {
+			if (val != 0) {
+				contained = true;
+				break;
+			}
+		}
+
+		return contained;
+	}
 }

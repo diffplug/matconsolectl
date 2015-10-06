@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 import java.util.Arrays;
 
@@ -30,86 +29,73 @@ import java.util.Arrays;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  * @param <T> {@code long} array type, ex. {@code long[]}, {@code long[][]}, {@code long[][][]}, ...
  */
-public class MatlabInt64Array<T> extends MatlabNumberArray<long[], T>
-{
-    MatlabInt64Array(long[] real, long[] imag, int[] lengths)
-    {
-        super(long[].class, real, imag, lengths);
-    }
-    
-    public static <T> MatlabInt64Array<T> getInstance(T real, T imaginary)
-    {
-        return new MatlabInt64Array(real, imaginary);
-    }
-    
-    private MatlabInt64Array(T real, T imaginary)
-    {
-        super(long[].class, real, imaginary);
-    }
-    
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
-     */
-    @Override
-    public MatlabInt64 getElementAtLinearIndex(int index)
-    {
-        return new MatlabInt64(_real[index], (_imag == null ? 0 : _imag[index]));
-    }
-        
-    /**
-     * {@inheritDoc}
-     * 
-     * @throws IllegalArgumentException {@inheritDoc}
-     * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
-     */
-    @Override
-    public MatlabInt64 getElementAtIndices(int row, int column, int... pages)
-    {
-        int linearIndex = getLinearIndex(row, column, pages);
-        
-        return new MatlabInt64(_real[linearIndex], (_imag == null ? 0 : _imag[linearIndex]));
-    }
+public class MatlabInt64Array<T> extends MatlabNumberArray<long[], T> {
+	MatlabInt64Array(long[] real, long[] imag, int[] lengths) {
+		super(long[].class, real, imag, lengths);
+	}
 
-    @Override
-    boolean equalsRealArray(long[] other)
-    {
-        return Arrays.equals(_real, other);
-    }
+	public static <T> MatlabInt64Array<T> getInstance(T real, T imaginary) {
+		return new MatlabInt64Array(real, imaginary);
+	}
 
-    @Override
-    boolean equalsImaginaryArray(long[] other)
-    {
-        return Arrays.equals(_imag, other);
-    }
+	private MatlabInt64Array(T real, T imaginary) {
+		super(long[].class, real, imaginary);
+	}
 
-    @Override
-    int hashReal()
-    {
-        return Arrays.hashCode(_real);
-    }
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
+	 */
+	@Override
+	public MatlabInt64 getElementAtLinearIndex(int index) {
+		return new MatlabInt64(_real[index], (_imag == null ? 0 : _imag[index]));
+	}
 
-    @Override
-    int hashImaginary()
-    {
-        return Arrays.hashCode(_imag);
-    }
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @throws IllegalArgumentException {@inheritDoc}
+	 * @throws ArrayIndexOutOfBoundsException {@inheritDoc}
+	 */
+	@Override
+	public MatlabInt64 getElementAtIndices(int row, int column, int... pages) {
+		int linearIndex = getLinearIndex(row, column, pages);
 
-    @Override
-    boolean containsNonZero(long[] array)
-    {
-        boolean contained = false;
-        
-        for(long val : array)
-        {
-            if(val != 0L)
-            {
-                contained = true;
-                break;
-            }
-        }
-        
-        return contained;
-    }
+		return new MatlabInt64(_real[linearIndex], (_imag == null ? 0 : _imag[linearIndex]));
+	}
+
+	@Override
+	boolean equalsRealArray(long[] other) {
+		return Arrays.equals(_real, other);
+	}
+
+	@Override
+	boolean equalsImaginaryArray(long[] other) {
+		return Arrays.equals(_imag, other);
+	}
+
+	@Override
+	int hashReal() {
+		return Arrays.hashCode(_real);
+	}
+
+	@Override
+	int hashImaginary() {
+		return Arrays.hashCode(_imag);
+	}
+
+	@Override
+	boolean containsNonZero(long[] array) {
+		boolean contained = false;
+
+		for (long val : array) {
+			if (val != 0L) {
+				contained = true;
+				break;
+			}
+		}
+
+		return contained;
+	}
 }

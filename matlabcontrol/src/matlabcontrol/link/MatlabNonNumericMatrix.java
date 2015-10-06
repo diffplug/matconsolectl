@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 /**
  * 
@@ -28,16 +27,14 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-abstract class MatlabNonNumericMatrix<L, T> extends MatlabMatrix<L, T>
-{
-    /**
-     * Returns an array that holds the values from the MATLAB matrix. Each call returns a new copy which may be used in
-     * any manner; modifications to it will have no effect on this instance.
-     * 
-     * @return array
-     */
-    public T toArray()
-    {
-        return getBaseArray().toRealArray();
-    }
+abstract class MatlabNonNumericMatrix<L, T> extends MatlabMatrix<L, T> {
+	/**
+	 * Returns an array that holds the values from the MATLAB matrix. Each call returns a new copy which may be used in
+	 * any manner; modifications to it will have no effect on this instance.
+	 * 
+	 * @return array
+	 */
+	public T toArray() {
+		return getBaseArray().toRealArray();
+	}
 }

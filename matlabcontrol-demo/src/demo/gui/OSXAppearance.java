@@ -1,5 +1,3 @@
-package demo.gui;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package demo.gui;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package demo.gui;
 
 import java.awt.Image;
 import java.lang.reflect.Method;
@@ -32,33 +31,29 @@ import javax.imageio.ImageIO;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class OSXAppearance
-{
-    static void applyIfApplicable()
-    {
-        String osName = System.getProperties().getProperty("os.name");
+class OSXAppearance {
+	static void applyIfApplicable() {
+		String osName = System.getProperties().getProperty("os.name");
 
-        if(osName != null && osName.startsWith("Mac OS X"))
-        {   
-            //Set the System menu bar to be 'matlabcontrol demo'
-            System.setProperty("com.apple.mrj.application.apple.menu.about.name", "matlabcontrol demo");
+		if (osName != null && osName.startsWith("Mac OS X")) {
+			//Set the System menu bar to be 'matlabcontrol demo'
+			System.setProperty("com.apple.mrj.application.apple.menu.about.name", "matlabcontrol demo");
 
-            //Set the dock icon using reflection so that no OS X specific classes are referenced - which would be a
-            //problem on other platforms
-            try
-            {
-                Image dockIcon = ImageIO.read(OSXAppearance.class.getResource("/demo/gui/icon.png"));
+			//Set the dock icon using reflection so that no OS X specific classes are referenced - which would be a
+			//problem on other platforms
+			try {
+				Image dockIcon = ImageIO.read(OSXAppearance.class.getResource("/demo/gui/icon.png"));
 
-                //The following is equivalent to:
-                // com.apple.eawt.Application.getApplication().setDockIconImage(dockIcon);
-                Class<?> appClass = Class.forName("com.apple.eawt.Application");
-                Method getAppMethod = appClass.getMethod("getApplication");
-                Object appInstance = getAppMethod.invoke(null);
-                Method dockMethod = appInstance.getClass().getMethod("setDockIconImage", java.awt.Image.class);
-                dockMethod.invoke(appInstance, dockIcon);
-            }
-            //If this does not work, it does not actually matter
-            catch(Exception e) { }
-        }
-    }
+				//The following is equivalent to:
+				// com.apple.eawt.Application.getApplication().setDockIconImage(dockIcon);
+				Class<?> appClass = Class.forName("com.apple.eawt.Application");
+				Method getAppMethod = appClass.getMethod("getApplication");
+				Object appInstance = getAppMethod.invoke(null);
+				Method dockMethod = appInstance.getClass().getMethod("setDockIconImage", java.awt.Image.class);
+				dockMethod.invoke(appInstance, dockIcon);
+			}
+			//If this does not work, it does not actually matter
+			catch (Exception e) {}
+		}
+	}
 }

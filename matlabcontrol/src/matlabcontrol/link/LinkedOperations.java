@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
@@ -31,60 +30,51 @@ import matlabcontrol.MatlabProxy;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public final class LinkedOperations implements MatlabOperations
-{
-    private final MatlabProxy _delegateProxy;
-    private final MatlabOperations _delegateOperations;
-    
-    public LinkedOperations(MatlabProxy proxy)
-    {
-        _delegateProxy = proxy;
-        _delegateOperations = Linker.getLinkedMatlabOperations(proxy);
-    }
+public final class LinkedOperations implements MatlabOperations {
+	private final MatlabProxy _delegateProxy;
+	private final MatlabOperations _delegateOperations;
 
-    @Override
-    public void eval(String command) throws MatlabInvocationException
-    {
-        _delegateOperations.eval(command);
-    }
+	public LinkedOperations(MatlabProxy proxy) {
+		_delegateProxy = proxy;
+		_delegateOperations = Linker.getLinkedMatlabOperations(proxy);
+	}
 
-    @Override
-    public Object[] returningEval(String command, int nargout) throws MatlabInvocationException
-    {
-        return _delegateOperations.returningEval(command, nargout);
-    }
+	@Override
+	public void eval(String command) throws MatlabInvocationException {
+		_delegateOperations.eval(command);
+	}
 
-    @Override
-    public void feval(String functionName, Object... args) throws MatlabInvocationException
-    {
-        _delegateOperations.feval(functionName, args);
-    }
+	@Override
+	public Object[] returningEval(String command, int nargout) throws MatlabInvocationException {
+		return _delegateOperations.returningEval(command, nargout);
+	}
 
-    @Override
-    public Object[] returningFeval(String functionName, int nargout, Object... args) throws MatlabInvocationException
-    {
-        return _delegateOperations.returningFeval(functionName, nargout, args);
-    }
+	@Override
+	public void feval(String functionName, Object... args) throws MatlabInvocationException {
+		_delegateOperations.feval(functionName, args);
+	}
 
-    @Override
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
-    {
-        _delegateOperations.setVariable(variableName, value);
-    }
+	@Override
+	public Object[] returningFeval(String functionName, int nargout, Object... args) throws MatlabInvocationException {
+		return _delegateOperations.returningFeval(functionName, nargout, args);
+	}
 
-    @Override
-    public Object getVariable(String variableName) throws MatlabInvocationException
-    {
-        return _delegateOperations.getVariable(variableName);
-    }
-    
-    /**
-     * The proxy used to communicate with MATLAB.
-     * 
-     * @return proxy
-     */
-    public MatlabProxy getDelegateProxy()
-    {
-        return _delegateProxy;
-    }
+	@Override
+	public void setVariable(String variableName, Object value) throws MatlabInvocationException {
+		_delegateOperations.setVariable(variableName, value);
+	}
+
+	@Override
+	public Object getVariable(String variableName) throws MatlabInvocationException {
+		return _delegateOperations.getVariable(variableName);
+	}
+
+	/**
+	 * The proxy used to communicate with MATLAB.
+	 * 
+	 * @return proxy
+	 */
+	public MatlabProxy getDelegateProxy() {
+		return _delegateProxy;
+	}
 }

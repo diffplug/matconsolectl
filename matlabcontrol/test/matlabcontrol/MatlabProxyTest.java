@@ -1,11 +1,3 @@
-package matlabcontrol;
-
-import static junit.framework.Assert.*;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -27,56 +19,56 @@ import org.junit.Test;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
+
+import static junit.framework.Assert.*;
+
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 /**
  *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabProxyTest
-{
-    private static MatlabProxy _proxy;
-    
-    @BeforeClass
-    public static void createProxy() throws MatlabConnectionException
-    {
-        MatlabProxyFactory factory = new MatlabProxyFactory();
-        _proxy = factory.getProxy();
-    }
-    
-    @AfterClass
-    public static void exitMatlab() throws MatlabInvocationException
-    {
-        if(_proxy != null)
-        {
-            _proxy.exit();
-        }
-    }
-    
-    @Before
-    public void clear() throws MatlabInvocationException
-    {
-        _proxy.eval("clear");
-    }
-    
-    @Test
-    public void testSetVariable() throws MatlabInvocationException
-    {
-        _proxy.setVariable("a", 5);
-    }
-    
-    @Test
-    public void testSetGetVariable() throws MatlabInvocationException
-    {
-        double expected = 5;
-        _proxy.setVariable("a", expected);
-        Object result = _proxy.getVariable("a");
-        double actual = ((double[]) result)[0];
-        assertEquals(expected, actual, 0);
-    }
-    
-    @Test
-    public void testEval() throws MatlabInvocationException
-    {
-        _proxy.eval("disp('Hello World')");
-    }
+public class MatlabProxyTest {
+	private static MatlabProxy _proxy;
+
+	@BeforeClass
+	public static void createProxy() throws MatlabConnectionException {
+		MatlabProxyFactory factory = new MatlabProxyFactory();
+		_proxy = factory.getProxy();
+	}
+
+	@AfterClass
+	public static void exitMatlab() throws MatlabInvocationException {
+		if (_proxy != null) {
+			_proxy.exit();
+		}
+	}
+
+	@Before
+	public void clear() throws MatlabInvocationException {
+		_proxy.eval("clear");
+	}
+
+	@Test
+	public void testSetVariable() throws MatlabInvocationException {
+		_proxy.setVariable("a", 5);
+	}
+
+	@Test
+	public void testSetGetVariable() throws MatlabInvocationException {
+		double expected = 5;
+		_proxy.setVariable("a", expected);
+		Object result = _proxy.getVariable("a");
+		double actual = ((double[]) result)[0];
+		assertEquals(expected, actual, 0);
+	}
+
+	@Test
+	public void testEval() throws MatlabInvocationException {
+		_proxy.eval("disp('Hello World')");
+	}
 }

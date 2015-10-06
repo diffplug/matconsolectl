@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 /**
  * Thrown if a MATLAB type cannot be returned from MATLAB to Java because it is not supported.
@@ -28,12 +27,10 @@ package matlabcontrol.link;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class UnsupportedReturnException extends RuntimeException
-{
-    private static final long serialVersionUID = 0xF500L;
-    
-    UnsupportedReturnException(String msg)
-    {
-        super(msg);
-    }
+public class UnsupportedReturnException extends RuntimeException {
+	private static final long serialVersionUID = 0xF500L;
+
+	UnsupportedReturnException(String msg) {
+		super(msg);
+	}
 }

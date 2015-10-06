@@ -1,10 +1,3 @@
-package matlabcontrol;
-
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
-import junit.framework.Assert;
-import org.junit.Test;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -26,42 +19,44 @@ import org.junit.Test;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
+
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
+
+import junit.framework.Assert;
+
+import org.junit.Test;
 
 /**
  *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabProxyFactoryTest
-{
-    @Test
-    public void createFactory()
-    {
-        MatlabProxyFactory factory = new MatlabProxyFactory();
-    }
-    
-    @Test
-    public void getProxy() throws MatlabConnectionException, MatlabInvocationException
-    {
-        MatlabProxyFactory factory = new MatlabProxyFactory();
-        MatlabProxy proxy = factory.getProxy();
-        proxy.exit();
-    }
-    
-    @Test
-    public void requestProxy() throws MatlabConnectionException, MatlabInvocationException, InterruptedException
-    {
-        MatlabProxyFactory factory = new MatlabProxyFactory();
-        final ArrayBlockingQueue<MatlabProxy> proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
-        factory.requestProxy(new MatlabProxyFactory.RequestCallback()
-        {
-            @Override
-            public void proxyCreated(MatlabProxy proxy)
-            {
-                proxyQueue.add(proxy);
-            }
-        });
-        
-        MatlabProxy proxy = proxyQueue.take();
-        proxy.exit();
-    }
+public class MatlabProxyFactoryTest {
+	@Test
+	public void createFactory() {
+		MatlabProxyFactory factory = new MatlabProxyFactory();
+	}
+
+	@Test
+	public void getProxy() throws MatlabConnectionException, MatlabInvocationException {
+		MatlabProxyFactory factory = new MatlabProxyFactory();
+		MatlabProxy proxy = factory.getProxy();
+		proxy.exit();
+	}
+
+	@Test
+	public void requestProxy() throws MatlabConnectionException, MatlabInvocationException, InterruptedException {
+		MatlabProxyFactory factory = new MatlabProxyFactory();
+		final ArrayBlockingQueue<MatlabProxy> proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
+		factory.requestProxy(new MatlabProxyFactory.RequestCallback() {
+			@Override
+			public void proxyCreated(MatlabProxy proxy) {
+				proxyQueue.add(proxy);
+			}
+		});
+
+		MatlabProxy proxy = proxyQueue.take();
+		proxy.exit();
+	}
 }

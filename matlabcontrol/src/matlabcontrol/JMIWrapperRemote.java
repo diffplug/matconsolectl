@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -38,29 +37,28 @@ import java.rmi.RemoteException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface JMIWrapperRemote extends Remote
-{
-    public void exit() throws RemoteException;
-    
-    public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException;
+interface JMIWrapperRemote extends Remote {
+	public void exit() throws RemoteException;
 
-    public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException;
-    
-    public void eval(String command) throws RemoteException, MatlabInvocationException;
-    
-    public Object[] returningEval(String command, int nargout) throws RemoteException, MatlabInvocationException;
-    
-    public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
-    
-    public Object[] returningFeval(String command, int nargout, Object... args) throws RemoteException, MatlabInvocationException;
-    
-    public <U> U invokeAndWait(MatlabProxy.MatlabThreadCallable<U> callable) throws RemoteException, MatlabInvocationException;
-    
-    /**
-     * This method does nothing. It is used internally to check if a connection is still active via calling this method
-     * and seeing if it throws a {@code RemoteException} (if it does, the connection is no longer active).
-     * 
-     * @throws RemoteException
-     */
-    public void checkConnection() throws RemoteException;
+	public void setVariable(String variableName, Object value) throws RemoteException, MatlabInvocationException;
+
+	public Object getVariable(String variableName) throws RemoteException, MatlabInvocationException;
+
+	public void eval(String command) throws RemoteException, MatlabInvocationException;
+
+	public Object[] returningEval(String command, int nargout) throws RemoteException, MatlabInvocationException;
+
+	public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+
+	public Object[] returningFeval(String command, int nargout, Object... args) throws RemoteException, MatlabInvocationException;
+
+	public <U> U invokeAndWait(MatlabProxy.MatlabThreadCallable<U> callable) throws RemoteException, MatlabInvocationException;
+
+	/**
+	 * This method does nothing. It is used internally to check if a connection is still active via calling this method
+	 * and seeing if it throws a {@code RemoteException} (if it does, the connection is no longer active).
+	 * 
+	 * @throws RemoteException
+	 */
+	public void checkConnection() throws RemoteException;
 }

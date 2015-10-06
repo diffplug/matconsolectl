@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 import java.io.Serializable;
 
@@ -39,47 +38,44 @@ import matlabcontrol.MatlabOperations;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-abstract class MatlabType
-{   
-    MatlabType() { }
-    
-    abstract MatlabTypeSetter getSetter();
-       
-    /**
-     * Retrieves in MATLAB the information necessary to create the associated {@code MatlabType} from a given MATLAB
-     * variable.
-     * <br><br>
-     * Must have an accessible no argument constructor.
-     * 
-     * @param <U> 
-     */
-    static interface MatlabTypeGetter extends Serializable
-    {
-        /**
-         * Takes the information retrieved by the
-         * {@link #getInMatlab(matlabcontrol.MatlabOperations, java.lang.String)} and creates the
-         * associated {@code MatlabType}.
-         * 
-         * @return 
-         */
-        public Object retrieve();
-        
-        /**
-         * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information
-         * {@link #retrieve()} can be called to create the appropriate {@code MatlabType}.
-         * 
-         * @param ops
-         * @param variableName 
-         */
-        public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
-    }
-    
-    /**
-     * Sets in MATLAB the equivalent of the data represented by the {@code MatlabType} that provides an instance of
-     * an implementation of this class.
-     */
-    static interface MatlabTypeSetter extends Serializable
-    {
-        public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
-    }
+abstract class MatlabType {
+	MatlabType() {}
+
+	abstract MatlabTypeSetter getSetter();
+
+	/**
+	 * Retrieves in MATLAB the information necessary to create the associated {@code MatlabType} from a given MATLAB
+	 * variable.
+	 * <br><br>
+	 * Must have an accessible no argument constructor.
+	 * 
+	 * @param <U> 
+	 */
+	static interface MatlabTypeGetter extends Serializable {
+		/**
+		 * Takes the information retrieved by the
+		 * {@link #getInMatlab(matlabcontrol.MatlabOperations, java.lang.String)} and creates the
+		 * associated {@code MatlabType}.
+		 * 
+		 * @return 
+		 */
+		public Object retrieve();
+
+		/**
+		 * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information
+		 * {@link #retrieve()} can be called to create the appropriate {@code MatlabType}.
+		 * 
+		 * @param ops
+		 * @param variableName 
+		 */
+		public void getInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
+	}
+
+	/**
+	 * Sets in MATLAB the equivalent of the data represented by the {@code MatlabType} that provides an instance of
+	 * an implementation of this class.
+	 */
+	static interface MatlabTypeSetter extends Serializable {
+		public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException;
+	}
 }

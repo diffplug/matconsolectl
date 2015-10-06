@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -32,17 +31,16 @@ import java.rmi.RemoteException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface MatlabSession extends Remote
-{
-    /**
-     * Attempts a connection to this session of MATLAB. If this session is available for connection it will send a
-     * {@link JMIWrapperRemote} to the receiver and {@code true} will be returned. Otherwise {@code false} will be
-     * returned and no other action will be taken.
-     * 
-     * @param receiverID
-     * @param port
-     * @throws RemoteException
-     * @return if connection was established
-     */
-    public boolean connectFromRMI(String receiverID, int port) throws RemoteException;
+interface MatlabSession extends Remote {
+	/**
+	 * Attempts a connection to this session of MATLAB. If this session is available for connection it will send a
+	 * {@link JMIWrapperRemote} to the receiver and {@code true} will be returned. Otherwise {@code false} will be
+	 * returned and no other action will be taken.
+	 * 
+	 * @param receiverID
+	 * @param port
+	 * @throws RemoteException
+	 * @return if connection was established
+	 */
+	public boolean connectFromRMI(String receiverID, int port) throws RemoteException;
 }

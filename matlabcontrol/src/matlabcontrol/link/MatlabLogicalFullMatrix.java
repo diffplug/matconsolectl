@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,53 +19,46 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 /**
  *
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabLogicalFullMatrix<T> extends MatlabLogicalMatrix<T>
-{
-    private final FullArray<boolean[], T> _array;
+class MatlabLogicalFullMatrix<T> extends MatlabLogicalMatrix<T> {
+	private final FullArray<boolean[], T> _array;
 
-    MatlabLogicalFullMatrix(boolean[] values, int[] dimensions)
-    {
-        _array = new FullArray<boolean[], T>(boolean[].class, values, null, dimensions);
-    }
-    
-    MatlabLogicalFullMatrix(T values)
-    {
-        _array = new FullArray<boolean[], T>(boolean[].class, values, null);
-    }
+	MatlabLogicalFullMatrix(boolean[] values, int[] dimensions) {
+		_array = new FullArray<boolean[], T>(boolean[].class, values, null, dimensions);
+	}
 
-    @Override
-    BaseArray<boolean[], T> getBaseArray()
-    {
-        return _array;
-    }
-    
-    @Override
-    public boolean getElementAtLinearIndex(int linearIndex)
-    {
-        return _array._real[linearIndex];
-    }
+	MatlabLogicalFullMatrix(T values) {
+		_array = new FullArray<boolean[], T>(boolean[].class, values, null);
+	}
 
-    @Override
-    public boolean getElementAtIndices(int row, int column)
-    {
-        return _array._real[_array.getLinearIndex(row, column)];
-    }
+	@Override
+	BaseArray<boolean[], T> getBaseArray() {
+		return _array;
+	}
 
-    @Override
-    public boolean getElementAtIndices(int row, int column, int page)
-    {
-        return _array._real[_array.getLinearIndex(row, column, page)];
-    }
+	@Override
+	public boolean getElementAtLinearIndex(int linearIndex) {
+		return _array._real[linearIndex];
+	}
 
-    @Override
-    public boolean getElementAtIndices(int row, int column, int[] pages)
-    {
-        return _array._real[_array.getLinearIndex(row, column, pages)];
-    }
+	@Override
+	public boolean getElementAtIndices(int row, int column) {
+		return _array._real[_array.getLinearIndex(row, column)];
+	}
+
+	@Override
+	public boolean getElementAtIndices(int row, int column, int page) {
+		return _array._real[_array.getLinearIndex(row, column, page)];
+	}
+
+	@Override
+	public boolean getElementAtIndices(int row, int column, int[] pages) {
+		return _array._real[_array.getLinearIndex(row, column, pages)];
+	}
 }

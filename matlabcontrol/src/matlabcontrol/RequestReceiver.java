@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -33,40 +32,39 @@ import java.rmi.RemoteException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-interface RequestReceiver extends Remote
-{
-    /**
-     * Receives an incoming wrapper around the JMI functionality inside of MATLAB.
-     * <br><br>
-     * This method is to be called by {@link MatlabConnector} running inside of MATLAB's JVM.
-     * 
-     * @param jmiWrapper
-     * @param existingSession if the session sending the jmiWrapper was running prior to the request to create the proxy
-     * @throws RemoteException 
-     */
-    public void receiveJMIWrapper(JMIWrapperRemote jmiWrapper, boolean existingSession) throws RemoteException;
-    
-    /**
-     * The identifier of the receiver.
-     * 
-     * @return
-     * @throws RemoteException 
-     */
-    public String getReceiverID() throws RemoteException;
-    
-    /**
-     * The classpath of the VM the receiver was created in encoded as an RMI codebase.
-     * 
-     * @return
-     * @throws RemoteException 
-     */
-    public String getClassPathAsRMICodebase() throws RemoteException;
-    
-    /**
-     * The classpath of the VM the receiver was created in encoded as canonical paths.
-     * 
-     * @return
-     * @throws RemoteException 
-     */
-    public String[] getClassPathAsCanonicalPaths() throws RemoteException;
+interface RequestReceiver extends Remote {
+	/**
+	 * Receives an incoming wrapper around the JMI functionality inside of MATLAB.
+	 * <br><br>
+	 * This method is to be called by {@link MatlabConnector} running inside of MATLAB's JVM.
+	 * 
+	 * @param jmiWrapper
+	 * @param existingSession if the session sending the jmiWrapper was running prior to the request to create the proxy
+	 * @throws RemoteException 
+	 */
+	public void receiveJMIWrapper(JMIWrapperRemote jmiWrapper, boolean existingSession) throws RemoteException;
+
+	/**
+	 * The identifier of the receiver.
+	 * 
+	 * @return
+	 * @throws RemoteException 
+	 */
+	public String getReceiverID() throws RemoteException;
+
+	/**
+	 * The classpath of the VM the receiver was created in encoded as an RMI codebase.
+	 * 
+	 * @return
+	 * @throws RemoteException 
+	 */
+	public String getClassPathAsRMICodebase() throws RemoteException;
+
+	/**
+	 * The classpath of the VM the receiver was created in encoded as canonical paths.
+	 * 
+	 * @return
+	 * @throws RemoteException 
+	 */
+	public String[] getClassPathAsCanonicalPaths() throws RemoteException;
 }

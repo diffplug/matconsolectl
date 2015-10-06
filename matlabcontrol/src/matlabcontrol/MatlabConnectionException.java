@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 /**
  * Represents a failure to connect to MATLAB or make MATLAB available for a connection.
@@ -29,17 +28,14 @@ package matlabcontrol;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabConnectionException extends Exception
-{
-    private static final long serialVersionUID = 0xA400L;
+public class MatlabConnectionException extends Exception {
+	private static final long serialVersionUID = 0xA400L;
 
-    MatlabConnectionException(String msg)
-    {
-        super(msg);
-    }
-    
-    MatlabConnectionException(String msg, Throwable cause)
-    {
-        super(msg, cause);
-    }
+	MatlabConnectionException(String msg) {
+		super(msg);
+	}
+
+	MatlabConnectionException(String msg, Throwable cause) {
+		super(msg, cause);
+	}
 }

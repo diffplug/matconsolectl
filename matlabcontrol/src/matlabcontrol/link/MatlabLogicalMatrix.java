@@ -1,5 +1,3 @@
-package matlabcontrol.link;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,34 +19,30 @@ package matlabcontrol.link;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol.link;
 
 /**
  *
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public abstract class MatlabLogicalMatrix<T> extends MatlabNonNumericMatrix<boolean[], T>
-{
-    MatlabLogicalMatrix() { }
-    
-    public static <T> MatlabLogicalMatrix<T> getFull(T values)
-    {
-        return new MatlabLogicalFullMatrix<T>(values);
-    }
-    
-    public static MatlabLogicalMatrix<boolean[][]> getSparse(int[] rowIndices, int[] colIndices, boolean[] values,
-            int numRows, int numCols)
-    {
-        return new MatlabLogicalSparseMatrix(rowIndices, colIndices, values, numRows, numCols);
-    }
-    
-    public abstract boolean getElementAtLinearIndex(int linearIndex);
-    
-    
-    
-    public abstract boolean getElementAtIndices(int row, int column);
-    
-    public abstract boolean getElementAtIndices(int row, int column, int page);
-    
-    public abstract boolean getElementAtIndices(int row, int column, int[] pages);
+public abstract class MatlabLogicalMatrix<T> extends MatlabNonNumericMatrix<boolean[], T> {
+	MatlabLogicalMatrix() {}
+
+	public static <T> MatlabLogicalMatrix<T> getFull(T values) {
+		return new MatlabLogicalFullMatrix<T>(values);
+	}
+
+	public static MatlabLogicalMatrix<boolean[][]> getSparse(int[] rowIndices, int[] colIndices, boolean[] values,
+			int numRows, int numCols) {
+		return new MatlabLogicalSparseMatrix(rowIndices, colIndices, values, numRows, numCols);
+	}
+
+	public abstract boolean getElementAtLinearIndex(int linearIndex);
+
+	public abstract boolean getElementAtIndices(int row, int column);
+
+	public abstract boolean getElementAtIndices(int row, int column, int page);
+
+	public abstract boolean getElementAtIndices(int row, int column, int[] pages);
 }

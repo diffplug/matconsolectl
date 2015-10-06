@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.lang.reflect.Method;
 import java.net.URL;
@@ -68,77 +67,64 @@ import java.net.URLClassLoader;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class MatlabClassLoaderHelper
-{   
-    /**
-     * Configures class loading to work properly with RMI inside MATLAB. See the class description for more detail.
-     * Called from within MATLAB when {@link RemoteMatlabProxyFactory} launches a session of MATLAB.
-     * 
-     * @throws MatlabConnectionException 
-     */
-    public static void configureClassLoading() throws MatlabConnectionException
-    {
-        if(!isOnSystemClassLoader())
-        {   
-            addToSystemClassLoader();
-        }
-    }
-    
-    /**
-     * Determines if matlabcontrol is on the system class loader's class path.
-     * 
-     * @return
-     * @throws MatlabConnectionException 
-     */
-    private static boolean isOnSystemClassLoader() throws MatlabConnectionException
-    {   
-        URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
-        
-        try
-        {
-            URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-            URL[] urls = systemClassLoader.getURLs();
+class MatlabClassLoaderHelper {
+	/**
+	 * Configures class loading to work properly with RMI inside MATLAB. See the class description for more detail.
+	 * Called from within MATLAB when {@link RemoteMatlabProxyFactory} launches a session of MATLAB.
+	 * 
+	 * @throws MatlabConnectionException 
+	 */
+	public static void configureClassLoading() throws MatlabConnectionException {
+		if (!isOnSystemClassLoader()) {
+			addToSystemClassLoader();
+		}
+	}
 
-            boolean onClasspath = false;
-            for(URL url : urls)
-            {
-                if(url.equals(matlabcontrolLocation))
-                {
-                    onClasspath = true;
-                    break;
-                }
-            }
-        
-            return onClasspath;
-        }
-        catch(ClassCastException e)
-        {
-            throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class " +
-                    "loader's classpath", e);
-        }
-    }
-    
-    /**
-     * Adds the location where matlabcontrol exists to the system class loader.
-     * 
-     * @throws MatlabConnectionException 
-     */
-    private static void addToSystemClassLoader() throws MatlabConnectionException
-    {   
-        URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
-        
-        try
-        {
-            URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader(); 
-            Class<URLClassLoader> classLoaderClass = URLClassLoader.class; 
+	/**
+	 * Determines if matlabcontrol is on the system class loader's class path.
+	 * 
+	 * @return
+	 * @throws MatlabConnectionException 
+	 */
+	private static boolean isOnSystemClassLoader() throws MatlabConnectionException {
+		URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
 
-            Method method = classLoaderClass.getDeclaredMethod("addURL", URL.class); 
-            method.setAccessible(true); 
-            method.invoke(systemClassLoader, matlabcontrolLocation);
-        }
-        catch(Exception e)
-        {
-            throw new MatlabConnectionException("Unable to add matlabcontrol to system class loader", e);
-        }
-    }
+		try {
+			URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+			URL[] urls = systemClassLoader.getURLs();
+
+			boolean onClasspath = false;
+			for (URL url : urls) {
+				if (url.equals(matlabcontrolLocation)) {
+					onClasspath = true;
+					break;
+				}
+			}
+
+			return onClasspath;
+		} catch (ClassCastException e) {
+			throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class " +
+					"loader's classpath", e);
+		}
+	}
+
+	/**
+	 * Adds the location where matlabcontrol exists to the system class loader.
+	 * 
+	 * @throws MatlabConnectionException 
+	 */
+	private static void addToSystemClassLoader() throws MatlabConnectionException {
+		URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
+
+		try {
+			URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
+			Class<URLClassLoader> classLoaderClass = URLClassLoader.class;
+
+			Method method = classLoaderClass.getDeclaredMethod("addURL", URL.class);
+			method.setAccessible(true);
+			method.invoke(systemClassLoader, matlabcontrolLocation);
+		} catch (Exception e) {
+			throw new MatlabConnectionException("Unable to add matlabcontrol to system class loader", e);
+		}
+	}
 }

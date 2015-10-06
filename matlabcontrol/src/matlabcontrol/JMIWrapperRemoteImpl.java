@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.rmi.RemoteException;
 
@@ -36,59 +35,51 @@ import java.rmi.RemoteException;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject implements JMIWrapperRemote
-{   
-    private static final long serialVersionUID = 6263244863419922018L;
-    public JMIWrapperRemoteImpl() throws RemoteException { }
-    
-    @Override
-    public void exit()
-    {
-        JMIWrapper.exit();
-    }
-    
-    @Override
-    public void eval(String command) throws MatlabInvocationException
-    {
-        JMIWrapper.eval(command);
-    }
-    
-    @Override
-    public Object[] returningEval(String command, int nargout) throws MatlabInvocationException
-    {    
-        return JMIWrapper.returningEval(command, nargout);
-    }
-    
-    @Override
-    public void feval(String command, Object... args) throws MatlabInvocationException
-    {
-        JMIWrapper.feval(command, args);
-    }
-    
-    @Override
-    public Object[] returningFeval(String command, int nargout, Object... args) throws MatlabInvocationException
-    {
-        return JMIWrapper.returningFeval(command, nargout, args);
-    }
-    
-    @Override
-    public void setVariable(String variableName, Object value) throws MatlabInvocationException
-    {
-        JMIWrapper.setVariable(variableName, value);
-    }
-    
-    @Override
-    public Object getVariable(String variableName) throws MatlabInvocationException
-    {
-        return JMIWrapper.getVariable(variableName);
-    }
-    
-    @Override
-    public <T> T invokeAndWait(MatlabProxy.MatlabThreadCallable<T> callable) throws MatlabInvocationException
-    {
-        return JMIWrapper.invokeAndWait(callable);
-    }
-    
-    @Override
-    public void checkConnection() { }
+class JMIWrapperRemoteImpl extends LocalHostRMIHelper.LocalHostRemoteObject implements JMIWrapperRemote {
+	private static final long serialVersionUID = 6263244863419922018L;
+
+	public JMIWrapperRemoteImpl() throws RemoteException {}
+
+	@Override
+	public void exit() {
+		JMIWrapper.exit();
+	}
+
+	@Override
+	public void eval(String command) throws MatlabInvocationException {
+		JMIWrapper.eval(command);
+	}
+
+	@Override
+	public Object[] returningEval(String command, int nargout) throws MatlabInvocationException {
+		return JMIWrapper.returningEval(command, nargout);
+	}
+
+	@Override
+	public void feval(String command, Object... args) throws MatlabInvocationException {
+		JMIWrapper.feval(command, args);
+	}
+
+	@Override
+	public Object[] returningFeval(String command, int nargout, Object... args) throws MatlabInvocationException {
+		return JMIWrapper.returningFeval(command, nargout, args);
+	}
+
+	@Override
+	public void setVariable(String variableName, Object value) throws MatlabInvocationException {
+		JMIWrapper.setVariable(variableName, value);
+	}
+
+	@Override
+	public Object getVariable(String variableName) throws MatlabInvocationException {
+		return JMIWrapper.getVariable(variableName);
+	}
+
+	@Override
+	public <T> T invokeAndWait(MatlabProxy.MatlabThreadCallable<T> callable) throws MatlabInvocationException {
+		return JMIWrapper.invokeAndWait(callable);
+	}
+
+	@Override
+	public void checkConnection() {}
 }

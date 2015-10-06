@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -172,247 +171,234 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @since 4.0.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public abstract class MatlabProxy implements MatlabOperations
-{   
-    /**
-     * Unique identifier for this proxy.
-     */
-    private final Identifier _id;
-    
-    /**
-     * Whether the session of MATLAB this proxy is connected to is an existing session.
-     */
-    private final boolean _existingSession;
-    
-    /**
-     * Listeners for disconnection.
-     */
-    private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
-    
-    /**
-     * This constructor is package private to prevent subclasses from outside of this package.
-     */
-    MatlabProxy(Identifier id, boolean existingSession)
-    {
-        _id = id;
-        _existingSession = existingSession;
-        
-        _listeners = new CopyOnWriteArrayList<DisconnectionListener>();
-    }
-    
-    /**
-     * Returns the unique identifier for this proxy.
-     * 
-     * @return identifier
-     */
-    public Identifier getIdentifier()
-    {
-        return _id;
-    }
-        
-    /**
-     * Whether this proxy is connected to a session of MATLAB that was running previous to the request to create this
-     * proxy.
-     * 
-     * @return if existing session
-     */
-    public boolean isExistingSession()
-    {
-        return _existingSession;
-    }
-    
-    /**
-     * Returns a brief description of this proxy. The exact details of this representation are unspecified and are
-     * subject to change.
-     * 
-     * @return 
-     */
-    @Override
-    public String toString()
-    {
-        return "[" + this.getClass().getName() +
-                " identifier=" + this.getIdentifier() + "," +
-                " connected=" + this.isConnected() + "," +
-                " insideMatlab=" + this.isRunningInsideMatlab() + "," +
-                " existingSession=" + this.isExistingSession() +
-                "]";
-    }
-    
-    /**
-     * Adds a disconnection listener that will be notified when this proxy becomes disconnected from MATLAB.
-     * 
-     * @param listener 
-     */
-    public void addDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.add(listener);
-    }
+public abstract class MatlabProxy implements MatlabOperations {
+	/**
+	 * Unique identifier for this proxy.
+	 */
+	private final Identifier _id;
 
-    /**
-     * Removes a disconnection listener. It will no longer be notified.
-     * 
-     * @param listener 
-     */
-    public void removeDisconnectionListener(DisconnectionListener listener)
-    {
-        _listeners.remove(listener);
-    }
-    
-    /**
-     * Notifies the disconnection listeners this proxy has become disconnected.
-     */
-    void notifyDisconnectionListeners()
-    {
-        for(DisconnectionListener listener : _listeners)
-        {
-            listener.proxyDisconnected(this);
-        }
-    }
-    
-    /**
-     * Whether this proxy is running inside of MATLAB.
-     * 
-     * @return
-     */
-    public abstract boolean isRunningInsideMatlab();
-    
-    /**
-     * Whether this proxy is connected to MATLAB.
-     * <br><br>
-     * The most likely reasons for this method to return {@code false} are if the proxy has been disconnected via
-     * {@link #disconnect()} or MATLAB has been closed (when running outside MATLAB).
-     * 
-     * @return if connected
-     * 
-     * @see #disconnect() 
-     * @see #exit()
-     */
-    public abstract boolean isConnected();
-    
-    /**
-     * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
-     * throw an exception. A proxy cannot be reconnected. Returns {@code true} if the proxy is now disconnected,
-     * {@code false} otherwise.
-     * 
-     * @return if disconnected
-     * 
-     * @see #exit()
-     * @see #isConnected() 
-     */
-    public abstract boolean disconnect();
-    
-    /**
-     * Exits MATLAB. Attempting to exit MATLAB with either a {@code eval} or {@code feval} command will cause MATLAB to
-     * hang indefinitely.
-     * 
-     * @throws MatlabInvocationException 
-     * 
-     * @see #disconnect()
-     * @see #isConnected() 
-     */
-    public abstract void exit() throws MatlabInvocationException;
-    
-    /**
-     * Runs the {@code callable} on MATLAB's main thread and waits for it to return its result. This method allows for
-     * uninterrupted access to MATLAB's main thread between two or more interactions with MATLAB.
-     * <br><br>
-     * If <i>running outside MATLAB</i> the {@code callable} must be {@link java.io.Serializable}; it may not be
-     * {@link java.rmi.Remote}.
-     * 
-     * @param <T>
-     * @param callable
-     * @return result of the callable
-     * @throws MatlabInvocationException 
-     */
-    public abstract <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
-    
-    /**
-     * Uninterrupted block of computation performed in MATLAB.
-     * 
-     * @see MatlabProxy#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) 
-     * @param <T> type of the data returned by the callable
-     */
-    public static interface MatlabThreadCallable<T>
-    {
-        /**
-         * Performs the computation in MATLAB. The {@code proxy} provided will invoke its methods directly on MATLAB's
-         * main thread without delay. This {@code proxy} should be used to interact with MATLAB, not a
-         * {@code MatlabProxy} (or any class delegating to it).
-         * 
-         * @param proxy
-         * @return result of the computation
-         * @throws MatlabInvocationException
-         */
-        public T call(MatlabThreadProxy proxy) throws MatlabInvocationException;
-    }
-     
-    /**
-     * Operates on MATLAB's main thread without interruption. Currently this interface has only the methods defined in
-     * {@link MatlabOperations}, but this may change in future releases.
-     * <br><br>
-     * An implementation of this interface is provided to
-     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy)} so that the callable can interact with
-     * MATLAB. Implementations of this interface behave identically to a {@link MatlabProxy} running inside of MATLAB
-     * except that they are <b>not</b> thread-safe. They must be used solely on the thread that calls
-     * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
-     * <br><br>
-     * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
-     * to this interface, and these additions will not be considered breaking binary compatibility.
-     */
-    public static interface MatlabThreadProxy extends MatlabOperations
-    {
-        
-    }
-    
-    /**
-     * Listens for a proxy's disconnection from MATLAB.
-     * 
-     * @see MatlabProxy#addDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener)
-     * @see MatlabProxy#removeDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener) 
-     * @since 4.0.0
-     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
-     */
-    public static interface DisconnectionListener
-    {
-        /**
-         * Called when the proxy becomes disconnected from MATLAB. The proxy passed in will always be the proxy that
-         * the listener was added to. The proxy is provided so that if desired a single implementation of this
-         * interface may easily be used for multiple proxies.
-         * 
-         * @param proxy disconnected proxy
-         */
-        public void proxyDisconnected(MatlabProxy proxy);
-    }
-    
-    /**
-     * Uniquely identifies a proxy.
-     * <br><br>
-     * Implementations of this interface are unconditionally thread-safe.
-     * <br><br>
-     * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
-     * to this interface, and these additions will not be considered breaking binary compatibility.
-     * 
-     * @since 4.0.0
-     * 
-     * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
-     */
-    public static interface Identifier
-    {
-        /**
-         * Returns {@code true} if {@code other} is equal to this identifier, {@code false} otherwise.
-         * 
-         * @param other
-         * @return 
-         */
-        @Override
-        public boolean equals(Object other);
-        
-        /**
-         * Returns a hash code which conforms to the {@code hashCode} contract defined in {@link Object#hashCode()}.
-         * 
-         * @return 
-         */
-        @Override
-        public int hashCode();
-    }
+	/**
+	 * Whether the session of MATLAB this proxy is connected to is an existing session.
+	 */
+	private final boolean _existingSession;
+
+	/**
+	 * Listeners for disconnection.
+	 */
+	private final CopyOnWriteArrayList<DisconnectionListener> _listeners;
+
+	/**
+	 * This constructor is package private to prevent subclasses from outside of this package.
+	 */
+	MatlabProxy(Identifier id, boolean existingSession) {
+		_id = id;
+		_existingSession = existingSession;
+
+		_listeners = new CopyOnWriteArrayList<DisconnectionListener>();
+	}
+
+	/**
+	 * Returns the unique identifier for this proxy.
+	 * 
+	 * @return identifier
+	 */
+	public Identifier getIdentifier() {
+		return _id;
+	}
+
+	/**
+	 * Whether this proxy is connected to a session of MATLAB that was running previous to the request to create this
+	 * proxy.
+	 * 
+	 * @return if existing session
+	 */
+	public boolean isExistingSession() {
+		return _existingSession;
+	}
+
+	/**
+	 * Returns a brief description of this proxy. The exact details of this representation are unspecified and are
+	 * subject to change.
+	 * 
+	 * @return 
+	 */
+	@Override
+	public String toString() {
+		return "[" + this.getClass().getName() +
+				" identifier=" + this.getIdentifier() + "," +
+				" connected=" + this.isConnected() + "," +
+				" insideMatlab=" + this.isRunningInsideMatlab() + "," +
+				" existingSession=" + this.isExistingSession() +
+				"]";
+	}
+
+	/**
+	 * Adds a disconnection listener that will be notified when this proxy becomes disconnected from MATLAB.
+	 * 
+	 * @param listener 
+	 */
+	public void addDisconnectionListener(DisconnectionListener listener) {
+		_listeners.add(listener);
+	}
+
+	/**
+	 * Removes a disconnection listener. It will no longer be notified.
+	 * 
+	 * @param listener 
+	 */
+	public void removeDisconnectionListener(DisconnectionListener listener) {
+		_listeners.remove(listener);
+	}
+
+	/**
+	 * Notifies the disconnection listeners this proxy has become disconnected.
+	 */
+	void notifyDisconnectionListeners() {
+		for (DisconnectionListener listener : _listeners) {
+			listener.proxyDisconnected(this);
+		}
+	}
+
+	/**
+	 * Whether this proxy is running inside of MATLAB.
+	 * 
+	 * @return
+	 */
+	public abstract boolean isRunningInsideMatlab();
+
+	/**
+	 * Whether this proxy is connected to MATLAB.
+	 * <br><br>
+	 * The most likely reasons for this method to return {@code false} are if the proxy has been disconnected via
+	 * {@link #disconnect()} or MATLAB has been closed (when running outside MATLAB).
+	 * 
+	 * @return if connected
+	 * 
+	 * @see #disconnect() 
+	 * @see #exit()
+	 */
+	public abstract boolean isConnected();
+
+	/**
+	 * Disconnects the proxy from MATLAB. MATLAB will not exit. After disconnecting, any method sent to MATLAB will
+	 * throw an exception. A proxy cannot be reconnected. Returns {@code true} if the proxy is now disconnected,
+	 * {@code false} otherwise.
+	 * 
+	 * @return if disconnected
+	 * 
+	 * @see #exit()
+	 * @see #isConnected() 
+	 */
+	public abstract boolean disconnect();
+
+	/**
+	 * Exits MATLAB. Attempting to exit MATLAB with either a {@code eval} or {@code feval} command will cause MATLAB to
+	 * hang indefinitely.
+	 * 
+	 * @throws MatlabInvocationException 
+	 * 
+	 * @see #disconnect()
+	 * @see #isConnected() 
+	 */
+	public abstract void exit() throws MatlabInvocationException;
+
+	/**
+	 * Runs the {@code callable} on MATLAB's main thread and waits for it to return its result. This method allows for
+	 * uninterrupted access to MATLAB's main thread between two or more interactions with MATLAB.
+	 * <br><br>
+	 * If <i>running outside MATLAB</i> the {@code callable} must be {@link java.io.Serializable}; it may not be
+	 * {@link java.rmi.Remote}.
+	 * 
+	 * @param <T>
+	 * @param callable
+	 * @return result of the callable
+	 * @throws MatlabInvocationException 
+	 */
+	public abstract <T> T invokeAndWait(MatlabThreadCallable<T> callable) throws MatlabInvocationException;
+
+	/**
+	 * Uninterrupted block of computation performed in MATLAB.
+	 * 
+	 * @see MatlabProxy#invokeAndWait(matlabcontrol.MatlabProxy.MatlabThreadCallable) 
+	 * @param <T> type of the data returned by the callable
+	 */
+	public static interface MatlabThreadCallable<T> {
+		/**
+		 * Performs the computation in MATLAB. The {@code proxy} provided will invoke its methods directly on MATLAB's
+		 * main thread without delay. This {@code proxy} should be used to interact with MATLAB, not a
+		 * {@code MatlabProxy} (or any class delegating to it).
+		 * 
+		 * @param proxy
+		 * @return result of the computation
+		 * @throws MatlabInvocationException
+		 */
+		public T call(MatlabThreadProxy proxy) throws MatlabInvocationException;
+	}
+
+	/**
+	 * Operates on MATLAB's main thread without interruption. Currently this interface has only the methods defined in
+	 * {@link MatlabOperations}, but this may change in future releases.
+	 * <br><br>
+	 * An implementation of this interface is provided to
+	 * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy)} so that the callable can interact with
+	 * MATLAB. Implementations of this interface behave identically to a {@link MatlabProxy} running inside of MATLAB
+	 * except that they are <b>not</b> thread-safe. They must be used solely on the thread that calls
+	 * {@link MatlabThreadCallable#call(MatlabProxy.MatlabThreadProxy) call(...)}.
+	 * <br><br>
+	 * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
+	 * to this interface, and these additions will not be considered breaking binary compatibility.
+	 */
+	public static interface MatlabThreadProxy extends MatlabOperations {
+
+	}
+
+	/**
+	 * Listens for a proxy's disconnection from MATLAB.
+	 * 
+	 * @see MatlabProxy#addDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener)
+	 * @see MatlabProxy#removeDisconnectionListener(matlabcontrol.MatlabProxy.DisconnectionListener) 
+	 * @since 4.0.0
+	 * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+	 */
+	public static interface DisconnectionListener {
+		/**
+		 * Called when the proxy becomes disconnected from MATLAB. The proxy passed in will always be the proxy that
+		 * the listener was added to. The proxy is provided so that if desired a single implementation of this
+		 * interface may easily be used for multiple proxies.
+		 * 
+		 * @param proxy disconnected proxy
+		 */
+		public void proxyDisconnected(MatlabProxy proxy);
+	}
+
+	/**
+	 * Uniquely identifies a proxy.
+	 * <br><br>
+	 * Implementations of this interface are unconditionally thread-safe.
+	 * <br><br>
+	 * <b>WARNING:</b> This interface is not intended to be implemented by users of matlabcontrol. Methods may be added
+	 * to this interface, and these additions will not be considered breaking binary compatibility.
+	 * 
+	 * @since 4.0.0
+	 * 
+	 * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
+	 */
+	public static interface Identifier {
+		/**
+		 * Returns {@code true} if {@code other} is equal to this identifier, {@code false} otherwise.
+		 * 
+		 * @param other
+		 * @return 
+		 */
+		@Override
+		public boolean equals(Object other);
+
+		/**
+		 * Returns a hash code which conforms to the {@code hashCode} contract defined in {@link Object#hashCode()}.
+		 * 
+		 * @return 
+		 */
+		@Override
+		public int hashCode();
+	}
 }

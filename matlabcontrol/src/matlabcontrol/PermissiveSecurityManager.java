@@ -1,5 +1,3 @@
-package matlabcontrol;
-
 /*
  * Copyright (c) 2013, Joshua Kaplan
  * All rights reserved.
@@ -21,6 +19,7 @@ package matlabcontrol;
  * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package matlabcontrol;
 
 import java.security.Permission;
 
@@ -51,22 +50,21 @@ import java.security.Permission;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class PermissiveSecurityManager extends SecurityManager
-{
-    /**
-     * Always accepts permission request.
-     * 
-     * @param perm 
-     */
-    @Override
-    public void checkPermission(Permission perm) { }
+public class PermissiveSecurityManager extends SecurityManager {
+	/**
+	 * Always accepts permission request.
+	 * 
+	 * @param perm 
+	 */
+	@Override
+	public void checkPermission(Permission perm) {}
 
-    /**
-     * Always accepts permission request.
-     * 
-     * @param perm
-     * @param context 
-     */
-    @Override
-    public void checkPermission(Permission perm, Object context) { }
+	/**
+	 * Always accepts permission request.
+	 * 
+	 * @param perm
+	 * @param context 
+	 */
+	@Override
+	public void checkPermission(Permission perm, Object context) {}
 }
