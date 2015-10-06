@@ -1,47 +1,74 @@
-
-// gradlew
-task wrapper(type: Wrapper) {
-	gradleVersion VER_GRADLE
+plugins {
+	// for downloading JRE6
+    id "de.undercouch.download" version "2.0.0"
 }
 
-// build
-apply plugin: 'java'
-sourceSets {
-	main { java {
-			srcDir 'src'
-	} }
-	test { java {
-			srcDir 'test'
-	} }
-}
+////////////
+// JAVA 6 //
+////////////
 
-// matlablcontrol requires at least Java 1.6,
+// matlabcontrol requires at least Java 1.6,
 // but older MATLABs run on even older versions
-//
+
+// URL for downloading the JRE6
+// others available here, OS doesn't matter: https://github.com/alexkasko/openjdk-unofficial-builds#openjdk-6-build-30
+def JDK6_URL = 'https://bitbucket.org/alexkasko/openjdk-unofficial-builds/downloads/openjdk-1.6.0-unofficial-b30-windows-i586-image.zip'
+def JDK6_SHA_256 = '8a119a8c9b2ecc48e8457738f57b251e6265b2c0fb232de0ff6fddce0f127045'
+// place where the JRE6 will end up
+def JDK6_DIR = "${buildDir}/jdk"
+def JDK6_DST = "${JDK6_DIR}/jdk.zip"
+def JRE6_HOME = "${buildDir}/jdk/openjdk-1.6.0-unofficial-b30-windows-i586-image/jre"
+
+import de.undercouch.gradle.tasks.download.Download;
+import de.undercouch.gradle.tasks.download.Verify;
+
+task downloadJRE6(type: Download) {
+    src JDK6_URL
+    dest JDK6_DST
+    overwrite false
+}
+
+task verifyJRE6(dependsOn: downloadJRE6, type: Verify) {
+	src downloadJRE6.dest
+	algorithm 'SHA-256'
+    checksum JDK6_SHA_256
+}
+
+task unzipJRE6(dependsOn: verifyJRE6, type: Copy) {
+    from zipTree(downloadJRE6.dest)
+    into JDK6_DIR
+}
+
 // Best bet is to stay at 1.6
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
-def JRE6_HOME = 'C:/Program Files/Java/jre6'
 def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar;${JRE6_HOME}/lib/jsse.jar"
 project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
     ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
+    ac.dependsOn(unzipJRE6)
 })
 
-// eclipse
-apply plugin: 'eclipse'
-// eclipse forces cleanEclipse
-tasks.eclipse.dependsOn(cleanEclipse)
 
-repositories {
-	maven {
-		url "${dp_maven}/repo"
-		credentials {
-			username "${dp_maven_user}"
-			password "${dp_maven_pass}"
-		}
+/////////////
+// ECLIPSE //
+/////////////
+apply plugin: 'eclipse'
+eclipse {
+	classpath {
+		downloadSources true
+		downloadJavadoc true
 	}
 }
+// always create fresh projects
+tasks.eclipse.dependsOn(cleanEclipse)
 
+//////////////////////
+// EXCLUDE JMI_STUB //
+//////////////////////
+apply plugin: 'maven-publish'
+repositories {
+	mavenCentral()
+}
 dependencies {
 	testCompile "junit:junit:${VER_JUNIT}"
 }
@@ -50,7 +77,7 @@ dependencies {
 def JMI_STUB = 'com/mathworks/jmi/**'
 
 // make a source jar
-task sourceJar(type: Jar) {
+task sourcesJar(type: Jar) {
 	from sourceSets.main.allJava
 	exclude(JMI_STUB) 
 }
@@ -59,33 +86,118 @@ jar {
 	exclude(JMI_STUB) 
 }
 
-// publish
-apply plugin: 'maven-publish'
-group = 'com.diffplug.matlabcontrol'
+/////////////
+// JAVADOC //
+/////////////
+
+// Where it's possible to name parameters and methods clearly enough
+// that javadoc is not necessary, why make the code bigger?
+def makeLink = { url, text -> "<a href=\"${url}\" style=\"text-transform: none;\">${text}</a>" }
+def javadocInfo = '<h2>' + makeLink("https://github.com/${org}/${name}", "${group}:${name}:${version}") +
+' by ' + makeLink('http://www.diffplug.com', 'DiffPlug') + '</h2>'
+javadoc {
+	options.addStringOption('Xdoclint:none', '-quiet')
+	options.header javadocInfo
+	options.footer javadocInfo
+	options.links('https://docs.oracle.com/javase/6/docs/api/')
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+	classifier = 'javadoc'
+	from javadoc.destinationDir
+}
+
+////////////////
+// PUBLISHING //
+////////////////
+def isSnapshot = project.version.endsWith('-SNAPSHOT')
+// pulls the credentials from either the environment variable or gradle.properties
+def cred = {
+	if (System.env[it] != null) {
+		return System.env[it]
+	} else if (project.hasProperty(it)) {
+		return project[it]
+	} else {
+		return 'unknown_' + it
+	}
+}
 
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
 			from components.java
-
-			artifact sourceJar {
-				classifier 'sources'
+			artifact sourcesJar
+			artifact javadocJar
+			pom.withXml {
+				// findbugs annotations should have scope "provided"
+				asNode().dependencies.'*'.findAll() { it.groupId.text() == 'com.google.code.findbugs' }.each() { it.scope*.value = 'provided' }
+				// add MavenCentral requirements to the POM
+				asNode().children().last() + {
+					resolveStrategy = Closure.DELEGATE_FIRST
+					name project.name
+					description project.description
+					url "https://github.com/${project.org}/${project.name}"
+					scm {
+						url "https://github.com/${project.org}/${project.name}"
+						connection "scm:git:git://github.com/${project.org}/${project.name}"
+						developerConnection "scm:git:ssh:git@github.com/${project.org}/${project.name}"
+					}
+					licenses {
+						license {
+							name 'The Apache Software License, Version 2.0'
+							url 'http://www.apache.org/license/LICENSE-2.0.txt'
+							distribution 'repo'
+						}
+					}
+					developers {
+						developer {
+							id 'nedtwigg'
+							name 'Ned Twigg'
+							email 'ned.twigg@diffplug.com'
+						}
+					}
+				}
 			}
 		}
 	}
-
-	repositories {
-		maven {
-			if (project.version.endsWith('-SNAPSHOT')) {
-				url "${dp_maven}/libs-snapshot-local"
-			} else {
-				url "${dp_maven}/libs-release-local"
-			}
-
+	if (isSnapshot) {
+		// upload snapshots to oss.sonatype.org
+		repositories { maven {
+			url = 'https://oss.sonatype.org/content/repositories/snapshots'
 			credentials {
-				username "${dp_maven_user}"
-				password "${dp_maven_pass}"
+				username = cred('nexus_user')
+				password = cred('nexus_pass')
+			}
+		} }
+	}
+}
+
+if (!isSnapshot) {
+	// upload releases to bintray and then mavenCentral
+	bintray {
+		user = cred('bintray_user')
+		key = cred('bintray_pass')
+		publications = ['mavenJava']
+		publish = true
+		pkg {
+			repo = 'opensource'
+			name = project.name
+			userOrg = project.org
+			version {
+				name = project.version
+				mavenCentralSync {
+					user = cred('nexus_user')
+					password = cred('nexus_pass')
+				}
 			}
 		}
 	}
+
+	publish.dependsOn(bintrayUpload)
+	bintrayUpload.dependsOn(['generatePomFileForMavenJavaPublication', jar, sourcesJar, javadocJar])
+}
+
+// helps external scripts detect version
+task printVersion << {
+	println version
 }

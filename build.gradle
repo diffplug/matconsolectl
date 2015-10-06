@@ -1,0 +1,21 @@
+
+// simplified source layout for all our projects
+subprojects {
+	// build
+	apply plugin: 'java'
+	sourceSets {
+		main { java {
+			srcDir 'src'
+		} }
+		test { java {
+			srcDir 'test'
+		} }
+	}
+}
+
+// the demo project needs the regular project
+project(':matlabcontrol-demo') {
+	dependencies {
+		compile project(':matlabcontrol')
+	}
+}
