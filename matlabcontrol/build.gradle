@@ -1,6 +1,6 @@
 plugins {
 	// for downloading JRE6
-    id "de.undercouch.download" version "2.0.0"
+	id "de.undercouch.download" version "2.0.0"
 }
 
 ////////////
@@ -23,20 +23,20 @@ import de.undercouch.gradle.tasks.download.Download;
 import de.undercouch.gradle.tasks.download.Verify;
 
 task downloadJRE6(type: Download) {
-    src JDK6_URL
-    dest JDK6_DST
-    overwrite false
+	src JDK6_URL
+	dest JDK6_DST
+	overwrite false
 }
 
 task verifyJRE6(dependsOn: downloadJRE6, type: Verify) {
 	src downloadJRE6.dest
 	algorithm 'SHA-256'
-    checksum JDK6_SHA_256
+	checksum JDK6_SHA_256
 }
 
 task unzipJRE6(dependsOn: verifyJRE6, type: Copy) {
-    from zipTree(downloadJRE6.dest)
-    into JDK6_DIR
+	from zipTree(downloadJRE6.dest)
+	into JDK6_DIR
 }
 
 // Best bet is to stay at 1.6
@@ -44,8 +44,8 @@ sourceCompatibility = 1.6
 targetCompatibility = 1.6
 def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar;${JRE6_HOME}/lib/jsse.jar"
 project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
-    ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
-    ac.dependsOn(unzipJRE6)
+	ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
+	ac.dependsOn(unzipJRE6)
 })
 
 
@@ -79,11 +79,11 @@ def JMI_STUB = 'com/mathworks/jmi/**'
 // make a source jar
 task sourcesJar(type: Jar) {
 	from sourceSets.main.allJava
-	exclude(JMI_STUB) 
+	exclude(JMI_STUB)
 }
 
 jar {
-	exclude(JMI_STUB) 
+	exclude(JMI_STUB)
 }
 
 /////////////

@@ -1,3 +1,32 @@
+plugins {
+	// code formatting
+	id "com.diffplug.gradle.spotless" version "1.3.1"
+}
+
+// format
+spotless {
+	format 'misc', {
+		target '**/.gitignore', '**/*.gradle', '**/*.md', '**/*.sh'
+		indentWithTabs()
+		trimTrailingWhitespace()
+		endWithNewline()
+	}
+	java {
+		target project.fileTree(project.rootDir) {
+			include '**/*.java'
+			exclude '**/package-info.java'
+			exclude 'spotless.license.java'
+		}
+		licenseHeaderFile	'spotless.license.java'			// License header file
+		importOrderFile		'spotless.importorder'			// An import ordering file, exported from Eclipse
+		eclipseFormatFile	'spotless.eclipseformat.xml'	// XML file dumped out by the Eclipse formatter
+		// Eclipse formatter puts excess whitespace after lambda blocks
+		//    funcThatTakesLambdas(x -> {} , y -> {} )	// what Eclipse does
+		//    funcThatTakesLambdas(x -> {}, y -> {})	// what I wish Eclipse did
+		custom 'Lambda fix', { it.replace('} )', '})').replace('} ,', '},') }
+	}
+	freshmark {}
+}
 
 // simplified source layout for all our projects
 subprojects {
