@@ -30,6 +30,17 @@ spotless {
 
 // simplified source layout for all our projects
 subprojects {
+	// eclipse
+	apply plugin: 'eclipse'
+	eclipse {
+		classpath {
+			downloadSources true
+			downloadJavadoc true
+		}
+	}
+	// always create fresh projects
+	tasks.eclipse.dependsOn(cleanEclipse)
+
 	// build
 	apply plugin: 'java'
 	sourceSets {
