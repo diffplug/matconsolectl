@@ -35,6 +35,8 @@ import matlabcontrol.MatlabProxy.MatlabThreadProxy;
 import com.mathworks.jmi.Matlab;
 import com.mathworks.jmi.NativeMatlab;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Interacts with MATLAB via the undocumented Java MATLAB Interface (JMI).
  * <br><br>
@@ -82,6 +84,7 @@ class JMIWrapper {
 	 * 
 	 * @throws MatlabInvocationException 
 	 */
+	@SuppressFBWarnings(value = "DLS_DEAD_LOCAL_STORE", justification = "False positive.")
 	static void exit() {
 		Runnable runnable = new Runnable() {
 			@Override

@@ -30,6 +30,8 @@ import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 /**
  * Contains important configuration information regarding the setup of MATLAB and matlabcontrol.
  * 
@@ -116,6 +118,7 @@ class Configuration {
 	 * 
 	 * @throws MatlabConnectionException if the location cannot be determined
 	 */
+	@SuppressFBWarnings(value = "DMI_HARDCODED_ABSOLUTE_FILENAME", justification = "OS X is very predictable")
 	private static String getOSXMatlabLocation() throws MatlabConnectionException {
 		//Search for MATLAB in the Applications directory
 		String matlabName = null;
