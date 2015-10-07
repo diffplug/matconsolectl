@@ -22,6 +22,8 @@
 package matlabcontrol;
 
 import java.lang.reflect.Method;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 
@@ -87,24 +89,22 @@ class MatlabClassLoaderHelper {
 	 * @throws MatlabConnectionException 
 	 */
 	private static boolean isOnSystemClassLoader() throws MatlabConnectionException {
-		URL matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation();
-
 		try {
+			URI matlabcontrolLocation = MatlabClassLoaderHelper.class.getProtectionDomain().getCodeSource().getLocation().toURI();
+
 			URLClassLoader systemClassLoader = (URLClassLoader) ClassLoader.getSystemClassLoader();
 			URL[] urls = systemClassLoader.getURLs();
 
-			boolean onClasspath = false;
 			for (URL url : urls) {
-				if (url.equals(matlabcontrolLocation)) {
-					onClasspath = true;
-					break;
+				if (url.toURI().equals(matlabcontrolLocation)) {
+					return true;
 				}
 			}
-
-			return onClasspath;
+			return false;
 		} catch (ClassCastException e) {
-			throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class " +
-					"loader's classpath", e);
+			throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class loader's classpath", e);
+		} catch (URISyntaxException e) {
+			throw new MatlabConnectionException("Unable to determine if matlabcontrol is on the system class loader's classpath", e);
 		}
 	}
 
