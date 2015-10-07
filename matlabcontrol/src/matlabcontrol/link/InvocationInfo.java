@@ -288,7 +288,10 @@ class InvocationInfo implements Serializable {
 		//Delete files in the opposite order so that files are deleted before their containing directories
 		if (deleteNow) {
 			for (int i = sortedFiles.size() - 1; i >= 0; i--) {
-				sortedFiles.get(i).delete();
+				boolean deleted = sortedFiles.get(i).delete();
+				if (!deleted) {
+					System.err.println("unable to delete " + sortedFiles.get(i));
+				}
 			}
 		}
 		//Delete files in the existing order because the files will be deleted on exit in the opposite order
@@ -365,7 +368,10 @@ class InvocationInfo implements Serializable {
 				//Directory
 				if (entry.isDirectory()) {
 					File destDir = new File(unzipDir, entry.getName());
-					destDir.mkdirs();
+					boolean mkdir = destDir.mkdirs();
+					if (!mkdir) {
+						System.err.println("Unable to mkdir " + destDir);
+					}
 
 					entryMap.put(entry.getName(), destDir);
 				}
@@ -378,7 +384,10 @@ class InvocationInfo implements Serializable {
 								"generated path: " + destFile.getAbsolutePath() + "\n" +
 								"zip file: " + zipLocation.getAbsolutePath());
 					}
-					destFile.getParentFile().mkdirs();
+					boolean mkdir = destFile.getParentFile().mkdirs();
+					if (!mkdir) {
+						System.err.println("Unable to mkdir " + destFile.getParentFile());
+					}
 
 					//Unarchive
 					try {
