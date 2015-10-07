@@ -339,7 +339,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		@Override
 		public void run() {
 			try {
-				BufferedReader in = new BufferedReader(new InputStreamReader(_stream));
+				String processConsoleEncoding = "UTF-8";
+				BufferedReader in = new BufferedReader(new InputStreamReader(_stream, processConsoleEncoding));
 				while (in.readLine() != null)
 					;
 			} catch (IOException e) {}
