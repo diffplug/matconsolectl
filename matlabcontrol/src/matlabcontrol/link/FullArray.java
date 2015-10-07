@@ -94,6 +94,7 @@ class FullArray<L, T> extends BaseArray<L, T> {
 	 * @param imagLinear
 	 * @param dimensions 
 	 */
+	@SuppressWarnings("unchecked")
 	FullArray(Class<L> linearArrayType, L real, L imag, int[] dimensions) {
 		//Dimensions of the array
 		_dimensions = dimensions;
@@ -109,6 +110,7 @@ class FullArray<L, T> extends BaseArray<L, T> {
 		_outputArrayType = (Class<T>) ArrayUtils.getArrayClass(_baseComponentType, dimensions.length);
 	}
 
+	@SuppressWarnings("unchecked")
 	FullArray(Class<L> linearArrayType, T real, T imag) {
 		//Real array cannot be null
 		if (real == null) {
@@ -238,7 +240,7 @@ class FullArray<L, T> extends BaseArray<L, T> {
 		}
 		//Same class
 		else if (obj != null && this.getClass().equals(obj.getClass())) {
-			FullArray other = (FullArray) obj;
+			FullArray<?, ?> other = (FullArray<?, ?>) obj;
 
 			//If the two instances are equal their hashcodes must be equal (but not the converse)
 			if (this.hashCode() == other.hashCode()) {

@@ -103,6 +103,7 @@ class ArrayLinearizer {
 		Object linearArray = Array.newInstance(baseClass, size);
 
 		//Fill linearArray with values from array
+		@SuppressWarnings("rawtypes")
 		ArrayFillOperation fillOperation = FILL_OPERATIONS.get(baseClass);
 		linearize_internal(linearArray, array, fillOperation, lengths, 0, new int[lengths.length]);
 
@@ -119,6 +120,7 @@ class ArrayLinearizer {
 	 * @param depth the level of recursion, initially {@code 0}
 	 * @param indices must be the length of {@code lengths}
 	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	private static void linearize_internal(Object linearArray, Object srcArray, ArrayFillOperation fillOperation,
 			int[] lengths, int depth, int[] indices) {
 		//Base case - array holding non-array elements

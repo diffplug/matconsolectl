@@ -29,6 +29,7 @@ import java.util.Arrays;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
+@SuppressWarnings("unchecked")
 public final class MatlabReturns {
 	private MatlabReturns() {}
 
@@ -267,6 +268,7 @@ public final class MatlabReturns {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
 	static ReturnN getMaxReturn(Object[] values) {
 		return new Return9(values);
 	}

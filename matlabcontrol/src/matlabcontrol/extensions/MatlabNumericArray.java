@@ -574,6 +574,7 @@ public final class MatlabNumericArray {
 	 * @param currIndices should be an empty integer array initially
 	 * @return 
 	 */
+	@SuppressWarnings("unchecked")
 	private static <T> T multidimensionalize_internal(double[] linearArray, Class<T> outputArrayType, int[] lengths,
 			int indexIntoLengths, int[] currIndices) {
 		Class<?> arrayType = outputArrayType.getComponentType();
@@ -755,6 +756,7 @@ public final class MatlabNumericArray {
 		/**
 		 * Caches loaded {@code DoubleArrayType}s.
 		 */
+		@SuppressWarnings("rawtypes")
 		private static final Map<Class<?>, DoubleArrayType> CLASS_TO_ARRAY_TYPE = new ConcurrentHashMap<Class<?>, DoubleArrayType>();
 
 		/**
@@ -850,6 +852,7 @@ public final class MatlabNumericArray {
 		 * Behaves the same as {@link #getInstance(java.lang.Class)} except that {@code double[]} is valid. This is
 		 * needed by some of the recursive algorithms in {@code MatlabNumericArray}.
 		 */
+		@SuppressWarnings("unchecked")
 		static <T> DoubleArrayType<T> getInstanceUnsafe(Class<T> arrayType) {
 			if (!CLASS_TO_ARRAY_TYPE.containsKey(arrayType)) {
 				DoubleArrayType<T> type = new DoubleArrayType<T>(arrayType);

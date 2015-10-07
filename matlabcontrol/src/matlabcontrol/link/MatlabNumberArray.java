@@ -70,6 +70,7 @@ import matlabcontrol.link.ArrayMultidimensionalizer.PrimitiveArrayGetter;
  * @param <T> output array - primitive numeric array type, ex. {@code byte[][][]}
  *            (1 or more dimensions is acceptable, including for example {@code byte[]})
  */
+@SuppressWarnings("unchecked")
 abstract class MatlabNumberArray<L, T> extends MatlabType {
 	/**
 	 * The linear array of real values. Only intended to be accessed directly by subclasses inside this package.
@@ -369,7 +370,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType {
 		}
 		//Same class
 		else if (obj != null && this.getClass().equals(obj.getClass())) {
-			MatlabNumberArray other = (MatlabNumberArray) obj;
+			MatlabNumberArray<?, ?> other = (MatlabNumberArray<?, ?>) obj;
 
 			//If the two instances are equal their hashcodes must be equal (but not the converse)
 			if (this.hashCode() == other.hashCode()) {

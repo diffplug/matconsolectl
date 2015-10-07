@@ -36,6 +36,7 @@ import java.util.Map;
  * 
  * @param <L> underlying array of values - single dimensional array type, ex. {@code byte[]}
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 class SparseArray<L> extends BaseArray<L, L[]> {
 	/**
 	 * The values in this array are the linear indices in the sparse array that have values. The index of an element

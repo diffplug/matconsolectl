@@ -56,6 +56,7 @@ import matlabcontrol.link.MatlabVariable.MatlabVariableGetter;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
+@SuppressWarnings({"unchecked", "rawtypes"})
 public class Linker {
 	private Linker() {}
 

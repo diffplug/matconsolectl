@@ -38,6 +38,7 @@ import matlabcontrol.link.MatlabType.MatlabTypeGetter;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
+@SuppressWarnings("rawtypes")
 class ArrayMultidimensionalizer {
 	static class PrimitiveArrayGetter implements MatlabTypeGetter<Object> {
 		private static final long serialVersionUID = -3228683201238234004L;
@@ -190,6 +191,7 @@ class ArrayMultidimensionalizer {
 	 * @param indices must be the length of {@code lengths}
 	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private static Object multidimensionalize_internal(Object linearArray, Class<?> outputArrayType,
 			ArrayFillOperation fillOperation, int[] lengths, int depth, int[] indices) {
 		Class<?> componentType = outputArrayType.getComponentType();
