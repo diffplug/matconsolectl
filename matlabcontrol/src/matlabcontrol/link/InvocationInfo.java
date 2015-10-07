@@ -27,6 +27,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
@@ -53,7 +54,9 @@ import java.util.zip.ZipFile;
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class InvocationInfo {
+class InvocationInfo implements Serializable {
+	private static final long serialVersionUID = 764281612994597133L;
+
 	/**
 	 * The name of the function.
 	 */
