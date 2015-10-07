@@ -435,21 +435,22 @@ abstract class MatlabNumberArray<L, T> extends MatlabType {
 		public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException {
 			ops.setVariable(variableName, this);
 
-			String command = variableName + " = reshape(" + variableName + ".getReal()";
+			StringBuilder command = new StringBuilder();
+			command.append(variableName + " = reshape(" + variableName + ".getReal()");
 			if (_imag != null) {
-				command += " + " + variableName + ".getImaginary() * i";
+				command.append(" + " + variableName + ".getImaginary() * i");
 			}
 
 			if (_lengths.length == 1) {
-				command += ", 1, " + _lengths[0] + ");";
+				command.append(", 1, " + _lengths[0] + ");");
 			} else {
 				for (int length : _lengths) {
-					command += ", " + length;
+					command.append(", " + length);
 				}
-				command += ");";
+				command.append(");");
 			}
 
-			ops.eval(command);
+			ops.eval(command.toString());
 		}
 
 		@SuppressWarnings("unused")

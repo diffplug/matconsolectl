@@ -99,15 +99,16 @@ class InvocationInfo implements Serializable {
 
 	@Override
 	public String toString() {
-		String genericParameters = "[";
+		StringBuilder genericParameters = new StringBuilder();
+		genericParameters.append("[");
 		for (int i = 0; i < returnTypeParameters.length; i++) {
-			genericParameters += classArrayToString(returnTypeParameters[i]);
+			genericParameters.append(classArrayToString(returnTypeParameters[i]));
 
 			if (i != returnTypeParameters.length - 1) {
-				genericParameters += " ";
+				genericParameters.append(" ");
 			}
 		}
-		genericParameters += "]";
+		genericParameters.append("]");
 
 		return "[" + this.getClass().getSimpleName() +
 				" name=" + name + "," +
@@ -117,17 +118,17 @@ class InvocationInfo implements Serializable {
 	}
 
 	private static String classArrayToString(Class<?>[] array) {
-		String str = "[";
+		StringBuilder str = new StringBuilder();
+		str.append("[");
 		for (int i = 0; i < array.length; i++) {
-			str += array[i].getCanonicalName();
+			str.append(array[i].getCanonicalName());
 
 			if (i != array.length - 1) {
-				str += " ";
+				str.append(" ");
 			}
 		}
-		str += "]";
-
-		return str;
+		str.append("]");
+		return str.toString();
 	}
 
 	private static class FunctionInfo {

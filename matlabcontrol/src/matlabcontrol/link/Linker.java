@@ -387,23 +387,24 @@ public class Linker {
 		}
 
 		private static String toClassString(Class<?> returnType, Class<?>[] returnTypeParameters) {
-			String classString = returnType.getCanonicalName();
+			StringBuilder classString = new StringBuilder();
+			classString.append(returnType.getCanonicalName());
 
 			if (returnTypeParameters.length != 0) {
-				classString += "<";
+				classString.append("<");
 
 				for (int i = 0; i < returnTypeParameters.length; i++) {
-					classString += returnTypeParameters[i].getCanonicalName();
+					classString.append(returnTypeParameters[i].getCanonicalName());
 
 					if (i != returnTypeParameters.length - 1) {
-						classString += ", ";
+						classString.append(", ");
 					}
 				}
 
-				classString += ">";
+				classString.append(">");
 			}
 
-			return classString;
+			return classString.toString();
 		}
 
 		private static String toClassString(Object obj) {
@@ -499,7 +500,8 @@ public class Linker {
 			List<String> variablesToClear = new ArrayList<String>();
 			try {
 				//Set all arguments as MATLAB variables and build a function call using those variables
-				String functionStr = _functionInfo.name + "(";
+				StringBuilder functionStr = new StringBuilder();
+				functionStr.append(_functionInfo.name + "(");
 				List<String> parameterNames = generateNames(ops, "param_", _args.length);
 				for (int i = 0; i < _args.length; i++) {
 					String name = parameterNames.get(i);
@@ -507,18 +509,19 @@ public class Linker {
 
 					setReturnValue(ops, name, _args[i]);
 
-					functionStr += name;
+					functionStr.append(name);
 					if (i != _args.length - 1) {
-						functionStr += ", ";
+						functionStr.append(", ");
 					}
 				}
-				functionStr += ");";
+				functionStr.append(");");
 
 				//Return arguments
 				List<String> returnNames = null;
 				if (_functionInfo.returnTypes.length != 0) {
 					returnNames = generateNames(ops, "return_", _functionInfo.returnTypes.length);
-					String returnStr = "[";
+					StringBuilder returnStr = new StringBuilder();
+					returnStr.append("[");
 					for (int i = 0; i < returnNames.size(); i++) {
 						ClassInfo returnInfo = ClassInfo.getInfo(_functionInfo.returnTypes[i]);
 
@@ -530,18 +533,18 @@ public class Linker {
 							variablesToClear.add(name);
 						}
 
-						returnStr += name;
+						returnStr.append(name);
 						if (i != returnNames.size() - 1) {
-							returnStr += ", ";
+							returnStr.append(", ");
 						}
 					}
-					returnStr += "]";
+					returnStr.append("] = ");
 
-					functionStr = returnStr + " = " + functionStr;
+					functionStr.insert(0, returnStr);
 				}
 
 				//Invoke the function
-				ops.eval(functionStr);
+				ops.eval(functionStr.toString());
 
 				//Get the return values
 				List<String> variablesToKeep = new ArrayList<String>();
@@ -578,15 +581,16 @@ public class Linker {
 				try {
 					//Clear all variables used
 					if (!variablesToClear.isEmpty()) {
-						String clearCmd = "clear ";
+						StringBuilder clearCmd = new StringBuilder();
+						clearCmd.append("clear ");
 						for (int i = 0; i < variablesToClear.size(); i++) {
-							clearCmd += variablesToClear.get(i);
+							clearCmd.append(variablesToClear.get(i));
 
 							if (i != variablesToClear.size() - 1) {
-								clearCmd += " ";
+								clearCmd.append(" ");
 							}
 						}
-						ops.eval(clearCmd);
+						ops.eval(clearCmd.toString());
 					}
 				} finally {
 					//If necessary, change back to the directory MATLAB was in before the function was invoked

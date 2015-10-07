@@ -834,15 +834,15 @@ public final class MatlabNumericArray {
 			DoubleArrayType<?> type;
 
 			//Construct the name of the class
-			String className = "";
+			StringBuilder className = new StringBuilder(1 + dimensions);
 			for (int i = 0; i < dimensions; i++) {
-				className += "[";
+				className.append('[');
 			}
-			className += "D";
+			className.append('D');
 
 			//Retrieve the class, and then getInstance the corresponding DoubleArrayType
 			try {
-				type = getInstanceUnsafe(Class.forName(className));
+				type = getInstanceUnsafe(Class.forName(className.toString()));
 			} catch (ClassNotFoundException e) {
 				type = null;
 			}

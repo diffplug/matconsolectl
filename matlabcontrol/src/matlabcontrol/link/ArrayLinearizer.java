@@ -56,18 +56,18 @@ class ArrayLinearizer {
 		public void setInMatlab(MatlabOperations ops, String variableName) throws MatlabInvocationException {
 			ops.setVariable(variableName, this);
 
-			String command;
+			StringBuilder command = new StringBuilder();
 			if (_lengths.length == 1) {
-				command = variableName + " = reshape(" + variableName + ".getLinearArray(), 1, " + _lengths[0] + ");";
+				command.append(variableName + " = reshape(" + variableName + ".getLinearArray(), 1, " + _lengths[0] + ");");
 			} else {
-				command = variableName + " = reshape(" + variableName + ".getLinearArray()";
+				command.append(variableName + " = reshape(" + variableName + ".getLinearArray()");
 				for (int length : _lengths) {
-					command += ", " + length;
+					command.append(", " + length);
 				}
-				command += ");";
+				command.append(");");
 			}
 
-			ops.eval(command);
+			ops.eval(command.toString());
 		}
 
 		@SuppressWarnings("unused")

@@ -163,23 +163,23 @@ class JMIValidator {
 	 */
 	private static String buildMethodDescription(Class<?> clazz, Class<?> requiredReturn, String methodName,
 			Class<?>[] requiredParameters, Class<?>[] requiredExceptions) {
-		String paramString = "";
+		StringBuilder paramString = new StringBuilder();
 		for (int i = 0; i < requiredParameters.length; i++) {
-			paramString += requiredParameters[i].getCanonicalName();
+			paramString.append(requiredParameters[i].getCanonicalName());
 
 			if (i < requiredParameters.length - 1) {
-				paramString += ",";
+				paramString.append(",");
 			}
 		}
 
-		String throwsString = "";
+		StringBuilder throwsString = new StringBuilder();
 		if (requiredExceptions.length > 0) {
-			throwsString = " throws ";
+			throwsString.append(" throws ");
 			for (int i = 0; i < requiredExceptions.length; i++) {
-				throwsString += requiredExceptions[i].getCanonicalName();
+				throwsString.append(requiredExceptions[i].getCanonicalName());
 
 				if (i < requiredExceptions.length - 1) {
-					throwsString += ",";
+					throwsString.append(",");
 				}
 			}
 		}

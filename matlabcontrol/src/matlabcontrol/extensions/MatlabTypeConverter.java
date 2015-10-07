@@ -148,15 +148,15 @@ public class MatlabTypeConverter {
 			// - If imaginary array exists, combine the real and imaginary arrays
 			// - Set the proper dimension length metadata
 			// - Store as arrayName
-			String evalStatement = _arrayName + " = reshape(" + realArray;
+			StringBuilder evalStatement = new StringBuilder(_arrayName + " = reshape(" + realArray);
 			if (_imaginaryArray != null) {
-				evalStatement += " + " + imagArray + " * i";
+				evalStatement.append(" + " + imagArray + " * i");
 			}
 			for (int length : _lengths) {
-				evalStatement += ", " + length;
+				evalStatement.append(", " + length);
 			}
-			evalStatement += ");";
-			proxy.eval(evalStatement);
+			evalStatement.append(");");
+			proxy.eval(evalStatement.toString());
 
 			//Clear variables holding separate real and imaginary arrays
 			proxy.eval("clear " + realArray + ";");
