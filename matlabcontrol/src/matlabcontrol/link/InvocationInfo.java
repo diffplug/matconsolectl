@@ -308,7 +308,10 @@ class InvocationInfo implements Serializable {
 	private static final ConcurrentHashMap<Class<?>, File> CLASS_LOCATIONS = new ConcurrentHashMap<Class<?>, File>();
 
 	private static File getClassLocation(Class<?> clazz) {
-		if (!CLASS_LOCATIONS.containsKey(clazz)) {
+		File result = CLASS_LOCATIONS.get(clazz);
+		if (result != null) {
+			return result;
+		} else {
 			try {
 				URL url = clazz.getProtectionDomain().getCodeSource().getLocation();
 				File file = new File(url.toURI().getPath()).getCanonicalFile();
@@ -317,16 +320,13 @@ class InvocationInfo implements Serializable {
 							"class: " + clazz.getCanonicalName() + "\n" +
 							"location: " + file.getAbsolutePath());
 				}
-
-				CLASS_LOCATIONS.put(clazz, file);
+				return CLASS_LOCATIONS.putIfAbsent(clazz, file);
 			} catch (IOException e) {
 				throw new LinkingException("Unable to determine location of " + clazz.getCanonicalName(), e);
 			} catch (URISyntaxException e) {
 				throw new LinkingException("Unable to determine location of " + clazz.getCanonicalName(), e);
 			}
 		}
-
-		return CLASS_LOCATIONS.get(clazz);
 	}
 
 	private static class UnzipResult {
