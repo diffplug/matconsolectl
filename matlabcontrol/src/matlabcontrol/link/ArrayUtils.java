@@ -456,7 +456,7 @@ class ArrayUtils {
 			} else if (array1 instanceof int[] && array2 instanceof int[]) {
 				equal = Arrays.equals((int[]) array1, (int[]) array2);
 			} else if (array1 instanceof long[] && array2 instanceof long[]) {
-				equal = Arrays.equals((byte[]) array1, (byte[]) array2);
+				equal = Arrays.equals((long[]) array1, (long[]) array2);
 			} else if (array1 instanceof float[] && array2 instanceof float[]) {
 				equal = Arrays.equals((float[]) array1, (float[]) array2);
 			} else if (array1 instanceof double[] && array2 instanceof double[]) {
