@@ -88,10 +88,7 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 	 */
 	private final Class<?> _baseComponentType;
 
-	/**
-	 * Internal array type for storing the sparse values.
-	 */
-	private final Class<L> _linearArrayType;
+
 
 	/**
 	 * Output array type.
@@ -121,7 +118,6 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 
 		//Make class information at run time
 		_baseComponentType = linearArrayType.getComponentType();
-		_linearArrayType = linearArrayType;
 		_outputArrayType = (Class<L[]>) ArrayUtils.getArrayClass(_baseComponentType, 2);
 
 		//Indices
@@ -151,7 +147,6 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 
 		//Make class information at run time
 		_baseComponentType = linearArrayType.getComponentType();
-		_linearArrayType = linearArrayType;
 		_outputArrayType = (Class<L[]>) ArrayUtils.getArrayClass(_baseComponentType, 2);
 
 		//Construct a sparse mapping, sort by keys, and then set these values in to the indice and value arrays
@@ -520,13 +515,6 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 			this.linearIndex = ArrayUtils.multidimensionalIndicesToLinearIndex(numRows, row, col);
 			this.row = row;
 			this.col = col;
-		}
-
-		SparseKey(int linearIndex, int[] dimensions) {
-			this.linearIndex = linearIndex;
-			int[] indices = ArrayUtils.linearIndexToMultidimensionalIndices(dimensions, linearIndex);
-			this.row = indices[0];
-			this.col = indices[1];
 		}
 
 		@Override

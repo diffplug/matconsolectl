@@ -491,38 +491,6 @@ public final class MatlabNumericArray {
 	}
 
 	/**
-	 * Linear index to multidimensional indices. Similar to MATLAB's (@code ind2sub} function.
-	 * 
-	 * @param lengths the lengths of the array in each dimension
-	 * @param linearIndex
-	 * @return 
-	 */
-	private static int[] linearIndexToMultidimensionalIndices(int[] lengths, int linearIndex) {
-		int[] indices = new int[lengths.length];
-
-		if (lengths.length == 1) {
-			indices[0] = linearIndex;
-		} else {
-			int pageSize = lengths[0] * lengths[1];
-			int pageNumber = linearIndex / pageSize;
-
-			//Row and column
-			int indexInPage = linearIndex % pageSize;
-			indices[0] = indexInPage % lengths[0];
-			indices[1] = indexInPage / lengths[0];
-
-			//3rd dimension and above
-			int accumSize = 1;
-			for (int dim = 2; dim < lengths.length; dim++) {
-				indices[dim] = (pageNumber / accumSize) % lengths[dim];
-				accumSize *= lengths[dim];
-			}
-		}
-
-		return indices;
-	}
-
-	/**
 	 * Multidimensional indices to linear index. Similar to MATLAB's (@code sub2ind} function.
 	 * 
 	 * @param lengths the lengths of the array in each dimension
