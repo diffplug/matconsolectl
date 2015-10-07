@@ -22,9 +22,6 @@
 package matlabcontrol;
 
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
-
-import junit.framework.Assert;
 
 import org.junit.Test;
 
