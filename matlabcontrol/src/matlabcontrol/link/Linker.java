@@ -638,6 +638,8 @@ public class Linker {
 				_value = value;
 			}
 
+			@SuppressWarnings("unused")
+			// called in MATLAB by the script above
 			public Object getValue() {
 				return _value;
 			}
@@ -792,6 +794,8 @@ public class Linker {
 
 			private Object _value = null;
 
+			@SuppressWarnings("unused")
+			// called in MATLAB by the script above
 			public void set(Object val) {
 				_value = val;
 			}

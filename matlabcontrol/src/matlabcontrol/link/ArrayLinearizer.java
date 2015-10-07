@@ -70,11 +70,8 @@ class ArrayLinearizer {
 			ops.eval(command);
 		}
 
-		/**
-		 * This round about way allows for setting char[] and long[] without exception.
-		 * 
-		 * @return 
-		 */
+		@SuppressWarnings("unused")
+		// called in MATLAB by the script above
 		public Object getLinearArray() {
 			return _linearArray;
 		}

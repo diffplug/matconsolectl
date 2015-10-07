@@ -452,10 +452,14 @@ abstract class MatlabNumberArray<L, T> extends MatlabType {
 			ops.eval(command);
 		}
 
+		@SuppressWarnings("unused")
+		// called in MATLAB by the script above
 		public Object getReal() {
 			return _real;
 		}
 
+		@SuppressWarnings("unused")
+		// called in MATLAB by the script above
 		public Object getImaginary() {
 			return _imag;
 		}
