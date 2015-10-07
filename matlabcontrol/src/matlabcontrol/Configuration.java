@@ -122,9 +122,12 @@ class Configuration {
 	private static String getOSXMatlabLocation() throws MatlabConnectionException {
 		//Search for MATLAB in the Applications directory
 		String matlabName = null;
-		for (String fileName : new File("/Applications/").list()) {
-			if (fileName.startsWith("MATLAB")) {
-				matlabName = fileName;
+		String[] files = new File("/Applications/").list();
+		if (files != null) {
+			for (String fileName : files) {
+				if (fileName.startsWith("MATLAB")) {
+					matlabName = fileName;
+				}
 			}
 		}
 
