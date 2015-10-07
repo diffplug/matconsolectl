@@ -39,7 +39,7 @@ import matlabcontrol.link.MatlabType.MatlabTypeGetter;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ArrayMultidimensionalizer {
-	static class PrimitiveArrayGetter implements MatlabTypeGetter {
+	static class PrimitiveArrayGetter implements MatlabTypeGetter<Object> {
 		private static final long serialVersionUID = -3228683201238234004L;
 		private int[] _lengths;
 		private Object _array;
@@ -75,12 +75,11 @@ class ArrayMultidimensionalizer {
 				throw new IllegalStateException("array has not yet been retrieved");
 			}
 
-			Object array = _array;
 			if (_array != null && !_keepLinear) {
-				array = multidimensionalize(_array, _lengths);
+				return multidimensionalize(_array, _lengths);
+			} else {
+				return _array;
 			}
-
-			return array;
 		}
 
 		@Override
