@@ -154,7 +154,7 @@ public final class MatlabFunctionHandle extends MatlabType {
 		}
 	}
 
-	static class MatlabFunctionHandleGetter implements MatlabTypeGetter {
+	static class MatlabFunctionHandleGetter implements MatlabTypeGetter<MatlabFunctionHandle> {
 		private static final long serialVersionUID = 4448554689248088229L;
 		private String _function;
 		private boolean _retrieved = false;

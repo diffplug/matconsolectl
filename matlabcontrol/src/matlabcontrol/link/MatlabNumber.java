@@ -159,7 +159,7 @@ abstract class MatlabNumber<T extends Number> extends MatlabType {
 		}
 	}
 
-	static class MatlabNumberGetter implements MatlabTypeGetter {
+	static class MatlabNumberGetter implements MatlabTypeGetter<MatlabNumber<?>> {
 		private static final long serialVersionUID = 1339080882185682568L;
 		private Object _real;
 		private Object _imag;

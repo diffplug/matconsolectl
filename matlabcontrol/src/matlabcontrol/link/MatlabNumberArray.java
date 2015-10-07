@@ -460,7 +460,7 @@ abstract class MatlabNumberArray<L, T> extends MatlabType {
 		}
 	}
 
-	static class MatlabNumberArrayGetter implements MatlabTypeGetter {
+	static class MatlabNumberArrayGetter implements MatlabTypeGetter<MatlabNumberArray<?, ?>> {
 		private static final long serialVersionUID = 5757315814250115890L;
 		private Object _real;
 		private Object _imag;
@@ -474,25 +474,25 @@ abstract class MatlabNumberArray<L, T> extends MatlabType {
 		}
 
 		@Override
-		public MatlabNumberArray retrieve() {
+		public MatlabNumberArray<?, ?> retrieve() {
 			if (!_retreived) {
 				throw new IllegalStateException("array has not been retrieved");
 			}
 
 			//Create the appropriate subclass
-			MatlabNumberArray array;
+			MatlabNumberArray<?, ?> array;
 			if (_real.getClass().equals(byte[].class)) {
-				array = new MatlabInt8Array((byte[]) _real, (byte[]) _imag, _lengths);
+				array = new MatlabInt8Array<Object>((byte[]) _real, (byte[]) _imag, _lengths);
 			} else if (_real.getClass().equals(short[].class)) {
-				array = new MatlabInt16Array((short[]) _real, (short[]) _imag, _lengths);
+				array = new MatlabInt16Array<Object>((short[]) _real, (short[]) _imag, _lengths);
 			} else if (_real.getClass().equals(int[].class)) {
-				array = new MatlabInt32Array((int[]) _real, (int[]) _imag, _lengths);
+				array = new MatlabInt32Array<Object>((int[]) _real, (int[]) _imag, _lengths);
 			} else if (_real.getClass().equals(long[].class)) {
-				array = new MatlabInt64Array((long[]) _real, (long[]) _imag, _lengths);
+				array = new MatlabInt64Array<Object>((long[]) _real, (long[]) _imag, _lengths);
 			} else if (_real.getClass().equals(float[].class)) {
-				array = new MatlabSingleArray((float[]) _real, (float[]) _imag, _lengths);
+				array = new MatlabSingleArray<Object>((float[]) _real, (float[]) _imag, _lengths);
 			} else if (_real.getClass().equals(double[].class)) {
-				array = new MatlabDoubleArray((double[]) _real, (double[]) _imag, _lengths);
+				array = new MatlabDoubleArray<Object>((double[]) _real, (double[]) _imag, _lengths);
 			} else {
 				throw new IllegalStateException("unsupported array type: " + _real.getClass().getCanonicalName());
 			}

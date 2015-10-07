@@ -51,7 +51,7 @@ abstract class MatlabType {
 	 * 
 	 * @param <U> 
 	 */
-	static interface MatlabTypeGetter extends Serializable {
+	static interface MatlabTypeGetter<T> extends Serializable {
 		/**
 		 * Takes the information retrieved by the
 		 * {@link #getInMatlab(matlabcontrol.MatlabOperations, java.lang.String)} and creates the
@@ -59,7 +59,7 @@ abstract class MatlabType {
 		 * 
 		 * @return 
 		 */
-		public Object retrieve();
+		public T retrieve();
 
 		/**
 		 * Retrieves the data it needs from the variable in MATLAB. So that after retrieving this information

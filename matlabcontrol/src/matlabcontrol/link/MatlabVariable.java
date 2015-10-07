@@ -106,7 +106,7 @@ public final class MatlabVariable extends MatlabType {
 		return _name.hashCode();
 	}
 
-	static class MatlabVariableGetter implements MatlabTypeGetter {
+	static class MatlabVariableGetter implements MatlabTypeGetter<MatlabVariable> {
 		private static final long serialVersionUID = 7724337165919355824L;
 		private String _name;
 		private boolean _retrieved;

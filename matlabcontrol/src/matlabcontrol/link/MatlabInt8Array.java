@@ -27,7 +27,7 @@ import java.util.Arrays;
  *
  * @since 4.2.0
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
- * @param <M> {@code byte} array type, ex. {@code byte[]}, {@code byte[][]}, {@code byte[][][]}, ...
+ * @param <T> {@code byte} array type, ex. {@code byte[]}, {@code byte[][]}, {@code byte[][][]}, ...
  */
 public class MatlabInt8Array<T> extends MatlabNumberArray<byte[], T> {
 	MatlabInt8Array(byte[] real, byte[] imag, int[] lengths) {
