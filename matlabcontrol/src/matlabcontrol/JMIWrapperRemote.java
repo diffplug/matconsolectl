@@ -48,7 +48,7 @@ interface JMIWrapperRemote extends Remote {
 
 	public Object[] returningEval(String command, int nargout) throws RemoteException, MatlabInvocationException;
 
-	public void feval(String command, Object[] args) throws RemoteException, MatlabInvocationException;
+	public void feval(String command, Object... args) throws RemoteException, MatlabInvocationException;
 
 	public Object[] returningFeval(String command, int nargout, Object... args) throws RemoteException, MatlabInvocationException;
 
