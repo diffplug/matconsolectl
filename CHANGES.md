@@ -17,5 +17,3 @@
 	+ You can connect over and over this way, and the MATLAB instance stays happy.
 
 ## Versions up to 4.1.0 are from the original [Google code page](https://code.google.com/p/matlabcontrol/wiki/VersionHistory).
-
-* First release, to test out that we can release to jcenter and whatnot.

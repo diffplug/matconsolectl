@@ -1,29 +1,3 @@
-# Contributing to matlabcontrol
-
-Pull requests are welcome, preferably against `master`.
-
-Every successful Travis CI build on branch `master` is automatically published to [`https://oss.sonatype.org/content/repositories/snapshots`](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/), and its javadoc are published [here](http://diffplug.github.io/matlabcontrol/javadoc/snapshot/).
-
-## Build instructions
-
-It's a bog-standard gradle build.
-
-`gradlew eclipse`
-* creates an Eclipse project file for you.
-
-`gradlew build`
-* builds the jar
-* runs FindBugs
-* checks the formatting
-* runs the tests
-
-If you're getting style warnings, `gradlew spotlessApply` will apply anything necessary to fix formatting. For more info on the formatter, check out [spotless](https://github.com/diffplug/spotless).
-
-## License
-
-By contributing your code, you agree to license your contribution under the terms of the New BSD license as such:
-
-```
 Copyright (c) 2013, Joshua Kaplan
 All rights reserved.
 
@@ -43,4 +17,3 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PRO
 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
 WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-```
