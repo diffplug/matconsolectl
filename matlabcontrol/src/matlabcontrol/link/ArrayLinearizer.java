@@ -85,7 +85,7 @@ class ArrayLinearizer {
 	 * @return linear array
 	 */
 	static Object linearize(Object array, int[] lengths) {
-		if (array == null | !array.getClass().isArray()) {
+		if (array == null || !array.getClass().isArray()) {
 			throw new RuntimeException("provided object is not an array");
 		}
 
