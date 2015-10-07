@@ -2,9 +2,16 @@ language: java
 jdk:
 - oraclejdk8
 before_cache:
-  - rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
+- rm -f $HOME/.gradle/caches/modules-2/modules-2.lock
 cache:
   directories:
-    - $HOME/.gradle/caches/
-    - $HOME/.gradle/wrapper/
-    - matlabcontrol/matlabcontrol/build/jdk
+  - "$HOME/.gradle/caches/"
+  - "$HOME/.gradle/wrapper/"
+  - matlabcontrol/matlabcontrol/build/jdk
+env:
+  global:
+  - secure: bFkGxUuBzJ10xmP5q9HooBkyxTRR5Z1tV2v654igGG/4f0tjd9Y3uUQkzbltzeyC+z1GyFrGJv7dynURgB+U5yQCRUiWK6/fEEEFTx/rbQy2pTWfuNH6BaplKplXjBU6OKXk6wkVWMfTZd8FQQXmRBJ27kjlowGNB0JS/7b4vmA=
+  - secure: X9uzdaQtiya9tnVhoxbZiM0mpE5zhna1IqQWapeqr40TPbQEYPgTGL8gS97oWf5kCecGga2WmnTgg6nT1aiAnxClB9WqLwH1nhGGqvpM+3EK/EKhEanfKe7E7BQXwapKUn/gKHXxh0gNy2fZ+IUN0reWiamGpqU2NpPGJeZEAEU=
+  - secure: H2Cp8aArIxg0JIdXBBcK7coVnlB/NyKcnLwGEcwlfYKUz7cVZroGMmbByTcqn6+6bLj3vyST6JCDSJouRTkrJpGdatbGiL+EdhPP34B1s2MmLVp+mzN1JZK66RjXMpkAOZYyOxBPdbkMrHhljUv+k/kmUGrpn3IpD9YX5zadijw=
+  - secure: D+SxcVLyTJl+ChY9o1PNs8kezQTin4RjCsU6kzlNj9IL8QZmeDRgTPKJT3moIZcOT09QHyTlikpqNCLhd7lL2CCSQlv+WIE7YZcxyInhHAcB9i/1aSxMAKIKp2fCghSSfhq2T6sFx/sJfZUQ6Sb6jwf6Q7YlxBvtsVHYDS/GmA8=
+  - secure: T1jdUxDMBfVBXdzXI7QzJBkzmxXPa8Pp5T3vBjBr+5ROK9JogvuzYSDRtXMGOBNlNgEXOs9YALWD5g9VskD6QISekZyGJ72lWzqxFdMnCb19l/kbxudptRETxNTByp3G/5j/53pIsb6umjxcAjuw3TLAzF26+ptkVC/qZ7PExiA=
