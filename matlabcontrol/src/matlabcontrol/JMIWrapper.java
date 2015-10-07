@@ -91,7 +91,11 @@ class JMIWrapper {
 				}
 				//This should never fail, and if it does there is no way to consistently report it back to the caller
 				//because this method does not block
-				catch (Exception e) {}
+				catch (Exception e) {
+					// make as much noise as we can
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
 			}
 		};
 
