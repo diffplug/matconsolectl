@@ -29,8 +29,9 @@ output = prefixDelimiterReplace(input, 'https://{{org}}.github.io/{{name}}/javad
 ```java
 MatlabProxyFactoryOptions.Builder builder = new MatlabProxyFactoryOptions.Builder();
 // setup the factory
-//    setCopyPasteCallback to connect to an existing MATLAB by copy-pasting a script into
-//    setUsePreviouslyControlledSession to start a new MATLAB or connect to a previously started MATLAB
+//    setCopyPasteCallback() connects to an existing MATLAB by copy-pasting a few lines into the command window
+//    setUsePreviouslyControlledSession() starts a new MATLAB or connects to a previously started MATLAB without any user intervention
+
 MatlabProxyFactory factory = new MatlabProxyFactory(builder.build());
 // get the proxy
 MatlabProxy proxy = factory.getProxy();
@@ -40,9 +41,11 @@ proxy.setVariable("a", 5.0);
 Object a = proxy.getVariable("a");
 double actual = ((double[]) result)[0];
 assert(actual == 5.0)
-// disconnect
+// disconnect the proxy
 proxy.disconnect();
 ```
+
+Contributions are welcome, see the [contributing guide](CONTRIBUTING.md) for development info.
 
 ## Compatibility
 
@@ -56,8 +59,6 @@ matlabcontrol works on Win/Mac/Linux, MATLAB R2007b through R2015b, and it will 
 
 This has been forked from the project originally maintained on the now defunct [Google Code](https://code.google.com/p/matlabcontrol/).
 
-We have made some improvements, and we are happy to work with the community to continue to improve this fantastic library.
-However, this fork is in no way associated with or endorsed by any authors of the original project.  We have attempted to make contact with them to make sure
-that we are conducting this fork in compliance with their wishes, but have been unable to make contact.
+We have made some improvements (see the [changelog](CHANGES.md)), and will maintain this library into the future.  This fork is in no way associated with or endorsed by any authors of the original project.  We have attempted to make contact with them to make sure that we are conducting this fork in compliance with their wishes, but have been unable to make contact.
 
 Luckily, the BSD license of the original project allows us to continue development even if we are unable to contact the original authors.
