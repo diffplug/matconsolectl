@@ -30,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class ClassInfo {
-	private static ConcurrentMap<Class, ClassInfo> CACHE = new ConcurrentHashMap<Class, ClassInfo>();
+	private static ConcurrentMap<Class<?>, ClassInfo> CACHE = new ConcurrentHashMap<Class<?>, ClassInfo>();
 
 	static ClassInfo getInfo(Class<?> clazz) {
 		ClassInfo info = CACHE.get(clazz);
@@ -97,7 +97,7 @@ class ClassInfo {
 			isArray = true;
 
 			int dim = 0;
-			Class type = clazz;
+			Class<?> type = clazz;
 			while (type.isArray()) {
 				dim++;
 				type = type.getComponentType();

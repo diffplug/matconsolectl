@@ -35,7 +35,7 @@ public class MatlabInt8Array<T> extends MatlabNumberArray<byte[], T> {
 	}
 
 	public static <T> MatlabInt8Array<T> getInstance(T real, T imaginary) {
-		return new MatlabInt8Array(real, imaginary);
+		return new MatlabInt8Array<T>(real, imaginary);
 	}
 
 	private MatlabInt8Array(T real, T imaginary) {

@@ -102,7 +102,7 @@ class MatlabDoubleFullMatrix<T> extends MatlabDoubleMatrix<T> {
 	}
 
 	@Override
-	public MatlabDouble getElementAtIndices(int row, int column, int[] pages) {
+	public MatlabDouble getElementAtIndices(int row, int column, int... pages) {
 		int linearIndex = _array.getLinearIndex(row, column, pages);
 
 		return new MatlabDouble(_array._real[linearIndex], _array._imag == null ? 0 : _array._imag[linearIndex]);

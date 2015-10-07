@@ -96,7 +96,7 @@ abstract class MatlabNumber<T extends Number> extends MatlabType {
 		boolean equal = false;
 
 		if (obj != null && this.getClass().equals(obj.getClass())) {
-			MatlabNumber other = (MatlabNumber) obj;
+			MatlabNumber<?> other = (MatlabNumber<?>) obj;
 			equal = _real.equals(other._real) && _imag.equals(other._imag);
 		}
 
@@ -171,7 +171,7 @@ abstract class MatlabNumber<T extends Number> extends MatlabType {
 				throw new IllegalStateException("complex number has not been retrieved");
 			}
 
-			MatlabNumber num;
+			MatlabNumber<?> num;
 			if (_real.getClass().equals(Byte.class)) {
 				num = new MatlabInt8((Byte) _real, (Byte) _imag);
 			} else if (_real.getClass().equals(Short.class)) {

@@ -363,7 +363,7 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 		}
 		//Same class
 		else if (obj != null && this.getClass().equals(obj.getClass())) {
-			SparseArray other = (SparseArray) obj;
+			SparseArray<?> other = (SparseArray<?>) obj;
 
 			//If the two instances are equal their hashcodes must be equal (but not the converse)
 			if (this.hashCode() == other.hashCode()) {

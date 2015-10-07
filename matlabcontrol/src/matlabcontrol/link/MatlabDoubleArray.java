@@ -35,7 +35,7 @@ public class MatlabDoubleArray<T> extends MatlabNumberArray<double[], T> {
 	}
 
 	public static <T> MatlabDoubleArray<T> getInstance(T real, T imaginary) {
-		return new MatlabDoubleArray(real, imaginary);
+		return new MatlabDoubleArray<T>(real, imaginary);
 	}
 
 	private MatlabDoubleArray(T real, T imaginary) {

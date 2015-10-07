@@ -26,7 +26,6 @@ import java.util.Set;
 
 import matlabcontrol.MatlabInvocationException;
 import matlabcontrol.MatlabOperations;
-import matlabcontrol.link.MatlabType.MatlabTypeSetter;
 
 /**
  *

@@ -35,7 +35,7 @@ public class MatlabSingleArray<T> extends MatlabNumberArray<float[], T> {
 	}
 
 	public static <T> MatlabSingleArray<T> getInstance(T real, T imaginary) {
-		return new MatlabSingleArray(real, imaginary);
+		return new MatlabSingleArray<T>(real, imaginary);
 	}
 
 	private MatlabSingleArray(T real, T imaginary) {

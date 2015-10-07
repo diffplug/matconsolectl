@@ -35,7 +35,7 @@ public class MatlabInt32Array<T> extends MatlabNumberArray<int[], T> {
 	}
 
 	public static <T> MatlabInt32Array<T> getInstance(T real, T imaginary) {
-		return new MatlabInt32Array(real, imaginary);
+		return new MatlabInt32Array<T>(real, imaginary);
 	}
 
 	private MatlabInt32Array(T real, T imaginary) {

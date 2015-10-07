@@ -113,7 +113,7 @@ class InvocationInfo {
 				" returnTypesGenericParameters=" + genericParameters + "]";
 	}
 
-	private static String classArrayToString(Class[] array) {
+	private static String classArrayToString(Class<?>[] array) {
 		String str = "[";
 		for (int i = 0; i < array.length; i++) {
 			str += array[i].getCanonicalName();
@@ -473,7 +473,7 @@ class InvocationInfo {
 					Type type = parameterizedTypes[i];
 
 					if (type instanceof Class) {
-						Class returnType = (Class) type;
+						Class<?> returnType = (Class<?>) type;
 						if (MatlabNumberArray.class.isAssignableFrom(returnType)) {
 							throw new LinkingException(method + " must parameterize " + returnType.getCanonicalName());
 						}

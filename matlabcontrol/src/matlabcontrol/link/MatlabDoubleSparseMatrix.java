@@ -126,7 +126,7 @@ class MatlabDoubleSparseMatrix extends MatlabDoubleMatrix<double[][]> {
 	}
 
 	@Override
-	public MatlabDouble getElementAtIndices(int row, int column, int[] pages) {
+	public MatlabDouble getElementAtIndices(int row, int column, int... pages) {
 		throw new IllegalArgumentException("Array has 2 dimensions, it cannot be indexed into using " +
 				(2 + pages.length) + " indices");
 	}

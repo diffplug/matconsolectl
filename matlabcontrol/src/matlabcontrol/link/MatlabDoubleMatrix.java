@@ -64,5 +64,5 @@ public abstract class MatlabDoubleMatrix<T> extends MatlabNumericMatrix<double[]
 	public abstract MatlabDouble getElementAtIndices(int row, int column, int page);
 
 	@Override
-	public abstract MatlabDouble getElementAtIndices(int row, int column, int[] pages);
+	public abstract MatlabDouble getElementAtIndices(int row, int column, int... pages);
 }

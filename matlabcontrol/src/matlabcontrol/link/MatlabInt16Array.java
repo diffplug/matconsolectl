@@ -35,7 +35,7 @@ public class MatlabInt16Array<T> extends MatlabNumberArray<short[], T> {
 	}
 
 	public static <T> MatlabInt16Array<T> getInstance(T real, T imaginary) {
-		return new MatlabInt16Array(real, imaginary);
+		return new MatlabInt16Array<T>(real, imaginary);
 	}
 
 	private MatlabInt16Array(T real, T imaginary) {

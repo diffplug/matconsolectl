@@ -35,7 +35,7 @@ public class MatlabInt64Array<T> extends MatlabNumberArray<long[], T> {
 	}
 
 	public static <T> MatlabInt64Array<T> getInstance(T real, T imaginary) {
-		return new MatlabInt64Array(real, imaginary);
+		return new MatlabInt64Array<T>(real, imaginary);
 	}
 
 	private MatlabInt64Array(T real, T imaginary) {
