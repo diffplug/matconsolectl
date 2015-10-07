@@ -45,6 +45,7 @@ class ArrayUtils {
 	 * @param array
 	 * @return copy of array
 	 */
+	@SuppressWarnings("unchecked")
 	static <T> T deepCopy(T array) {
 		T copy;
 
@@ -476,6 +477,7 @@ class ArrayUtils {
 		return equal;
 	}
 
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	static boolean containsNonDefaultValue(Object array) {
 		boolean contains;
 		if (array == null) {
