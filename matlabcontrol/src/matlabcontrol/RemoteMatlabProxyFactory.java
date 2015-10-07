@@ -21,10 +21,8 @@
  */
 package matlabcontrol;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
@@ -339,9 +337,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		@Override
 		public void run() {
 			try {
-				String processConsoleEncoding = "UTF-8";
-				BufferedReader in = new BufferedReader(new InputStreamReader(_stream, processConsoleEncoding));
-				while (in.readLine() != null)
+				byte[] buffer = new byte[1024];
+				while (_stream.read(buffer) != -1)
 					;
 			} catch (IOException e) {
 				e.printStackTrace();
