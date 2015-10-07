@@ -64,6 +64,7 @@ def JMI_STUB = 'com/mathworks/jmi/**'
 
 // make a source jar
 task sourcesJar(type: Jar) {
+	classifier = 'sources'
 	from sourceSets.main.allJava
 	exclude(JMI_STUB)
 }
