@@ -88,8 +88,6 @@ class SparseArray<L> extends BaseArray<L, L[]> {
 	 */
 	private final Class<?> _baseComponentType;
 
-
-
 	/**
 	 * Output array type.
 	 */
