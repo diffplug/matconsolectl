@@ -27,11 +27,13 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
 /**
  *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
+@Category(MatlabRequired.Headless.class)
 public class GetAndSetTest {
 	private static MatlabProxy proxy;
 
