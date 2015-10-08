@@ -8,7 +8,7 @@ cache:
   directories:
   - "$HOME/.gradle/caches/"
   - "$HOME/.gradle/wrapper/"
-  - "matlabcontrol/matlabcontrol/build/jdk"
+  - "matlabcontrol/build/jdk"
 env:
   global:
   - secure: bFkGxUuBzJ10xmP5q9HooBkyxTRR5Z1tV2v654igGG/4f0tjd9Y3uUQkzbltzeyC+z1GyFrGJv7dynURgB+U5yQCRUiWK6/fEEEFTx/rbQy2pTWfuNH6BaplKplXjBU6OKXk6wkVWMfTZd8FQQXmRBJ27kjlowGNB0JS/7b4vmA=
