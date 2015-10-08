@@ -44,7 +44,8 @@ task unzipJRE6(dependsOn: verifyJRE6, type: Copy) {
 // Best bet is to stay at 1.6
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
-def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar;${JRE6_HOME}/lib/jsse.jar"
+def sep = System.getProperty('path.separator')
+def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar${sep}${JRE6_HOME}/lib/jsse.jar"
 project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
 	ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
 	ac.dependsOn(unzipJRE6)
