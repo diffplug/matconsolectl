@@ -55,9 +55,6 @@ project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
 // EXCLUDE JMI_STUB //
 //////////////////////
 apply plugin: 'maven-publish'
-repositories {
-	mavenCentral()
-}
 dependencies {
 	testCompile "junit:junit:${VER_JUNIT}"
 }
@@ -75,6 +72,31 @@ task sourcesJar(type: Jar) {
 jar {
 	exclude(JMI_STUB)
 }
+
+////////////////////
+// MATLAB TESTING //
+////////////////////
+
+// standard `gradlew test` can't handle tests which require a MATLAB installation
+test {
+	// test
+	useJUnit {
+		excludeCategories 'matlabcontrol.MatlabRequired$Interactive'
+		excludeCategories 'matlabcontrol.MatlabRequired$Headless'
+	}
+}
+
+task testMatlabHeadless(type: Test) {
+	useJUnit {
+		includeCategories 'matlabcontrol.MatlabRequired$Headless'
+	}
+}
+task testMatlabInteractive(type: Test) {
+	useJUnit {
+		includeCategories 'matlabcontrol.MatlabRequired$Interactive'
+	}
+}
+task testMatlabAll(dependsOn: [test, testMatlabHeadless, testMatlabInteractive])
 
 //////////////
 // FINDBUGS //

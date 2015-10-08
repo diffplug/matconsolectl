@@ -19,6 +19,15 @@ It's a bog-standard gradle build.
 
 If you're getting style warnings, `gradlew spotlessApply` will apply anything necessary to fix formatting. For more info on the formatter, check out [spotless](https://github.com/diffplug/spotless).
 
+## Testing MATLAB stuff
+
+In order to keep CI happy, there are three kinds of tests:
+
+* `gradlew test` doesn't need MATLAB, automatically called by `gradlew build`
+* `gradlew testMatlabHeadless` needs MATLAB but not a human, see [GetAndSetTest.java](matlabcontrol/test/matlabcontrol/GetAndSetTest.java?ts=4)
+* `gradlew testMatlabInteractive` needs MATLAB and a human, see [CopyPasteTest.java](matlabcontrol/test/matlabcontrol/CopyPasteTest.java?ts=4)
+* `gradlew testMatlabAll` runs all of the above
+
 ## License
 
 By contributing your code, you agree to license your contribution under the terms of the New BSD license as such:

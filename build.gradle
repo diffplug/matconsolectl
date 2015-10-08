@@ -51,6 +51,10 @@ subprojects {
 			srcDir 'test'
 		} }
 	}
+
+	repositories {
+		mavenCentral()
+	}
 }
 
 // the demo project needs the regular project

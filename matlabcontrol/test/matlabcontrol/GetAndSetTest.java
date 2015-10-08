@@ -21,39 +21,53 @@
  */
 package matlabcontrol;
 
-import java.util.concurrent.ArrayBlockingQueue;
+import matlabcontrol.link.ArrayUtilsTest;
 
+import org.junit.AfterClass;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  *
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-public class MatlabProxyFactoryTest {
-	@Test
-	public void createFactory() {
-		MatlabProxyFactory factory = new MatlabProxyFactory();
+public class GetAndSetTest {
+	private static MatlabProxy proxy;
+
+	@BeforeClass
+	public static void createProxy() throws MatlabConnectionException {
+		MatlabProxyFactoryOptions.Builder builder = new MatlabProxyFactoryOptions.Builder();
+		builder.setUsePreviouslyControlledSession(true);
+		MatlabProxyFactory factory = new MatlabProxyFactory(builder.build());
+		proxy = factory.getProxy();
+	}
+
+	@AfterClass
+	public static void exitMatlab() throws MatlabInvocationException {
+		if (proxy != null) {
+			proxy.disconnect();
+		}
+	}
+
+	@Before
+	public void clear() throws MatlabInvocationException {
+		proxy.eval("clear");
 	}
 
 	@Test
-	public void getProxy() throws MatlabConnectionException, MatlabInvocationException {
-		MatlabProxyFactory factory = new MatlabProxyFactory();
-		MatlabProxy proxy = factory.getProxy();
-		proxy.exit();
+	public void testSetGet() throws MatlabInvocationException {
+		testCaseSetGet(new boolean[]{true});
+		testCaseSetGet(new boolean[]{false});
+
+		testCaseSetGet(new double[]{1.5});
+
+		testCaseSetGet("string");
 	}
 
-	@Test
-	public void requestProxy() throws MatlabConnectionException, MatlabInvocationException, InterruptedException {
-		MatlabProxyFactory factory = new MatlabProxyFactory();
-		final ArrayBlockingQueue<MatlabProxy> proxyQueue = new ArrayBlockingQueue<MatlabProxy>(1);
-		factory.requestProxy(new MatlabProxyFactory.RequestCallback() {
-			@Override
-			public void proxyCreated(MatlabProxy proxy) {
-				proxyQueue.add(proxy);
-			}
-		});
-
-		MatlabProxy proxy = proxyQueue.take();
-		proxy.exit();
+	private void testCaseSetGet(Object set) throws MatlabInvocationException {
+		proxy.setVariable("a", set);
+		Object get = proxy.getVariable("a");
+		ArrayUtilsTest.assertArraysEqual(set, get);
 	}
 }

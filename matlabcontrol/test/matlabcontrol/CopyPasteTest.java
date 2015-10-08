@@ -21,54 +21,42 @@
  */
 package matlabcontrol;
 
-import static junit.framework.Assert.*;
+import matlabcontrol.MatlabProxyFactory.CopyPasteCallback;
 
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
+import org.junit.Assert;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 
-/**
- *
- * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
- */
-public class MatlabProxyTest {
-	private static MatlabProxy _proxy;
+@Category(MatlabRequired.Interactive.class)
+public class CopyPasteTest {
+	private Runnable runnable;
 
-	@BeforeClass
-	public static void createProxy() throws MatlabConnectionException {
-		MatlabProxyFactory factory = new MatlabProxyFactory();
-		_proxy = factory.getProxy();
-	}
-
-	@AfterClass
-	public static void exitMatlab() throws MatlabInvocationException {
-		if (_proxy != null) {
-			_proxy.exit();
+	@Test
+	public void testCopyPaste() throws MatlabConnectionException, MatlabInvocationException {
+		MatlabProxyFactoryOptions.Builder builder = new MatlabProxyFactoryOptions.Builder();
+		builder.setCopyPasteCallback(new CopyPasteCallback() {
+			@Override
+			public void copyPaste(String matlabCmdsToConnect) {
+				StringBuilder builder = new StringBuilder();
+				builder.append("Copy-paste the following lines into a MATLAB:\n");
+				String[] pieces = matlabCmdsToConnect.split(";");
+				for (String piece : pieces) {
+					builder.append("    " + piece.trim() + ";\n");
+				}
+				builder.append("\nWaiting for you to paste.");
+				runnable = MatlabRequired.Interactive.prompt(builder.toString());
+			}
+		});
+		MatlabProxyFactory factory = new MatlabProxyFactory(builder.build());
+		MatlabProxy proxy = factory.getProxy();
+		try {
+			runnable.run();
+			proxy.eval("disp('connection established')");
+			proxy.setVariable("test", "abc");
+			Assert.assertEquals("abc", proxy.getVariable("test"));
+		} finally {
+			runnable.run();
+			proxy.disconnect();
 		}
-	}
-
-	@Before
-	public void clear() throws MatlabInvocationException {
-		_proxy.eval("clear");
-	}
-
-	@Test
-	public void testSetVariable() throws MatlabInvocationException {
-		_proxy.setVariable("a", 5);
-	}
-
-	@Test
-	public void testSetGetVariable() throws MatlabInvocationException {
-		double expected = 5;
-		_proxy.setVariable("a", expected);
-		Object result = _proxy.getVariable("a");
-		double actual = ((double[]) result)[0];
-		assertEquals(expected, actual, 0);
-	}
-
-	@Test
-	public void testEval() throws MatlabInvocationException {
-		_proxy.eval("disp('Hello World')");
 	}
 }
