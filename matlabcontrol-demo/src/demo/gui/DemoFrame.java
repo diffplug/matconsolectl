@@ -268,7 +268,7 @@ public class DemoFrame extends JFrame {
 		methodPanel.add(methodLowerPanel, BorderLayout.SOUTH);
 
 		//Method choice
-		final JComboBox methodBox = new JComboBox(ProxyMethodDescriptor.values());
+		final JComboBox<ProxyMethodDescriptor> methodBox = new JComboBox<ProxyMethodDescriptor>(ProxyMethodDescriptor.values());
 		methodUpperPanel.add(methodBox);
 
 		//Invoke button
