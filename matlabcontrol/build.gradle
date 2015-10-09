@@ -74,7 +74,6 @@ jar.manifest {
 		'-removeheaders': 'Bnd-LastModified,Bundle-Name,Created-By,Tool,Private-Package',
 		'-savemanifest': project.file('META-INF/MANIFEST.MF'),
 	)
-	jar.outputs.file(project.file('META-INF/MANIFEST.MF'))
 }
 
 // manifests are only generated when the java files change - not if manifest properties change
