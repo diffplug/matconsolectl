@@ -1,6 +1,6 @@
-# Durian releases
+# matlabcontrol releases
 
-### Version 4.3.0 - October 7th 2015 ([javadoc](http://diffplug.github.io/matlabcontrol/javadoc/4.3.0/), [jcenter](https://bintray.com/diffplug/opensource/matlabcontrol/4.3.0/view))
+### Version 4.3.0 - TBD ([javadoc](http://diffplug.github.io/matlabcontrol/javadoc/4.3.0/), [jcenter](https://bintray.com/diffplug/opensource/matlabcontrol/4.3.0/view))
 
 - `MatlabType.MatlabTypeGetter` is now generic.
 - Fixed lots of compiler warnings.
