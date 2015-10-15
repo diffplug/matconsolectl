@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-Description: MatConsoleCtl - control MATLAB from Java
+Bundle-DocURL: https://github.com/diffplug/matconsolectl
+Bundle-License: https://github.com/diffplug/matconsolectl/blob/v4.3.0-SN
+ APSHOT/LICENSE
+Bundle-ManifestVersion: 2
+Bundle-SymbolicName: com.diffplug.matsim.matconsolectl
+Bundle-Vendor: DiffPlug
+Bundle-Version: 4.3.0.SNAPSHOT
+Export-Package: matlabcontrol;version="4.3.0",matlabcontrol.demo;version
+ ="4.3.0",matlabcontrol.extensions;uses:=matlabcontrol;version="4.3.0",m
+ atlabcontrol.link;uses:=matlabcontrol;version="4.3.0"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.6))"
