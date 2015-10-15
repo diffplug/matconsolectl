@@ -1,4 +1,4 @@
-# <img align="left" src="matlabcontrol.png"> matlabcontrol: Control MATLAB from Java
+# <img align="left" src="matconsolectl.png"> MatConsoleCtl: Control MATLAB from Java
 
 <!---freshmark shields
 output = [
@@ -11,16 +11,16 @@ output = [
 	link(image('Travis CI', 'https://travis-ci.org/{{org}}/{{name}}.svg?branch=master'), 'https://travis-ci.org/{{org}}/{{name}}')
 	].join('\n');
 -->
-[![Maven artifact](https://img.shields.io/badge/mavenCentral-com.diffplug.matsim%3Amatlabcontrol-blue.svg)](https://bintray.com/diffplug/opensource/matlabcontrol/view)
-[![Latest version](https://img.shields.io/badge/latest-4.3.0-blue.svg)](https://github.com/diffplug/matlabcontrol/releases/latest)
-[![Javadoc](https://img.shields.io/badge/javadoc-OK-blue.svg)](https://diffplug.github.io/matlabcontrol/javadoc/4.3.0/)
+[![Maven artifact](https://img.shields.io/badge/mavenCentral-com.diffplug.matsim%3Amatconsolectl-blue.svg)](https://bintray.com/diffplug/opensource/matconsolectl/view)
+[![Latest version](https://img.shields.io/badge/latest-4.3.0-blue.svg)](https://github.com/diffplug/matconsolectl/releases/latest)
+[![Javadoc](https://img.shields.io/badge/javadoc-OK-blue.svg)](https://diffplug.github.io/matconsolectl/javadoc/4.3.0/)
 [![License Apache](https://img.shields.io/badge/license-BSD-blue.svg)](https://tldrlegal.com/license/bsd-3-clause-license-(revised))
 
 [![Changelog](https://img.shields.io/badge/changelog-4.3.0--SNAPSHOT-brightgreen.svg)](CHANGES.md)
-[![Travis CI](https://travis-ci.org/diffplug/matlabcontrol.svg?branch=master)](https://travis-ci.org/diffplug/matlabcontrol)
+[![Travis CI](https://travis-ci.org/diffplug/matconsolectl.svg?branch=master)](https://travis-ci.org/diffplug/matconsolectl)
 <!---freshmark /shields -->
 
-matlabcontrol is a Java API that allows calling MATLAB from Java. You can `eval`, `feval`, as well as `get` and `set` variables. Interaction can be performed from either inside MATLAB or outside MATLAB (both by starting a new MATLAB or by connecting to an existing MATLAB).
+MatConsoleCtl is a Java API that allows calling MATLAB from Java. You can `eval`, `feval`, as well as `get` and `set` variables. Interaction can be performed from either inside MATLAB or outside MATLAB (both by starting a new MATLAB or by connecting to an existing MATLAB).
 
 <!---freshmark javadoc
 output = prefixDelimiterReplace(input, 'https://{{org}}.github.io/{{name}}/javadoc/', '/', stable);
@@ -49,7 +49,7 @@ Contributions are welcome, see the [contributing guide](CONTRIBUTING.md) for dev
 
 ## Compatibility
 
-matlabcontrol works on Win/Mac/Linux, MATLAB R2007b through R2015b, and it will continue to work so long as MATLAB maintains the Java MATLAB Interface.\*
+MatConsoleCtl works on Win/Mac/Linux, MATLAB R2007b through R2015b, and it will continue to work so long as MATLAB maintains the Java MATLAB Interface.\*
 
 \* On OS X 10.5, R2009a and earlier, you will need to do some hacking.  matlabcontrol requires Java 6, and Apple only released 64-bit Java 6 for OS X 10.5, while MATLAB only released 32-bit MATLAB for R2009a and earlier.  There are unofficial ways to run 32-bit Java 6 on OS X 10.5.
 
@@ -57,11 +57,9 @@ matlabcontrol works on Win/Mac/Linux, MATLAB R2007b through R2015b, and it will 
 
 ## Acknowledgements
 
-This has been forked from the project originally maintained on the now defunct [Google Code](https://code.google.com/p/matlabcontrol/).
+This is forked from the matlabcontrol project originally maintained on the now-defunct [Google Code](https://code.google.com/p/matlabcontrol/).  The name was changed to ensure that we don't infringe the original project's license, but we did not change the package names, so this project is binary compatible with the original matlabcontrol.  This fork is in no way associated with or endorsed by any authors of the original project.
 
-We have made some improvements (see the [changelog](CHANGES.md)), and will maintain this library into the future.  This fork is in no way associated with or endorsed by any authors of the original project.  We have attempted to make contact with them to make sure that we are conducting this fork in compliance with their wishes, but have been unable to make contact.
-
-Luckily, the BSD license of the original project allows us to continue development even if we are unable to contact the original authors.
+We have fixed some bugs and added some features (see the [changelog](CHANGES.md)), and we will maintain this library into the future.  We're happy to accept pull requests](CONTRIBUTING.md) too!
 
 * Formatted by [spotless](https://github.com/diffplug/spotless), [as such](https://github.com/diffplug/durian-rx/blob/v1.0/build.gradle?ts=4#L70-L90).
 * Bugs found by [findbugs](http://findbugs.sourceforge.net/), [as such](https://github.com/diffplug/durian-rx/blob/v1.0/build.gradle?ts=4#L92-L116).
