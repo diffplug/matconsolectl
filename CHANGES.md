@@ -1,6 +1,6 @@
 # MatConsoleCtl releases
 
-### Version 4.3.0 - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.3.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.3.0/view))
+### Version 4.4.0 - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.3.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.3.0/view))
 
 - `MatlabType.MatlabTypeGetter` is now generic.
 - Fixed lots of compiler warnings.
@@ -9,6 +9,10 @@
 - [Fixed bug in ArrayUtils.equals when applied to arrays of long.](https://github.com/diffplug/matconsolectl/commit/088b954551392dc7b24142fd7f1cbcdc6a4005bf)
 - [Fixed a serialization bug.](https://github.com/diffplug/matconsolectl/commit/d6bc07adca74f0bb3ae91c1009222eff6b975774)
 - Broke up the test suite into `test`, `testMatlabHeadless`, and `testMatlabInteractive`
+
+### Version 4.3.0 - February 23rd 2015
+
+- Added OSGi compatibility.
 
 ### Version 4.2.1 - February 22nd 2015
 
