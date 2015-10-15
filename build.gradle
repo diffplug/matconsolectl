@@ -67,7 +67,7 @@ jar.doFirst {
 
 jar.manifest {
 	attributes (
-		'Export-Package': '!matlabcontrol.internal.*,matlabcontrol.*',
+		'Export-Package': 'matlabcontrol.*,!matlabcontrol.internal.*,!matlabcontrol.demo.*',
 		'Bundle-SymbolicName': "${project.group}.${project.name}",
 		'Bundle-Vendor': 'DiffPlug',
 		'Bundle-DocURL': "https://github.com/${project.org}/${project.name}",
