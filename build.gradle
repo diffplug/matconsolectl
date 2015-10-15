@@ -56,10 +56,3 @@ subprojects {
 		mavenCentral()
 	}
 }
-
-// the demo project needs the regular project
-project(':matlabcontrol-demo') {
-	dependencies {
-		compile project(':matlabcontrol')
-	}
-}

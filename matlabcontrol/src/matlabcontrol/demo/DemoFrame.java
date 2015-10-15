@@ -3,7 +3,7 @@
  * All code up to tags/original: Copyright (c) 2013, Joshua Kaplan
  * All code after tags/original: Copyright (c) 2015, DiffPlug
  */
-package demo.gui;
+package matlabcontrol.demo;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
 import java.text.NumberFormat;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -83,6 +84,15 @@ public class DemoFrame extends JFrame {
 	private JScrollPane _returnPane;
 	private JTextArea _returnArea;
 
+	public static BufferedImage getIcon() {
+		try {
+			return ImageIO.read(DemoFrame.class.getResource("/matlabcontrol/demo/icon.png"));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
+		}
+	}
+
 	/**
 	 * Create the main GUI.
 	 */
@@ -90,10 +100,7 @@ public class DemoFrame extends JFrame {
 		super(title);
 
 		System.setSecurityManager(new PermissiveSecurityManager());
-
-		try {
-			this.setIconImage(ImageIO.read(this.getClass().getResource("/demo/gui/icon.png")));
-		} catch (Exception e) {}
+		setIconImage(getIcon());
 
 		//Panel that contains the over panels
 		JPanel mainPanel = new JPanel();

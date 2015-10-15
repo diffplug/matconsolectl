@@ -1,9 +1,8 @@
+package matlabcontrol.demo;
 
 import java.awt.EventQueue;
 
 import javax.swing.WindowConstants;
-
-import demo.gui.DemoFrame;
 
 /**
  * This class exists solely as a entry point to the demo when running it from inside of MATLAB. By placing it in the
@@ -13,11 +12,11 @@ import demo.gui.DemoFrame;
  * 
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
-class matlabcontroldemo {
+class InsideMatlab {
 	/**
 	 * Launches the demo.
 	 */
-	public matlabcontroldemo() {
+	public InsideMatlab() {
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {

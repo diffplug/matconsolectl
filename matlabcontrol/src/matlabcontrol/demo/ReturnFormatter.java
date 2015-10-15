@@ -3,7 +3,7 @@
  * All code up to tags/original: Copyright (c) 2013, Joshua Kaplan
  * All code after tags/original: Copyright (c) 2015, DiffPlug
  */
-package demo.gui;
+package matlabcontrol.demo;
 
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Bundle-Description: MatlabControl - control MATLAB from Java
+Bundle-Description: MatConsoleCtl - control MATLAB from Java
 Bundle-DocURL: https://github.com/diffplug/matlabcontrol
 Bundle-License: https://github.com/diffplug/matlabcontrol/blob/v4.3.0-SN
  APSHOT/LICENSE
