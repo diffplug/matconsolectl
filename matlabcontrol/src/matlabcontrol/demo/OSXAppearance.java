@@ -35,7 +35,9 @@ class OSXAppearance {
 				dockMethod.invoke(appInstance, dockIcon);
 			}
 			//If this does not work, it does not actually matter
-			catch (Exception e) {}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }
