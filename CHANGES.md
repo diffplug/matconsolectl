@@ -1,6 +1,8 @@
 # MatConsoleCtl releases
 
-### Version 4.4.0 - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.3.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.3.0/view))
+### Version 4.5.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
+
+### Version 4.4.0 - October 16th 2015 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.4.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.4.0/view))
 
 - `MatlabType.MatlabTypeGetter` is now generic.
 - Fixed lots of compiler warnings.
