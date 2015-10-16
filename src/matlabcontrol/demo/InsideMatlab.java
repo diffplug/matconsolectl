@@ -6,6 +6,8 @@
 package matlabcontrol.demo;
 
 import java.awt.EventQueue;
+import java.net.URL;
+import java.net.URLClassLoader;
 
 import javax.swing.WindowConstants;
 
@@ -18,10 +20,13 @@ import javax.swing.WindowConstants;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class InsideMatlab {
-	/**
-	 * Launches the demo.
-	 */
-	public InsideMatlab() {
+	public static void main(String[] args) {
+		ClassLoader cl = ClassLoader.getSystemClassLoader();
+		URL[] urls = ((URLClassLoader) cl).getURLs();
+		for (URL url : urls) {
+			System.out.println(url.getFile());
+		}
+
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {

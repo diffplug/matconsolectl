@@ -68,11 +68,8 @@ public class DemoFrame extends JFrame {
 			RETURN_PANEL_SIZE = new Dimension(PANEL_WIDTH, 250),
 			METHOD_PANEL_SIZE = new Dimension(PANEL_WIDTH, 110 + 28 * ArrayPanel.NUM_ENTRIES),
 			DESCRIPTION_PANE_SIZE = new Dimension(PANEL_WIDTH, 200),
-			COMMAND_PANEL_SIZE = new Dimension(PANEL_WIDTH, METHOD_PANEL_SIZE.height +
-					DESCRIPTION_PANE_SIZE.height),
-			MAIN_PANEL_SIZE = new Dimension(PANEL_WIDTH, CONNECTION_PANEL_SIZE.height +
-					COMMAND_PANEL_SIZE.height +
-					RETURN_PANEL_SIZE.height);
+			COMMAND_PANEL_SIZE = new Dimension(PANEL_WIDTH, METHOD_PANEL_SIZE.height + DESCRIPTION_PANE_SIZE.height),
+			MAIN_PANEL_SIZE = new Dimension(PANEL_WIDTH, CONNECTION_PANEL_SIZE.height + COMMAND_PANEL_SIZE.height + RETURN_PANEL_SIZE.height);
 	//Factory to create proxy
 	private final MatlabProxyFactory _factory;
 
@@ -86,7 +83,7 @@ public class DemoFrame extends JFrame {
 
 	public static BufferedImage getIcon() {
 		try {
-			return ImageIO.read(DemoFrame.class.getResource("/matlabcontrol/demo/icon.png"));
+			return ImageIO.read(DemoFrame.class.getResource("/matlabcontrol/demo/logo_128.png"));
 		} catch (Exception e) {
 			e.printStackTrace();
 			return new BufferedImage(1, 1, BufferedImage.TYPE_INT_RGB);
@@ -190,7 +187,6 @@ public class DemoFrame extends JFrame {
 										status = STATUS_CONNECTED_EXISTING;
 									} else {
 										status = STATUS_CONNECTED_LAUNCHED;
-
 									}
 									connectionPanel.setBorder(BorderFactory.createTitledBorder(status));
 

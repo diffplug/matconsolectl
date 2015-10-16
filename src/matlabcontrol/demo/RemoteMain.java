@@ -16,10 +16,7 @@ import javax.swing.WindowConstants;
  */
 public class RemoteMain {
 	public static void main(String[] args) {
-		OSXAppearance.applyIfApplicable();
-
 		final String matlabLocation = (args.length == 1 ? args[0] : null);
-
 		EventQueue.invokeLater(new Runnable() {
 			@Override
 			public void run() {
