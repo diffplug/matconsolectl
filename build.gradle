@@ -32,6 +32,12 @@ dependencies {
 	testCompile "junit:junit:${VER_JUNIT}"
 }
 
+processResources {
+	from ('src') {
+		exclude '**/*.java'
+	}
+}
+
 ////////////////////
 // MATLAB TESTING //
 ////////////////////
@@ -73,7 +79,8 @@ jar.manifest {
 		'Bundle-DocURL': "https://github.com/${project.org}/${project.name}",
 		'Bundle-License': "https://github.com/${project.org}/${project.name}/blob/v${project.version}/LICENSE",
 		'Import-Package': '!com.mathworks.jmi',
-		'-includeresource': "matlabcontrol=${sourceSets.main.output.classesDir}/matlabcontrol",
+		'Main-Class': 'matlabcontrol.demo.DemoMain',
+		'-includeresource': "matlabcontrol=${sourceSets.main.output.classesDir}/matlabcontrol,${sourceSets.main.output.resourcesDir}",
 		'-removeheaders': 'Bnd-LastModified,Bundle-Name,Created-By,Tool,Private-Package',
 		'-savemanifest': project.file('META-INF/MANIFEST.MF'),
 	)
@@ -219,10 +226,6 @@ def JMI_STUB = 'com/mathworks/jmi/**'
 task sourcesJar(type: Jar) {
 	classifier = 'sources'
 	from sourceSets.main.allJava
-	exclude(JMI_STUB)
-}
-
-jar {
 	exclude(JMI_STUB)
 }
 

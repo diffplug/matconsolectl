@@ -11,4 +11,5 @@ Export-Package: matlabcontrol;version="4.4.0",matlabcontrol.demo;version
  ="4.4.0",matlabcontrol.extensions;uses:=matlabcontrol;version="4.4.0",m
  atlabcontrol.internal;version="4.4.0",matlabcontrol.link;uses:=matlabco
  ntrol;version="4.4.0"
+Main-Class: matlabcontrol.demo.DemoMain
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.6))"
