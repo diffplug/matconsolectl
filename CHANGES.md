@@ -9,6 +9,7 @@
 - [Fixed bug in ArrayUtils.equals when applied to arrays of long.](https://github.com/diffplug/matconsolectl/commit/088b954551392dc7b24142fd7f1cbcdc6a4005bf)
 - [Fixed a serialization bug.](https://github.com/diffplug/matconsolectl/commit/d6bc07adca74f0bb3ae91c1009222eff6b975774)
 - Broke up the test suite into `test`, `testMatlabHeadless`, and `testMatlabInteractive`
+- Moved the demo code into the main library.  It's a very small demo with no dependencies, makes life easier to manage one jar rather than two.
 
 ### Version 4.3.0 - February 23rd 2015
 

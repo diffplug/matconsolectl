@@ -24,6 +24,8 @@ MatConsoleCtl is a Java API that allows calling MATLAB from Java. You can `eval`
 
 <!---freshmark javadoc
 output = prefixDelimiterReplace(input, 'https://{{org}}.github.io/{{name}}/javadoc/', '/', stable);
+output = prefixDelimiterReplace(output, "version = '", "';", stable);
+output = prefixDelimiterReplace(output, 'java -jar matconsolectl-', '.jar', stable);
 -->
 
 ```java
@@ -45,7 +47,32 @@ assert(actual == 5.0)
 proxy.disconnect();
 ```
 
+Javadoc links for [MatlabProxyFactoryOptions.Builder](http://diffplug.github.io/matconsolectl/javadoc/snapshot/matlabcontrol/MatlabProxyFactoryOptions.Builder.html) and [MatlabProxy](http://diffplug.github.io/matconsolectl/javadoc/snapshot/matlabcontrol/MatlabProxy.html).
+
 Contributions are welcome, see the [contributing guide](CONTRIBUTING.md) for development info.
+
+## Demo
+
+MatConsoleCtl includes a demo GUI.  Below is a script you can use to run the demo inside of MATLAB:
+
+```matlab
+version = '4.3.0';
+tempdir = 'matconsolectl_demo';
+
+% make a directory to copy the jar into
+mkdir tempdir;
+% download the jar
+URL = ['https://repo1.maven.org/maven2/com/diffplug/matsim/matlabcontrol/' version '/matlabcontrol-' version '.jar'];
+filename = [tempdir '/matconsolectl-' version '.jar'];
+urlwrite(URL,filename);
+% add it to the path
+javaaddpath([pwd '\' tempdir]);
+
+% run it
+matlabcontrol.demo.DemoMain
+```
+
+You can also run the demo outside of MATLAB by downloading the jar, then running `java -jar matconsolectl-4.3.0.jar` at a console.
 
 ## Compatibility
 
