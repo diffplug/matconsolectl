@@ -285,8 +285,8 @@ publishing {
 					}
 					licenses {
 						license {
-							name 'The Apache Software License, Version 2.0'
-							url 'http://www.apache.org/license/LICENSE-2.0.txt'
+							name 'New BSD License'
+							url 'https://github.com/diffplug/matconsolectl/blob/v4.4.0/LICENSE'
 							distribution 'repo'
 						}
 					}
