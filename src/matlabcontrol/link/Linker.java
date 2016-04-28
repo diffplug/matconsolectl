@@ -1,7 +1,7 @@
 /*
  * Code licensed under new-style BSD (see LICENSE).
  * All code up to tags/original: Copyright (c) 2013, Joshua Kaplan
- * All code after tags/original: Copyright (c) 2015, DiffPlug
+ * All code after tags/original: Copyright (c) 2016, DiffPlug
  */
 package matlabcontrol.link;
 
@@ -266,7 +266,7 @@ public class Linker {
 
 		private Object invokeMatlabFunction(InvocationInfo info, boolean userDefined, Object[] args,
 				Class<?> methodReturn)
-						throws MatlabInvocationException {
+				throws MatlabInvocationException {
 			//Replace all arguments with parameters of a MatlabType subclass or a multidimensional primitive array with
 			//their serialized setters
 			for (int i = 0; i < args.length; i++) {
