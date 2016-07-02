@@ -203,68 +203,49 @@ class Configuration {
 			URL url = codeSource.getLocation();
 			if (url != null) {
 				//Convert from url to absolute path
-				try {
-					//uri cannot be null, but this method can throw a URISyntaxException
-					URI uri = url.toURI();
-
-					//path could be null
-					String path = uri.getPath();
-					if (path != null) {
-						try {
-							File file = new File(path).getCanonicalFile();
-							if (file.exists()) {
-								return file.getAbsolutePath();
-							} else {
-								ClassLoader loader = Configuration.class.getClassLoader();
-								throw new MatlabConnectionException("Support code location was determined improperly." +
-										" Location does not exist.\n" +
-										"Location determined as: " + file.getAbsolutePath() + "\n" +
-										"Path: " + path + "\n" +
-										"URI Location: " + uri + "\n" +
-										"URL Location: " + url + "\n" +
-										"Code Source: " + codeSource + "\n" +
-										"Protection Domain: " + domain + "\n" +
-										"Class Loader: " + loader +
-										(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
-							}
-						}
-						//Unable to resolve canconical path
-						catch (IOException e) {
+				//path could be null
+				String path = url.getFile();
+				if (path != null) {
+					try {
+						File file = new File(path).getCanonicalFile();
+						if (file.exists()) {
+							return file.getAbsolutePath();
+						} else {
 							ClassLoader loader = Configuration.class.getClassLoader();
-							throw new MatlabConnectionException("Support code location could not be determined. " +
-									"Could not resolve canonical path.\n" +
+							throw new MatlabConnectionException("Support code location was determined improperly." +
+									" Location does not exist.\n" +
+									"Location determined as: " + file.getAbsolutePath() + "\n" +
 									"Path: " + path + "\n" +
-									"URI Location: " + uri + "\n" +
 									"URL Location: " + url + "\n" +
 									"Code Source: " + codeSource + "\n" +
 									"Protection Domain: " + domain + "\n" +
 									"Class Loader: " + loader +
-									(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()), e);
+									(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
 						}
 					}
-					//path was null
-					else {
+					//Unable to resolve canconical path
+					catch (IOException e) {
 						ClassLoader loader = Configuration.class.getClassLoader();
 						throw new MatlabConnectionException("Support code location could not be determined. " +
-								"Could not get path from URI location.\n" +
-								"URI Location: " + uri + "\n" +
+								"Could not resolve canonical path.\n" +
+								"Path: " + path + "\n" +
 								"URL Location: " + url + "\n" +
 								"Code Source: " + codeSource + "\n" +
 								"Protection Domain: " + domain + "\n" +
 								"Class Loader: " + loader +
-								(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
+								(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()), e);
 					}
 				}
-				//Unable to convert URL to URI
-				catch (URISyntaxException e) {
+				//path was null
+				else {
 					ClassLoader loader = Configuration.class.getClassLoader();
 					throw new MatlabConnectionException("Support code location could not be determined. " +
-							"Could not convert from URL to URI location.\n" +
+							"Could not get path from URI location.\n" +
 							"URL Location: " + url + "\n" +
 							"Code Source: " + codeSource + "\n" +
 							"Protection Domain: " + domain + "\n" +
 							"Class Loader: " + loader +
-							(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()), e);
+							(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
 				}
 			}
 			//url was null
