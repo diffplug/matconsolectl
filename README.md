@@ -76,7 +76,7 @@ You can also run the demo outside of MATLAB by downloading the jar, then running
 
 ## Compatibility
 
-MatConsoleCtl works on Win/Mac/Linux, MATLAB R2007b through R2015b, and it will continue to work so long as MATLAB maintains the Java MATLAB Interface.\*
+MatConsoleCtl works on Win/Mac/Linux, MATLAB R2007b through R2016b, and it will continue to work so long as MATLAB maintains the Java MATLAB Interface.\*
 
 \* On OS X 10.5, R2009a and earlier, you will need to do some hacking.  matlabcontrol requires Java 6, and Apple only released 64-bit Java 6 for OS X 10.5, while MATLAB only released 32-bit MATLAB for R2009a and earlier.  There are unofficial ways to run 32-bit Java 6 on OS X 10.5.
 
