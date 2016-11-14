@@ -60,11 +60,11 @@ version = '4.4.2';
 tempdir = 'matconsolectl_demo';
 
 % make a directory to copy the jar into
-mkdir tempdir;
+mkdir(tempdir);
 % download the jar
-URL = ['https://repo1.maven.org/maven2/com/diffplug/matsim/matlabcontrol/' version '/matlabcontrol-' version '.jar'];
+URL = ['https://repo1.maven.org/maven2/com/diffplug/matsim/matconsolectl/' version '/matconsolectl-' version '.jar'];
 filename = [tempdir '/matconsolectl-' version '.jar'];
-urlwrite(URL,filename);
+websave(filename,URL);
 % add it to the path
 javaaddpath([pwd '\' tempdir]);
 
