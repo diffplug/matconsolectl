@@ -232,6 +232,7 @@ class Configuration {
 				} catch (URISyntaxException e) {
 					ClassLoader loader = Configuration.class.getClassLoader();
 					throw new MatlabConnectionException("Support code location could not be determined. " +
+							"Could not convert URI location to file path.\n" +
 							"URL Location: " + url + "\n" +
 							"Code Source: " + codeSource + "\n" +
 							"Protection Domain: " + domain + "\n" +
