@@ -2,6 +2,10 @@
 
 ### Version 4.5.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
 
+### Version 4.4.3 - December 15th 2016 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.4.3/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.4.3/view))
+
+- Better fix to a bug where MatConsoleCtl would not run if there were [spaces in the path](https://github.com/diffplug/matconsolectl/issues/15) to the MatConsoleCtl jar.
+
 ### Version 4.4.2 - July 5th 2015 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.4.2/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.4.2/view))
 
 - Fixed a bug where MatConsoleCtl would not run if there were [spaces in the path](https://github.com/diffplug/matconsolectl/issues/11) to the MatConsoleCtl jar.
