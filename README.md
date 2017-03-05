@@ -66,7 +66,7 @@ URL = ['https://repo1.maven.org/maven2/com/diffplug/matsim/matconsolectl/' versi
 filename = [tempdir '/matconsolectl-' version '.jar'];
 websave(filename,URL);
 % add it to the path
-javaaddpath([pwd '\' tempdir]);
+javaaddpath([pwd '\' filename]);
 
 % run it
 matlabcontrol.demo.DemoMain
