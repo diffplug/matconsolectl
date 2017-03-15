@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
@@ -203,7 +204,9 @@ class Configuration {
 			if (url != null) {
 				//Convert from url to absolute path
 				try {
-					File file = new File(url.toURI()).getCanonicalFile();
+					// make sure that the url is properly encoded
+					URL encoded = new URL(URLEncoder.encode(url.toString(), "UTF-8"));
+					File file = new File(encoded.toURI()).getCanonicalFile();
 					if (file.exists()) {
 						return file.getAbsolutePath();
 					} else {
