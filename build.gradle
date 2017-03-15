@@ -339,6 +339,8 @@ if (!isSnapshot) {
 }
 
 // helps external scripts detect version
-task printVersion << {
-	println version
+task printVersion {
+	doLast {
+		println version
+	}
 }
