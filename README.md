@@ -12,11 +12,11 @@ output = [
 	].join('\n');
 -->
 [![Maven artifact](https://img.shields.io/badge/mavenCentral-com.diffplug.matsim%3Amatconsolectl-blue.svg)](https://bintray.com/diffplug/opensource/matconsolectl/view)
-[![Latest version](https://img.shields.io/badge/latest-4.4.3-blue.svg)](https://github.com/diffplug/matconsolectl/releases/latest)
-[![Javadoc](https://img.shields.io/badge/javadoc-OK-blue.svg)](https://diffplug.github.io/matconsolectl/javadoc/4.4.3/)
+[![Latest version](https://img.shields.io/badge/latest-4.4.4-blue.svg)](https://github.com/diffplug/matconsolectl/releases/latest)
+[![Javadoc](https://img.shields.io/badge/javadoc-OK-blue.svg)](https://diffplug.github.io/matconsolectl/javadoc/4.4.4/)
 [![License Apache](https://img.shields.io/badge/license-BSD-blue.svg)](https://tldrlegal.com/license/bsd-3-clause-license-(revised))
 
-[![Changelog](https://img.shields.io/badge/changelog-4.5.0--SNAPSHOT-brightgreen.svg)](CHANGES.md)
+[![Changelog](https://img.shields.io/badge/changelog-4.4.4-brightgreen.svg)](CHANGES.md)
 [![Travis CI](https://travis-ci.org/diffplug/matconsolectl.svg?branch=master)](https://travis-ci.org/diffplug/matconsolectl)
 <!---freshmark /shields -->
 
@@ -56,7 +56,7 @@ Contributions are welcome, see the [contributing guide](CONTRIBUTING.md) for dev
 MatConsoleCtl includes a demo GUI.  Below is a script you can use to run the demo inside of MATLAB:
 
 ```matlab
-version = '4.4.3';
+version = '4.4.4';
 tempdir = 'matconsolectl_demo';
 
 % make a directory to copy the jar into
@@ -72,7 +72,7 @@ javaaddpath([pwd '\' filename]);
 matlabcontrol.demo.DemoMain
 ```
 
-You can also run the demo outside of MATLAB by downloading the jar, then running `java -jar matconsolectl-4.4.3.jar` at a console.
+You can also run the demo outside of MATLAB by downloading the jar, then running `java -jar matconsolectl-4.4.4.jar` at a console.
 
 ## Compatibility
 
