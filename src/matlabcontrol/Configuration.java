@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
 
@@ -204,22 +203,27 @@ class Configuration {
 			if (url != null) {
 				//Convert from url to absolute path
 				try {
-					// make sure that the url is properly encoded
-					URL encoded = new URL(URLEncoder.encode(url.toString(), "UTF-8"));
-					File file = new File(encoded.toURI()).getCanonicalFile();
+					// generate canonical file using URL path
+					File file = new File(url.getPath()).getCanonicalFile();
 					if (file.exists()) {
 						return file.getAbsolutePath();
 					} else {
-						ClassLoader loader = Configuration.class.getClassLoader();
-						throw new MatlabConnectionException("Support code location was determined improperly." +
-								" Location does not exist.\n" +
-								"Location determined as: " + file.getAbsolutePath() + "\n" +
-								"File: " + file + "\n" +
-								"URL Location: " + url + "\n" +
-								"Code Source: " + codeSource + "\n" +
-								"Protection Domain: " + domain + "\n" +
-								"Class Loader: " + loader +
-								(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
+						// generate canonical file using URI
+						file = new File(url.toURI()).getCanonicalFile();
+						if (file.exists()) {
+							return file.getAbsolutePath();
+						} else {
+							ClassLoader loader = Configuration.class.getClassLoader();
+							throw new MatlabConnectionException("Support code location was determined improperly." +
+									" Location does not exist.\n" +
+									"Location determined as: " + file.getAbsolutePath() + "\n" +
+									"File: " + file + "\n" +
+									"URL Location: " + url + "\n" +
+									"Code Source: " + codeSource + "\n" +
+									"Protection Domain: " + domain + "\n" +
+									"Class Loader: " + loader +
+									(loader == null ? "" : "\nClass Loader Class: " + loader.getClass()));
+						}
 					}
 				}
 				//Unable to resolve canconical path
