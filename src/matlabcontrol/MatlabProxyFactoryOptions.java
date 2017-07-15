@@ -100,12 +100,12 @@ public class MatlabProxyFactoryOptions {
 	int getPort() {
 		return _port;
 	}
-	
-	public Writer getInputWriter() {
+
+	Writer getInputWriter() {
 		return _inputWriter;
 	}
 
-	public Writer getErrorWriter() {
+	Writer getErrorWriter() {
 		return _errorWriter;
 	}
 
@@ -401,28 +401,28 @@ public class MatlabProxyFactoryOptions {
 
 			return this;
 		}
-		
+
 		/**
 		 * Sets the input writer where the standard output of the created matlab process is written to.
 		 * This is only used when an actual process is spawned for the matlab proxy instance.
 		 * 
 		 * @param inputWriter
 		 */
-		public final Builder setInputWriter(Writer inputWriter){
+		public final Builder setInputWriter(Writer inputWriter) {
 			_inputWriter = inputWriter;
-			
+
 			return this;
 		}
-		
+
 		/**
 		 * Sets the error writer where the error output of the created matlab process is written to. 
 		 * This is only used when an actual process is spawned for the matlab proxy instance.
 		 * 
 		 * @param inputWriter
 		 */
-		public final Builder setErrorWriter(Writer errorWriter){
+		public final Builder setErrorWriter(Writer errorWriter) {
 			_errorWriter = errorWriter;
-			
+
 			return this;
 		}
 

@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
@@ -316,7 +317,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		private final Writer _writer;
 
 		private ProcessStreamDrainer(InputStream stream, String type, Writer writer) {
-			_reader = new InputStreamReader(stream);
+			_reader = new InputStreamReader(stream, Charset.defaultCharset());
 			_writer = writer;
 
 			this.setDaemon(true);
@@ -327,11 +328,11 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		public void run() {
 			try {
 				char[] buffer = new char[1024];
-				if(_writer != null){
-					while (_reader.read(buffer) != -1){
+				if (_writer != null) {
+					while (_reader.read(buffer) != -1) {
 						_writer.write(buffer);
 					}
-				}else{
+				} else {
 					while (_reader.read(buffer) != -1)
 						;
 				}
@@ -340,7 +341,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 				throw new RuntimeException(e);
 			}
 		}
-		
+
 	}
 
 	/**
