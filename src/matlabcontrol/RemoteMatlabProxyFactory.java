@@ -329,8 +329,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 			try {
 				char[] buffer = new char[1024];
 				if (_writer != null) {
-					while (_reader.read(buffer) != -1) {
-						_writer.write(buffer);
+					int len = 0;
+					while ((len = _reader.read(buffer)) != -1) {
+						_writer.write(buffer, 0, len);
+						_writer.flush();
 					}
 				} else {
 					while (_reader.read(buffer) != -1)
