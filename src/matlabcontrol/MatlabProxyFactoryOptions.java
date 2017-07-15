@@ -6,6 +6,7 @@
 package matlabcontrol;
 
 import java.io.File;
+import java.io.Writer;
 import java.util.concurrent.atomic.AtomicLong;
 
 import matlabcontrol.MatlabProxyFactory.CopyPasteCallback;
@@ -32,6 +33,8 @@ public class MatlabProxyFactoryOptions {
 	private final String _licenseFile;
 	private final boolean _useSingleCompThread;
 	private final int _port;
+	private final Writer _inputWriter;
+	private final Writer _errorWriter;
 
 	private MatlabProxyFactoryOptions(Builder options) {
 		_matlabLocation = options._matlabLocation;
@@ -46,6 +49,8 @@ public class MatlabProxyFactoryOptions {
 		_licenseFile = options._licenseFile;
 		_useSingleCompThread = options._useSingleCompThread;
 		_port = options._port;
+		_inputWriter = options._inputWriter;
+		_errorWriter = options._errorWriter;
 	}
 
 	String getMatlabLocation() {
@@ -95,6 +100,14 @@ public class MatlabProxyFactoryOptions {
 	int getPort() {
 		return _port;
 	}
+	
+	public Writer getInputWriter() {
+		return _inputWriter;
+	}
+
+	public Writer getErrorWriter() {
+		return _errorWriter;
+	}
 
 	/**
 	 * Creates instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
@@ -127,6 +140,8 @@ public class MatlabProxyFactoryOptions {
 		private volatile String _licenseFile = null;
 		private volatile boolean _useSingleCompThread = false;
 		private volatile int _port = 2100;
+		private volatile Writer _inputWriter;
+		private volatile Writer _errorWriter;
 
 		//Assigning to a long is not atomic, so use an AtomicLong so that a thread always sees an intended value
 		private final AtomicLong _proxyTimeout = new AtomicLong(180000L);
@@ -386,6 +401,30 @@ public class MatlabProxyFactoryOptions {
 
 			return this;
 		}
+		
+		/**
+		 * Sets the input writer where the standard output of the created matlab process is written to.
+		 * This is only used when an actual process is spawned for the matlab proxy instance.
+		 * 
+		 * @param inputWriter
+		 */
+		public final Builder setInputWriter(Writer inputWriter){
+			_inputWriter = inputWriter;
+			
+			return this;
+		}
+		
+		/**
+		 * Sets the error writer where the error output of the created matlab process is written to. 
+		 * This is only used when an actual process is spawned for the matlab proxy instance.
+		 * 
+		 * @param inputWriter
+		 */
+		public final Builder setErrorWriter(Writer errorWriter){
+			_errorWriter = errorWriter;
+			
+			return this;
+		}
 
 		/**
 		 * Builds a {@code MatlabProxyFactoryOptions} instance.
@@ -396,4 +435,5 @@ public class MatlabProxyFactoryOptions {
 			return new MatlabProxyFactoryOptions(this);
 		}
 	}
+
 }

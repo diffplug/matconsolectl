@@ -7,6 +7,9 @@ package matlabcontrol;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.Writer;
 import java.rmi.AlreadyBoundException;
 import java.rmi.NoSuchObjectException;
 import java.rmi.NotBoundException;
@@ -270,8 +273,8 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 
 			//If running under UNIX and MATLAB is hidden these streams need to be read so that MATLAB does not block
 			if (_options.getHidden() && !Configuration.isWindows()) {
-				new ProcessStreamDrainer(process.getInputStream(), "Input").start();
-				new ProcessStreamDrainer(process.getErrorStream(), "Error").start();
+				new ProcessStreamDrainer(process.getInputStream(), "Input", _options.getInputWriter()).start();
+				new ProcessStreamDrainer(process.getErrorStream(), "Error", _options.getErrorWriter()).start();
 			}
 
 			return process;
@@ -309,10 +312,12 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 	 * blocking.
 	 */
 	private static class ProcessStreamDrainer extends Thread {
-		private final InputStream _stream;
+		private final Reader _reader;
+		private final Writer _writer;
 
-		private ProcessStreamDrainer(InputStream stream, String type) {
-			_stream = stream;
+		private ProcessStreamDrainer(InputStream stream, String type, Writer writer) {
+			_reader = new InputStreamReader(stream);
+			_writer = writer;
 
 			this.setDaemon(true);
 			this.setName("ProcessStreamDrainer - " + type);
@@ -321,14 +326,21 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		@Override
 		public void run() {
 			try {
-				byte[] buffer = new byte[1024];
-				while (_stream.read(buffer) != -1)
-					;
+				char[] buffer = new char[1024];
+				if(_writer != null){
+					while (_reader.read(buffer) != -1){
+						_writer.write(buffer);
+					}
+				}else{
+					while (_reader.read(buffer) != -1)
+						;
+				}
 			} catch (IOException e) {
 				e.printStackTrace();
 				throw new RuntimeException(e);
 			}
 		}
+		
 	}
 
 	/**
