@@ -274,7 +274,7 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 
 			//If running under UNIX and MATLAB is hidden these streams need to be read so that MATLAB does not block
 			if (_options.getHidden() && !Configuration.isWindows()) {
-				new ProcessStreamDrainer(process.getInputStream(), "Input", _options.getInputWriter()).start();
+				new ProcessStreamDrainer(process.getInputStream(), "Output", _options.getOutputWriter()).start();
 				new ProcessStreamDrainer(process.getErrorStream(), "Error", _options.getErrorWriter()).start();
 			}
 
