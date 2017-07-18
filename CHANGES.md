@@ -1,6 +1,10 @@
 # MatConsoleCtl releases
 
-### Version 4.5.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
+### Version 4.6.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
+
+### Version 4.5.0 - July 18th 2017 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.5.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.5.0/view))
+
+- Added `Builder.setOutputWriter` and `Builder.setErrorWriter` for capturing `stdout` and `stderr` from MATLAB. ([#20](https://github.com/diffplug/matconsolectl/pull/20))
 
 ### Version 4.4.4 - December 15th 2016 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.4.4/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.4.4/view))
 
