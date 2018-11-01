@@ -12,6 +12,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.CodeSource;
 import java.security.ProtectionDomain;
+import java.util.logging.Logger;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
@@ -23,12 +24,15 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
  * @author <a href="mailto:nonother@gmail.com">Joshua Kaplan</a>
  */
 class Configuration {
+
+	private static Logger sLog = Logger.getLogger(Configuration.class.getName());
+
 	private Configuration() {}
 
 	/**
 	 * If running on OS X.
 	 * 
-	 * @return 
+	 * @return
 	 */
 	static boolean isOSX() {
 		return getOperatingSystem().startsWith("Mac OS X");
@@ -37,7 +41,7 @@ class Configuration {
 	/**
 	 * If running on Windows.
 	 * 
-	 * @return 
+	 * @return
 	 */
 	static boolean isWindows() {
 		return getOperatingSystem().startsWith("Windows");
@@ -55,7 +59,7 @@ class Configuration {
 	/**
 	 * Gets a string naming the operating system.
 	 * 
-	 * @return 
+	 * @return
 	 */
 	static String getOperatingSystem() {
 		return System.getProperty("os.name");
@@ -64,7 +68,7 @@ class Configuration {
 	/**
 	 * Returns the location or alias of MATLAB on an operating system specific basis.
 	 * <br><br>
-	 * For OS X this will be the location, for Windows or Linux this will be an alias. For any other operating system an 
+	 * For OS X this will be the location, for Windows or Linux this will be an alias. For any other operating system an
 	 * exception will be thrown.
 	 * 
 	 * @return
@@ -139,14 +143,18 @@ class Configuration {
 	 * @throws MatlabConnectionException
 	 */
 	static String getClassPathAsRMICodebase() throws MatlabConnectionException {
+		String entry = "";
 		try {
 			StringBuilder codebaseBuilder = new StringBuilder();
 			String[] paths = System.getProperty("java.class.path", "").split(File.pathSeparator);
 
 			for (int i = 0; i < paths.length; i++) {
-				codebaseBuilder.append("file://");
-				codebaseBuilder.append(new File(paths[i]).getCanonicalFile().toURI().toURL().getPath());
-
+				File f = new File(paths[i]);
+				if (f.exists() && !f.isDirectory()) {
+					entry = new File(paths[i]).getCanonicalFile().toURI().toURL().getPath();
+					codebaseBuilder.append("file://");
+					codebaseBuilder.append(entry);
+				}
 				if (i != paths.length - 1) {
 					codebaseBuilder.append(" ");
 				}
@@ -154,6 +162,7 @@ class Configuration {
 
 			return codebaseBuilder.toString();
 		} catch (IOException e) {
+			sLog.severe("Unable to resolve classpath entry: " + entry);
 			throw new MatlabConnectionException("Unable to resolve classpath entry", e);
 		}
 	}
@@ -162,14 +171,20 @@ class Configuration {
 	 * Converts the classpath into individual canonical entries.
 	 * 
 	 * @return
-	 * @throws MatlabConnectionException 
+	 * @throws MatlabConnectionException
 	 */
 	static String[] getClassPathAsCanonicalPaths() throws MatlabConnectionException {
 		try {
 			String[] paths = System.getProperty("java.class.path", "").split(File.pathSeparator);
 
 			for (int i = 0; i < paths.length; i++) {
-				paths[i] = new File(paths[i]).getCanonicalPath();
+				File f = new File(paths[i]);
+				if (f.exists()) {
+					paths[i] = f.getCanonicalPath();
+				} else {
+					sLog.severe("Classpath entry " + paths[i] + " not found. Adding absolute path instead.");
+					paths[i] = new File(paths[i]).getAbsolutePath();
+				}
 			}
 
 			return paths;
@@ -272,7 +287,7 @@ class Configuration {
 	/**
 	 * Whether this code is running inside of MATLAB.
 	 * 
-	 * @return 
+	 * @return
 	 */
 	static boolean isRunningInsideMatlab() {
 		boolean available;
