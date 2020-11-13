@@ -1,6 +1,8 @@
 # MatConsoleCtl releases
 
-### Version 4.6.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
+### Version 4.7.0-SNAPSHOT - TBD ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/snapshot/), [jcenter](https://oss.sonatype.org/content/repositories/snapshots/com/diffplug/matsim/matconsolectl/))
+
+### Version 4.6.0 - November 12th 2020 ([javadoc](http://diffplug.github.io/matconsolectl/javadoc/4.6.0/), [jcenter](https://bintray.com/diffplug/opensource/matconsolectl/4.6.0/view))
 
 - Added checks for directories and non-exisiting files in classpath converters: In Configuration.getClassPathAsRMICodebase() and Configuration.getClassPathAsCanonicalPaths(). This prevents unnecessary IOExceptions for invalid classpaths.
 - https://github.com/diffplug/matconsolectl/pull/21
