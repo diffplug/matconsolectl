@@ -344,3 +344,10 @@ task printVersion {
 		println version
 	}
 }
+
+allprojects {
+    tasks.withType(JavaCompile).configureEach {
+        options.incremental = true
+    }
+
+}
