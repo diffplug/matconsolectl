@@ -1,6 +1,4 @@
 plugins {
-	// osgi
-	id "org.jruyi.osgibnd" version "0.4.0"
 	// code formatting
 	id "com.diffplug.gradle.spotless" version "3.1.0"
 	// bintray uploading
@@ -53,39 +51,6 @@ task testMatlabInteractive(type: Test) {
 	}
 }
 task testMatlabAll(dependsOn: [test, testMatlabHeadless, testMatlabInteractive])
-
-//////////
-// OSGI //
-//////////
-
-// delete the old manifest to ensure there's no caching or merging going on
-jar.doFirst {
-	project.file('META-INF/MANIFEST.MF').delete()
-}
-
-jar.manifest {
-	attributes (
-		'Export-Package': 'matlabcontrol.*,!matlabcontrol.internal.*,!matlabcontrol.demo.*',
-		'Bundle-SymbolicName': "${project.group}.${project.name}",
-		'Bundle-Vendor': 'DiffPlug',
-		'Bundle-DocURL': "https://github.com/${project.org}/${project.name}",
-		'Bundle-License': "https://github.com/${project.org}/${project.name}/blob/v${project.version}/LICENSE",
-		'Import-Package': '!com.mathworks.jmi',
-		'Main-Class': 'matlabcontrol.demo.DemoMain',
-		'-includeresource': "matlabcontrol=${sourceSets.main.output.classesDir}/matlabcontrol,${sourceSets.main.output.resourcesDir}",
-		'-removeheaders': 'Bnd-LastModified,Bundle-Name,Created-By,Tool,Private-Package',
-		'-savemanifest': project.file('META-INF/MANIFEST.MF'),
-	)
-}
-
-// manifests are only generated when the java files change - not if manifest properties change
-// this task forces the manifests to regenerate
-task refreshManifest(dependsOn: jar)
-gradle.taskGraph.whenReady { taskGraph ->
-	if (taskGraph.hasTask(refreshManifest)) {
-		jar.outputs.upToDateWhen { false }
-	}
-}
 
 ////////////
 // JAVA 6 //
@@ -238,108 +203,4 @@ javadoc {
 task javadocJar(type: Jar, dependsOn: javadoc) {
 	classifier = 'javadoc'
 	from javadoc.destinationDir
-}
-
-////////////////
-// PUBLISHING //
-////////////////
-def isSnapshot = project.version.endsWith('-SNAPSHOT')
-// pulls the credentials from either the environment variable or gradle.properties
-def cred = {
-	if (System.env[it] != null) {
-		return System.env[it]
-	} else if (project.hasProperty(it)) {
-		return project[it]
-	} else {
-		return 'unknown_' + it
-	}
-}
-
-publishing {
-	publications {
-		mavenJava(MavenPublication) {
-			from components.java
-			artifact sourcesJar
-			artifact javadocJar
-			pom.withXml {
-				// findbugs annotations should have scope "provided"
-				asNode().dependencies.'*'.findAll() { it.groupId.text() == 'com.google.code.findbugs' }.each() { it.scope*.value = 'provided' }
-				// add MavenCentral requirements to the POM
-				asNode().children().last() + {
-					resolveStrategy = Closure.DELEGATE_FIRST
-					name project.name
-					description project.description
-					url "https://github.com/${project.org}/${project.name}"
-					scm {
-						url "https://github.com/${project.org}/${project.name}"
-						connection "scm:git:git://github.com/${project.org}/${project.name}"
-						developerConnection "scm:git:ssh:git@github.com/${project.org}/${project.name}"
-					}
-					licenses {
-						license {
-							name 'New BSD License'
-							url 'https://github.com/diffplug/matconsolectl/blob/v4.4.0/LICENSE'
-							distribution 'repo'
-						}
-					}
-					developers {
-						developer {
-							id 'nedtwigg'
-							name 'Ned Twigg'
-							email 'ned.twigg@diffplug.com'
-						}
-					}
-				}
-			}
-		}
-	}
-	if (isSnapshot) {
-		// upload snapshots to oss.sonatype.org
-		repositories { maven {
-			url = 'https://oss.sonatype.org/content/repositories/snapshots'
-			credentials {
-				username = cred('nexus_user')
-				password = cred('nexus_pass')
-			}
-		} }
-	}
-}
-
-if (!isSnapshot) {
-	// upload releases to bintray and then mavenCentral
-	bintray {
-		user = cred('bintray_user')
-		key = cred('bintray_pass')
-		publications = ['mavenJava']
-		publish = true
-		pkg {
-			repo = 'opensource'
-			name = project.name
-			userOrg = project.org
-			version {
-				name = project.version
-				mavenCentralSync {
-					user = cred('nexus_user')
-					password = cred('nexus_pass')
-				}
-			}
-		}
-	}
-
-	publish.dependsOn(bintrayUpload)
-	bintrayUpload.dependsOn(['generatePomFileForMavenJavaPublication', jar, sourcesJar, javadocJar])
-}
-
-// helps external scripts detect version
-task printVersion {
-	doLast {
-		println version
-	}
-}
-
-allprojects {
-    tasks.withType(JavaCompile).configureEach {
-        options.incremental = true
-    }
-
 }
