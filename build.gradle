@@ -17,14 +17,6 @@ repositories {
 // JAVA //
 //////////
 apply plugin: 'java'
-sourceSets {
-	main { java {
-			srcDir 'src'
-	} }
-	test { java {
-			srcDir 'test'
-	} }
-}
 sourceCompatibility = VER_JAVA
 targetCompatibility = VER_JAVA
 
