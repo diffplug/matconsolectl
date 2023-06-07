@@ -114,36 +114,11 @@ spotless {
 	}
 }
 
-//////////////
-// FINDBUGS //
-//////////////
-apply plugin: 'findbugs'
-findbugs {
-	toolVersion = VER_FINDBUGS
-	sourceSets = [sourceSets.main]	// don't check the test code
-	ignoreFailures = false 	// bug free or it doesn't ship!
-	reportsDir = file('build/findbugs')
-	effort = 'max'			// min|default|max
-	reportLevel = 'medium'	// low|medium|high (low = sensitive to even minor mistakes)
-	omitVisitors = []		// bugs that we want to ignore
-}
-// HTML instead of XML
-tasks.withType(FindBugs) {
-	reports {
-		xml.enabled = false
-		html.enabled = true
-	}
-}
 // we'll want the findbugs annotations (they don't have a 3.0.1 version)
 dependencies {
 	compile 'com.google.code.findbugs:annotations:3.0.0'
 	compile 'com.google.code.findbugs:jsr305:3.0.0'
 }
-
-///////////
-// MAVEN //
-///////////
-apply plugin: 'maven-publish'
 
 // the package of the jmi stub (which we're going to leave out of all the jars we make)
 def JMI_STUB = 'com/mathworks/jmi/**'
