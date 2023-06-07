@@ -22,12 +22,6 @@ dependencies {
 	testCompile "junit:junit:${VER_JUNIT}"
 }
 
-processResources {
-	from ('src') {
-		exclude '**/*.java'
-	}
-}
-
 ////////////////////
 // MATLAB TESTING //
 ////////////////////
@@ -97,31 +91,6 @@ project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
 	ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
 	ac.dependsOn(unzipJRE6)
 })
-
-/////////////
-// ECLIPSE //
-/////////////
-apply plugin: 'eclipse'
-eclipse {
-	project {
-		natures 'org.eclipse.pde.PluginNature'
-		natures 'org.eclipse.jdt.core.javanature'
-
-		buildCommand 'org.eclipse.jdt.core.javabuilder'
-		buildCommand 'org.eclipse.pde.ManifestBuilder'
-		buildCommand 'org.eclipse.pde.SchemaBuilder'
-	}
-	classpath {
-		downloadSources true
-		downloadJavadoc true
-	}
-	jdt {
-		sourceCompatibility VER_JAVA
-		targetCompatibility VER_JAVA
-	}
-}
-// always create fresh projects
-tasks.eclipse.dependsOn(cleanEclipse)
 
 ////////////
 // FORMAT //
