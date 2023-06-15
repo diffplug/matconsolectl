@@ -1,0 +1,32 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: ci
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java: ['11']
+    name: Java ${{ matrix.java }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: jdk ${{ matrix.java }}
+        uses: actions/setup-java@v3
+        with:
+          java-version: ${{ matrix.java }}
+          distribution: 'temurin'
+      - name: gradle wrapper
+        uses: gradle/wrapper-validation-action@v1
+      - name: gradle caching
+        uses: gradle/gradle-build-action@v2
+      - run: ./gradlew test
