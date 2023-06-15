@@ -29,4 +29,4 @@ jobs:
         uses: gradle/wrapper-validation-action@v1
       - name: gradle caching
         uses: gradle/gradle-build-action@v2
-      - run: ./gradlew test
+      - run: ./gradlew check
