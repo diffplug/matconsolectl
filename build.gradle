@@ -1,6 +1,4 @@
 plugins {
-	// code formatting
-	id "com.diffplug.spotless" version "6.19.0"
 	// for downloading JRE6
 	id "de.undercouch.download" version "5.4.0"
 }
@@ -89,28 +87,6 @@ project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
 	ac.options.bootstrapClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
 	ac.dependsOn(unzipJRE6)
 })
-
-////////////
-// FORMAT //
-////////////
-spotless {
-	java {
-		licenseHeaderFile	'spotless.license.java'			// License header file
-		importOrderFile		'spotless.importorder'			// An import ordering file, exported from Eclipse
-		eclipseFormatFile	'spotless.eclipseformat.xml'	// XML file dumped out by the Eclipse formatter
-		removeUnusedImports()
-	}
-	format 'misc', {
-		target '.gitignore', '*.gradle', '*.md', '.ci/*.sh'
-		indentWithTabs()
-		trimTrailingWhitespace()
-		endWithNewline()
-	}
-	freshmark {
-		target '*.md'
-		propertiesFile('gradle.properties')
-	}
-}
 
 // we'll want the findbugs annotations (they don't have a 3.0.1 version)
 dependencies {
