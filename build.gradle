@@ -1,10 +1,8 @@
 plugins {
 	// code formatting
-	id "com.diffplug.gradle.spotless" version "3.1.0"
-	// bintray uploading
-	id "com.jfrog.bintray" version "1.3.1"
+	id "com.diffplug.spotless" version "6.19.0"
 	// for downloading JRE6
-	id "de.undercouch.download" version "2.0.0"
+	id "de.undercouch.download" version "5.4.0"
 }
 
 repositories {
@@ -19,7 +17,7 @@ sourceCompatibility = VER_JAVA
 targetCompatibility = VER_JAVA
 
 dependencies {
-	testCompile "junit:junit:${VER_JUNIT}"
+	testImplementation "junit:junit:${VER_JUNIT}"
 }
 
 ////////////////////
@@ -86,9 +84,9 @@ task unzipJRE6(dependsOn: verifyJRE6, type: Copy) {
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 def sep = System.getProperty('path.separator')
-def bootClasspathStr = "${JRE6_HOME}/lib/rt.jar${sep}${JRE6_HOME}/lib/jsse.jar"
+def bootClasspathStr = project.files("${JRE6_HOME}/lib/rt.jar${sep}${JRE6_HOME}/lib/jsse.jar")
 project.tasks.withType(AbstractCompile, { AbstractCompile ac ->
-	ac.options.bootClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
+	ac.options.bootstrapClasspath = bootClasspathStr // options is always there but not defined on AbstractCompile so going to hit it anyway
 	ac.dependsOn(unzipJRE6)
 })
 
@@ -116,8 +114,8 @@ spotless {
 
 // we'll want the findbugs annotations (they don't have a 3.0.1 version)
 dependencies {
-	compile 'com.google.code.findbugs:annotations:3.0.0'
-	compile 'com.google.code.findbugs:jsr305:3.0.0'
+	implementation 'com.google.code.findbugs:annotations:3.0.0'
+	implementation 'com.google.code.findbugs:jsr305:3.0.0'
 }
 
 // the package of the jmi stub (which we're going to leave out of all the jars we make)
