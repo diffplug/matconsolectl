@@ -1,4 +1,6 @@
 plugins {
+	id 'com.diffplug.blowdryer'
+	id 'com.diffplug.spotless-changelog'
 	// for downloading JRE6
 	id "de.undercouch.download" version "5.4.0"
 }
@@ -7,12 +9,18 @@ repositories {
 	mavenCentral()
 }
 
+spotlessChangelog {
+	changelogFile 'CHANGES.md'
+}
+apply from: 干.file('base/changelog.gradle')
+
 //////////
 // JAVA //
 //////////
 apply plugin: 'java'
 sourceCompatibility = VER_JAVA
 targetCompatibility = VER_JAVA
+apply from: 干.file('spotless/java.gradle')
 
 dependencies {
 	testImplementation "junit:junit:${VER_JUNIT}"
