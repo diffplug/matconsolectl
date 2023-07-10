@@ -10,6 +10,7 @@ import java.io.Writer;
 import java.util.concurrent.atomic.AtomicLong;
 
 import matlabcontrol.MatlabProxyFactory.CopyPasteCallback;
+import java.util.Map;
 
 /**
  * Options that configure how a factory operates. Use a {@link Builder} to create an instance of this class.
@@ -35,6 +36,7 @@ public class MatlabProxyFactoryOptions {
 	private final int _port;
 	private final Writer _outputWriter;
 	private final Writer _errorWriter;
+	private final Map<String, String> _matlabEnvironment;
 
 	private MatlabProxyFactoryOptions(Builder options) {
 		_matlabLocation = options._matlabLocation;
@@ -51,6 +53,7 @@ public class MatlabProxyFactoryOptions {
 		_port = options._port;
 		_outputWriter = options._outputWriter;
 		_errorWriter = options._errorWriter;
+		_matlabEnvironment = options._matlabEnvironment;
 	}
 
 	String getMatlabLocation() {
@@ -109,6 +112,10 @@ public class MatlabProxyFactoryOptions {
 		return _errorWriter;
 	}
 
+	Map<String, String> getMatlabEnvironment() {
+		return _matlabEnvironment;
+	}
+
 	/**
 	 * Creates instances of {@link MatlabProxyFactoryOptions}. Any and all of these properties may be left unset, if so
 	 * then a default will be used. Depending on how the factory operates, not all properties may be used. Currently all
@@ -142,6 +149,7 @@ public class MatlabProxyFactoryOptions {
 		private volatile int _port = 2100;
 		private volatile Writer _outputWriter = null;
 		private volatile Writer _errorWriter = null;
+		private volatile Map<String, String> _matlabEnvironment = null;
 
 		//Assigning to a long is not atomic, so use an AtomicLong so that a thread always sees an intended value
 		private final AtomicLong _proxyTimeout = new AtomicLong(180000L);
@@ -422,6 +430,18 @@ public class MatlabProxyFactoryOptions {
 		 */
 		public final Builder setErrorWriter(Writer errorWriter) {
 			_errorWriter = errorWriter;
+
+			return this;
+		}
+
+		/**
+		* Sets the matlab environment as a key-value pair mapping.
+		* This map is appended to the environment map of the spawned  matlab proxy instance.
+		*
+		* @param matlabEnvironment
+		*/
+		public final Builder setMatlabEnvironment(Map<String, String> matlabEnvironment) {
+			_matlabEnvironment = matlabEnvironment;
 
 			return this;
 		}

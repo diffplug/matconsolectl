@@ -54,6 +54,30 @@ task testMatlabAll(dependsOn: [
 	testMatlabInteractive
 ])
 
+//////////
+// OSGI //
+//////////
+
+// delete the old manifest to ensure there's no caching or merging going on
+jar.doFirst {
+	project.file('META-INF/MANIFEST.MF').delete()
+}
+
+jar.manifest {
+	attributes (
+		'Bundle-Description': "${project.description}",
+		'Bundle-DocURL': "https://${project.git_url}",
+		'Bundle-License': "https://${project.git_url}/blob/v${version}/LICENSE",
+		'Bundle-ManifestVersion': "${osgi_manifest_ver}",
+		'Bundle-SymbolicName': "${project.group}.${project.name}",
+		'Bundle-Vendor': "${project.org}",
+		'Bundle-Version': "${project.version}",
+	    'Export-Package': "matlabcontrol;version=\"${project.version}\",matlabcontrol.demo;version=\"${project.version}\",matlabcontrol.extensions;uses:=matlabcontrol;version=\"${project.version}\",matlabcontrol.internal;version=\"${project.version}\",matlabcontrol.link;uses:=matlabcontrol;version=\"${project.version}\"",
+		'Main-Class': 'matlabcontrol.demo.DemoMain',
+		'Require-Capability': 'osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"'
+	)
+}
+
 ////////////
 // JAVA 6 //
 ////////////
@@ -111,9 +135,23 @@ def JMI_STUB = 'com/mathworks/jmi/**'
 
 // make a source jar
 task sourcesJar(type: Jar) {
-	classifier = 'sources'
+	archiveClassifier = 'sources'
 	from sourceSets.main.allJava
 	exclude(JMI_STUB)
+	manifest {
+		attributes (
+		'Bundle-Description': "${project.description}",
+		'Bundle-DocURL': "https://${project.git_url}",
+		'Bundle-License': "https://${project.git_url}/blob/v${version}/LICENSE",
+		'Bundle-ManifestVersion': "${osgi_manifest_ver}",
+		'Bundle-SymbolicName': "${project.group}.${project.name}",
+		'Bundle-Vendor': "${project.org}",
+		'Bundle-Version': "${project.version}",
+	    'Export-Package': "matlabcontrol;version=\"${project.version}\",matlabcontrol.demo;version=\"${project.version}\",matlabcontrol.extensions;uses:=matlabcontrol;version=\"${project.version}\",matlabcontrol.internal;version=\"${project.version}\",matlabcontrol.link;uses:=matlabcontrol;version=\"${project.version}\"",
+		'Main-Class': 'matlabcontrol.demo.DemoMain',
+		'Require-Capability': 'osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.7))"'
+		)
+	}
 }
 
 // Where it's possible to name parameters and methods clearly enough
@@ -131,8 +169,12 @@ javadoc {
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
-	classifier = 'javadoc'
+	archiveClassifier = 'javadoc'
 	from javadoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
 }
 
 // it all needs to get published and formatted

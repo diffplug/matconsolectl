@@ -1,6 +1,8 @@
 # MatConsoleCtl releases
 
 ## [Unreleased]
+- Support passing custom MATLAB environment & modify build gradle to OSGIfy(add the MANIFEST headers) the generated jar.
+- https://github.com/diffplug/matconsolectl/pull/27
 
 ## [4.6.0] - 2020-11-12
 - Added checks for directories and non-exisiting files in classpath converters: In Configuration.getClassPathAsRMICodebase() and Configuration.getClassPathAsCanonicalPaths(). This prevents unnecessary IOExceptions for invalid classpaths.
