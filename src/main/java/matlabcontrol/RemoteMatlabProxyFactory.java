@@ -24,6 +24,7 @@ import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.Map;
 
 import matlabcontrol.MatlabProxy.Identifier;
 import matlabcontrol.MatlabProxyFactory.Request;
@@ -268,6 +269,10 @@ class RemoteMatlabProxyFactory implements ProxyFactory {
 		//Create process
 		ProcessBuilder builder = new ProcessBuilder(processArguments);
 		builder.directory(_options.getStartingDirectory());
+		Map<String, String> env = builder.environment();
+		if (_options.getMatlabEnvironment() != null && !_options.getMatlabEnvironment().isEmpty()) {
+			env.putAll(_options.getMatlabEnvironment());
+		}
 
 		try {
 			Process process = builder.start();
