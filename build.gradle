@@ -63,7 +63,7 @@ jar.doFirst {
 	project.file('META-INF/MANIFEST.MF').delete()
 }
 
-project.version = project.hasProperty('ver') ? project['ver'] : 'none'
+project.version = project.hasProperty('ver') ? project['ver'] : "${project.version}"
 jar.manifest {
 	attributes (
 		'Bundle-Description': "${project.description}",
