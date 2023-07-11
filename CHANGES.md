@@ -1,6 +1,8 @@
 # MatConsoleCtl releases
 
 ## [Unreleased]
+
+## [4.6.1] - 2023-07-11
 - Support passing custom MATLAB environment & modify build gradle to OSGIfy(add the MANIFEST headers) the generated jar.
 - https://github.com/diffplug/matconsolectl/pull/27
 
