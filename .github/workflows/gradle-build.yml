@@ -25,6 +25,8 @@ jobs:
         with:
           java-version: ${{ matrix.java }}
           distribution: 'temurin'
+      - name: git fetch origin main
+        run: git fetch origin main
       - name: gradle wrapper
         uses: gradle/wrapper-validation-action@v1
       - name: gradle caching
